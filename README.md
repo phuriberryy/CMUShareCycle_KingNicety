@@ -12,6 +12,21 @@
 
 </div>
 
+รันที่เดียว
+cd /Users/pmykingg/Documents/CMUShareCycle_KingNicety/CMUShareCycle_KingNicety
+chmod +x start.sh
+./start.sh
+
+รึว่าจะรันแยก
+# Terminal 1
+cd /Users/pmykingg/Documents/CMUShareCycle_KingNicety/CMUShareCycle_KingNicety/backend
+npm run dev
+
+# Terminal 2
+cd /Users/pmykingg/Documents/CMUShareCycle_KingNicety/CMUShareCycle_KingNicety/frontend
+npm start
+
+
 ---
 
 ## 📖 สารบัญ
