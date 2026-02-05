@@ -13,6 +13,17 @@ if (result.error) {
   console.warn('   Expected path:', envPath)
 } else {
   console.log('✅ Loaded .env file from:', envPath)
+  // Debug
+  const maskedDbUrl = process.env.DATABASE_URL
+    ? process.env.DATABASE_URL.replace(/:[^:@]+@/, ':****@')
+    : undefined
+  console.log('🔎 ENV check:', {
+    PORT: process.env.PORT,
+    CLIENT_ORIGIN: process.env.CLIENT_ORIGIN,
+    CLIENT_ORIGINS: process.env.CLIENT_ORIGINS,
+    JWT_SECRET: process.env.JWT_SECRET ? 'set' : 'missing',
+    DATABASE_URL: maskedDbUrl || 'missing',
+  })
 }
 
 const schema = z.object({

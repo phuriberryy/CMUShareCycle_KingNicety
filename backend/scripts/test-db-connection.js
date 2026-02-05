@@ -3,9 +3,16 @@ import dotenv from 'dotenv'
 import path from 'path'
 import url from 'url'
 
-const __filename = url.fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-dotenv.config({ path: path.resolve(__dirname, '..', '.env') })
+const filename = url.fileURLToPath(import.meta.url)
+const dirname = path.dirname(filename)
+const envPath = path.join(dirname, '..', '.env')
+
+console.log('📂 Loading .env from:', envPath)
+const result = dotenv.config({ path: envPath })
+if (result.error) {
+  console.error('❌ Error loading .env:', result.error.message)
+}
+console.log('🔍 DATABASE_URL loaded:', process.env.DATABASE_URL || 'NOT FOUND')
 
 async function testConnection() {
   const databaseUrl = process.env.DATABASE_URL
