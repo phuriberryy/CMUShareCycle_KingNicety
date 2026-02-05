@@ -15,24 +15,19 @@ import donationRequestRoutes from './routes/donationRequest.routes.js'
 
 const app = express()
 
-app.use(cors({ 
-  origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true)
-    
-    // Check if origin is in allowed list
-    if (env.allowedOrigins.includes(origin)) {
-      callback(null, true)
-    } else {
-      callback(new Error('Not allowed by CORS'))
-    }
-  },
-  credentials: true 
-}))
+app.use(cors({
+  origin: [
+    "https://cmu-cycle-test.vercel.app",
+    "http://localhost:3000"
+  ],
+  credentials: true,
+}));
 app.use(express.json({ limit: '10mb' }))
 app.use(cookieParser())
 
 app.get('/health', (_req, res) => res.json({ ok: true }))
+
+app.options("*", cors());
 
 app.use('/api/auth', authRoutes)
 app.use('/api/items', itemRoutes)
