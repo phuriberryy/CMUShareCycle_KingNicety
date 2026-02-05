@@ -1,4 +1,19 @@
-export const API_BASE = process.env.REACT_APP_API_URL || process.env.REACT_APP_API_BASE || 'http://localhost:4000/api'
+// Determine API base URL
+// - In CRA/Vercel, configure REACT_APP_API_BASE_URL (recommended) or REACT_APP_API_URL / REACT_APP_API_BASE
+// - Defaults to http://localhost:4000/api for local development
+const rawApiBase =
+  process.env.REACT_APP_API_BASE_URL ||
+  process.env.REACT_APP_API_URL ||
+  process.env.REACT_APP_API_BASE ||
+  'http://localhost:4000'
+
+export const API_BASE = `${rawApiBase.replace(/\/$/, '')}/api`
+
+// Dev-only log for debugging API base configuration
+if (process.env.NODE_ENV === 'development') {
+  // eslint-disable-next-line no-console
+  console.log('[CMUShareCycle] API_BASE =', API_BASE)
+}
 const AUTH_STORAGE_KEY = 'sharecycle_auth'
 
 const handleUnauthorized = () => {
