@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useCallback } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import {
   ArrowRightLeft,
   User,
@@ -16,6 +16,18 @@ import { profileApi, exchangeApi, donationApi, itemsApi, API_BASE } from '../lib
 import { io } from 'socket.io-client'
 import EditItemModal from '../components/modals/EditItemModal'
 import ManageItemModal from '../components/modals/ManageItemModal'
+
+const fetchMyItems = async ({ token, activeTab, setMyItems }) => {
+  // Fetch items เมื่อ activeTab เป็น 'posts' หรือ 'expired' เพื่อให้แสดงทั้ง active และ expired items
+  if (!token || (activeTab !== 'posts' && activeTab !== 'expired')) return
+
+  try {
+    const data = await profileApi.getMyItems(token)
+    setMyItems(data)
+  } catch (err) {
+    console.error('Failed to fetch my items:', err)
+  }
+}
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState('posts')
@@ -54,21 +66,9 @@ export default function ProfilePage() {
     fetchProfile()
   }, [token])
 
-  const fetchMyItems = useCallback(async () => {
-    // Fetch items เมื่อ activeTab เป็น 'posts' หรือ 'expired' เพื่อให้แสดงทั้ง active และ expired items
-    if (!token || (activeTab !== 'posts' && activeTab !== 'expired')) return
-
-    try {
-      const data = await profileApi.getMyItems(token)
-      setMyItems(data)
-    } catch (err) {
-      console.error('Failed to fetch my items:', err)
-    }
-  }, [token, activeTab])
-
   useEffect(() => {
-    fetchMyItems()
-  }, [fetchMyItems])
+    fetchMyItems({ token, activeTab, setMyItems })
+  }, [token, activeTab])
 
   // Real-time updates via socket.io
   useEffect(() => {
@@ -94,13 +94,13 @@ export default function ProfilePage() {
 
     socket.on('item:updated', () => {
       if (activeTab === 'posts' || activeTab === 'expired') {
-        fetchMyItems()
+        fetchMyItems({ token, activeTab, setMyItems })
       }
     })
 
     socket.on('item:deleted', () => {
       if (activeTab === 'posts' || activeTab === 'expired') {
-        fetchMyItems()
+        fetchMyItems({ token, activeTab, setMyItems })
       }
     })
 
@@ -111,7 +111,7 @@ export default function ProfilePage() {
           .catch((err) => console.error('Failed to refresh exchange history:', err))
       }
       if (activeTab === 'posts' || activeTab === 'expired') {
-        fetchMyItems()
+        fetchMyItems({ token, activeTab, setMyItems })
       }
     })
 
@@ -122,7 +122,7 @@ export default function ProfilePage() {
           .catch((err) => console.error('Failed to refresh donation history:', err))
       }
       if (activeTab === 'posts' || activeTab === 'expired') {
-        fetchMyItems()
+        fetchMyItems({ token, activeTab, setMyItems })
       }
     })
 
@@ -138,7 +138,7 @@ export default function ProfilePage() {
     return () => {
       socket.disconnect()
     }
-  }, [token, activeTab, fetchMyItems])
+  }, [token, activeTab])
 
   useEffect(() => {
     const fetchExchangeHistory = async () => {

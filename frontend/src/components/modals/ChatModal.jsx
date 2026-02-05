@@ -199,13 +199,14 @@ export default function ChatModal({ open, onClose, initialChatId }) {
   // Calculate activeChat and related values before useEffect that uses them
   const activeChat = useMemo(() => chats.find((chat) => chat.id === activeChatId), [chats, activeChatId])
   const qrConfirmed = useMemo(() => Boolean(activeChat?.qrConfirmed), [activeChat?.qrConfirmed])
+  const isDonationChat = activeChat?.isDonationChat
 
   // Define handleConfirmQr before useEffect that uses it
   const handleConfirmQr = useCallback(async (code) => {
     if (!token || !activeChatId) return
     const trimmed = (code || '').trim()
     if (!trimmed) {
-      setQrError(`Please enter the ${activeChat?.isDonationChat ? 'donation' : 'exchange'} code`)
+      setQrError(`Please enter the ${isDonationChat ? 'donation' : 'exchange'} code`)
       return
     }
     setQrError('')
@@ -221,7 +222,7 @@ export default function ChatModal({ open, onClose, initialChatId }) {
     } finally {
       setConfirmingQr(false)
     }
-  }, [token, activeChatId, activeChat?.isDonationChat])
+  }, [token, activeChatId, isDonationChat])
 
   // Setup and cleanup html5-qrcode scanner
   useEffect(() => {
@@ -415,7 +416,6 @@ export default function ChatModal({ open, onClose, initialChatId }) {
 
   const chatStatus = activeChat?.status
   const isExchangeChat = activeChat?.isExchangeChat
-  const isDonationChat = activeChat?.isDonationChat
   const isOwner = activeChat?.role === 'owner'
   const isRequester = activeChat?.role === 'requester'
   const hasAccepted =

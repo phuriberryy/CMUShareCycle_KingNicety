@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Search,
@@ -25,6 +25,17 @@ import {
 import { itemsApi, statisticsApi, API_BASE } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import { io } from 'socket.io-client'
+
+const fetchItems = ({ setItems, setLoading }) => {
+  setLoading(true)
+  itemsApi
+    .list()
+    .then((data) => {
+      setItems(data)
+    })
+    .catch(() => setItems([]))
+    .finally(() => setLoading(false))
+}
 
 export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, refreshKey }) {
   const navigate = useNavigate()
@@ -63,20 +74,9 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
     { title: 'Save Money', description: 'No buying needed', icon: PiggyBank },
   ]
 
-  const fetchItems = useCallback(() => {
-    setLoading(true)
-    itemsApi
-      .list()
-      .then((data) => {
-        setItems(data)
-      })
-      .catch(() => setItems([]))
-      .finally(() => setLoading(false))
-  }, [])
-
   useEffect(() => {
-    fetchItems()
-  }, [refreshKey, fetchItems])
+    fetchItems({ setItems, setLoading })
+  }, [refreshKey])
 
   // Real-time updates via socket.io
   useEffect(() => {
@@ -106,19 +106,19 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
     })
 
     socket.on('item:created', () => {
-      fetchItems()
+      fetchItems({ setItems, setLoading })
     })
 
     socket.on('item:updated', () => {
-      fetchItems()
+      fetchItems({ setItems, setLoading })
     })
 
     socket.on('item:deleted', () => {
-      fetchItems()
+      fetchItems({ setItems, setLoading })
     })
 
     socket.on('exchange:completed', () => {
-      fetchItems()
+      fetchItems({ setItems, setLoading })
       // Refresh statistics when exchange completes
       statisticsApi.getStatistics()
         .then(setStatistics)
@@ -126,7 +126,7 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
     })
 
     socket.on('donation:completed', () => {
-      fetchItems()
+      fetchItems({ setItems, setLoading })
       // Refresh statistics when donation completes
       statisticsApi.getStatistics()
         .then(setStatistics)
@@ -136,7 +136,7 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
     return () => {
       socket.disconnect()
     }
-  }, [token, fetchItems])
+  }, [token])
 
   useEffect(() => {
     setLoadingStats(true)

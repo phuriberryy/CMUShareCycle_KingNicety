@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { X, Mail, Building2, Clock, MessageCircle } from 'lucide-react'
 import { itemsApi } from '../../lib/api'
 import { useAuth } from '../../context/AuthContext'
@@ -11,27 +11,25 @@ export default function ManageItemModal({ open, onClose, item, onUpdate }) {
   const { token } = useAuth()
   const navigate = useNavigate()
 
-  const fetchExchangeRequests = useCallback(async () => {
-    if (!item || !token) return
-
-    try {
-      setLoading(true)
-      setError('')
-      const data = await itemsApi.getItemExchangeRequests(token, item.id)
-      setExchangeRequests(data)
-    } catch (err) {
-      console.error('Failed to fetch exchange requests:', err)
-      setError(err.message || 'Failed to load exchange requests')
-    } finally {
-      setLoading(false)
-    }
-  }, [item, token])
-
   useEffect(() => {
     if (open && item && token) {
+      const fetchExchangeRequests = async () => {
+        try {
+          setLoading(true)
+          setError('')
+          const data = await itemsApi.getItemExchangeRequests(token, item.id)
+          setExchangeRequests(data)
+        } catch (err) {
+          console.error('Failed to fetch exchange requests:', err)
+          setError(err.message || 'Failed to load exchange requests')
+        } finally {
+          setLoading(false)
+        }
+      }
+
       fetchExchangeRequests()
     }
-  }, [open, item, token, fetchExchangeRequests])
+  }, [open, item, token])
 
   const handleViewRequest = (requestId) => {
     navigate(`/exchange/${requestId}`)
