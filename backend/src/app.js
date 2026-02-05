@@ -16,10 +16,7 @@ import donationRequestRoutes from './routes/donationRequest.routes.js'
 const app = express()
 
 app.use(cors({
-  origin: [
-    "https://cmu-cycle-test.vercel.app",
-    "http://localhost:3000", // Frontend runs on port 3000 locally
-  ],
+  origin: env.allowedOrigins,
   credentials: true,
 }));
 app.use(express.json({ limit: '10mb' }))
