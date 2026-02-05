@@ -1,13 +1,16 @@
 // Determine API base URL
 // - In CRA/Vercel, configure REACT_APP_API_BASE_URL (recommended) or REACT_APP_API_URL / REACT_APP_API_BASE
 // - Defaults to http://localhost:4000/api for local development
-const rawApiBase =
+let rawApiBase =
   process.env.REACT_APP_API_BASE_URL ||
   process.env.REACT_APP_API_URL ||
   process.env.REACT_APP_API_BASE ||
   'http://localhost:4000'
 
-export const API_BASE = `${rawApiBase.replace(/\/$/, '')}/api`
+// Remove trailing slash and any existing /api suffix to avoid double /api/api
+rawApiBase = rawApiBase.replace(/\/+$/, '').replace(/\/api$/, '')
+
+export const API_BASE = `${rawApiBase}/api`
 
 // Log API base URL for debugging (works in all environments)
 // eslint-disable-next-line no-console
