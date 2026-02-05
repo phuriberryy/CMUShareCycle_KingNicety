@@ -9,10 +9,14 @@ const rawApiBase =
 
 export const API_BASE = `${rawApiBase.replace(/\/$/, '')}/api`
 
-// Dev-only log for debugging API base configuration
-if (process.env.NODE_ENV === 'development') {
+// Log API base URL for debugging (works in all environments)
+// eslint-disable-next-line no-console
+console.log('[CMUShareCycle] API_BASE =', API_BASE, '(from env:', process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_API_URL || process.env.REACT_APP_API_BASE || 'default', ')')
+
+// Warn if in production but still using localhost
+if (process.env.NODE_ENV === 'production' && API_BASE.includes('localhost')) {
   // eslint-disable-next-line no-console
-  console.log('[CMUShareCycle] API_BASE =', API_BASE)
+  console.error('[CMUShareCycle] ⚠️ WARNING: Using localhost API in production! Set REACT_APP_API_BASE_URL in Vercel environment variables.')
 }
 const AUTH_STORAGE_KEY = 'sharecycle_auth'
 

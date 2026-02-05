@@ -18,7 +18,7 @@ const app = express()
 app.use(cors({
   origin: [
     "https://cmu-cycle-test.vercel.app",
-    "http://localhost:3000"
+    "http://localhost:3000", // Frontend runs on port 3000 locally
   ],
   credentials: true,
 }));
