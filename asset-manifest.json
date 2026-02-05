@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/CMUShareCycle_KingNicety/static/css/main.26beb033.css",
+    "main.js": "/CMUShareCycle_KingNicety/static/js/main.00e40ef2.js",
+    "index.html": "/CMUShareCycle_KingNicety/index.html",
+    "main.26beb033.css.map": "/CMUShareCycle_KingNicety/static/css/main.26beb033.css.map",
+    "main.00e40ef2.js.map": "/CMUShareCycle_KingNicety/static/js/main.00e40ef2.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.26beb033.css",
+    "static/js/main.00e40ef2.js"
+  ]
+}
