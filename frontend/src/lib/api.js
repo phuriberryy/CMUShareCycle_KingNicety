@@ -1,11 +1,16 @@
 // Determine API base URL
 // - In CRA/Vercel, configure REACT_APP_API_BASE_URL (recommended) or REACT_APP_API_URL / REACT_APP_API_BASE
 // - Defaults to http://localhost:4000/api for local development
+// - Runtime fallback: If on Vercel (vercel.app domain) and env var not set, use Render backend
 let rawApiBase =
   process.env.REACT_APP_API_BASE_URL ||
   process.env.REACT_APP_API_URL ||
   process.env.REACT_APP_API_BASE ||
-  'http://localhost:4000'
+  // Runtime fallback: detect Vercel deployment and use Render backend
+  (typeof window !== 'undefined' && 
+   window.location.hostname.includes('vercel.app') 
+   ? 'https://cmusharecycle-kingnicety.onrender.com'
+   : 'http://localhost:4000')
 
 // Remove trailing slash and any existing /api suffix to avoid double /api/api
 rawApiBase = rawApiBase.replace(/\/+$/, '').replace(/\/api$/, '')
@@ -13,13 +18,23 @@ rawApiBase = rawApiBase.replace(/\/+$/, '').replace(/\/api$/, '')
 export const API_BASE = `${rawApiBase}/api`
 
 // Log API base URL for debugging (works in all environments)
+const envSource = process.env.REACT_APP_API_BASE_URL 
+  ? 'REACT_APP_API_BASE_URL' 
+  : process.env.REACT_APP_API_URL 
+  ? 'REACT_APP_API_URL' 
+  : process.env.REACT_APP_API_BASE 
+  ? 'REACT_APP_API_BASE'
+  : typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')
+  ? 'runtime-fallback (Vercel detected)'
+  : 'default (localhost)'
+
 // eslint-disable-next-line no-console
-console.log('[CMUShareCycle] API_BASE =', API_BASE, '(from env:', process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_API_URL || process.env.REACT_APP_API_BASE || 'default', ')')
+console.log('[CMUShareCycle] API_BASE =', API_BASE, '| Source:', envSource)
 
 // Warn if in production but still using localhost
 if (process.env.NODE_ENV === 'production' && API_BASE.includes('localhost')) {
   // eslint-disable-next-line no-console
-  console.error('[CMUShareCycle] ⚠️ WARNING: Using localhost API in production! Set REACT_APP_API_BASE_URL in Vercel environment variables.')
+  console.error('[CMUShareCycle] ⚠️ CRITICAL: Using localhost API in production! This will fail. Set REACT_APP_API_BASE_URL in Vercel environment variables.')
 }
 const AUTH_STORAGE_KEY = 'sharecycle_auth'
 
