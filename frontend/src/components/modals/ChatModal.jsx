@@ -221,7 +221,7 @@ export default function ChatModal({ open, onClose, initialChatId }) {
     } finally {
       setConfirmingQr(false)
     }
-  }, [token, activeChatId])
+  }, [token, activeChatId, activeChat?.isDonationChat])
 
   // Setup and cleanup html5-qrcode scanner
   useEffect(() => {

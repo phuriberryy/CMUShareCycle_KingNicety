@@ -28,7 +28,7 @@ import { io } from 'socket.io-client'
 
 export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, refreshKey }) {
   const navigate = useNavigate()
-  const { user, token } = useAuth()
+  const { token } = useAuth()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('All Categories')
   const [selectedCondition, setSelectedCondition] = useState('All Conditions')

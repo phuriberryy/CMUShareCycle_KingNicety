@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams, Link, useNavigate } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import {
   ArrowLeft,
   MapPin,
@@ -17,8 +17,7 @@ import { calculateItemCO2 } from '../utils/co2Calculator'
 
 export default function ItemDetailPage({ onExchangeItem, onDonationItem }) {
   const { itemId } = useParams()
-  const navigate = useNavigate()
-  const { user, token } = useAuth()
+  const { user } = useAuth()
   const [item, setItem] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
