@@ -1,16 +1,23 @@
 // Determine API base URL
 // - In CRA/Vercel, configure REACT_APP_API_BASE_URL (recommended) or REACT_APP_API_URL / REACT_APP_API_BASE
+// - Runtime detection: If on Vercel (vercel.app domain), ALWAYS use Render backend
 // - Defaults to http://localhost:4000/api for local development
-// - Runtime fallback: If on Vercel (vercel.app domain) and env var not set, use Render backend
-let rawApiBase =
-  process.env.REACT_APP_API_BASE_URL ||
-  process.env.REACT_APP_API_URL ||
-  process.env.REACT_APP_API_BASE ||
-  // Runtime fallback: detect Vercel deployment and use Render backend
-  (typeof window !== 'undefined' && 
-   window.location.hostname.includes('vercel.app') 
-   ? 'https://cmusharecycle-kingnicety.onrender.com'
-   : 'http://localhost:4000')
+
+// First check: Are we running on Vercel? (runtime check, works even if env vars not set)
+const isVercel = typeof window !== 'undefined' && 
+  (window.location.hostname.includes('vercel.app') || 
+   window.location.hostname.includes('cmu-cycle-test'))
+
+// Determine base URL with priority:
+// 1. Runtime Vercel detection (always wins if on Vercel)
+// 2. Build-time env vars
+// 3. Default to localhost
+let rawApiBase = isVercel
+  ? 'https://cmusharecycle-kingnicety.onrender.com'
+  : (process.env.REACT_APP_API_BASE_URL ||
+     process.env.REACT_APP_API_URL ||
+     process.env.REACT_APP_API_BASE ||
+     'http://localhost:4000')
 
 // Remove trailing slash and any existing /api suffix to avoid double /api/api
 rawApiBase = rawApiBase.replace(/\/+$/, '').replace(/\/api$/, '')
@@ -18,18 +25,24 @@ rawApiBase = rawApiBase.replace(/\/+$/, '').replace(/\/api$/, '')
 export const API_BASE = `${rawApiBase}/api`
 
 // Log API base URL for debugging (works in all environments)
-const envSource = process.env.REACT_APP_API_BASE_URL 
+const envSource = isVercel
+  ? `runtime-detection (Vercel: ${typeof window !== 'undefined' ? window.location.hostname : 'unknown'})`
+  : process.env.REACT_APP_API_BASE_URL 
   ? 'REACT_APP_API_BASE_URL' 
   : process.env.REACT_APP_API_URL 
   ? 'REACT_APP_API_URL' 
   : process.env.REACT_APP_API_BASE 
   ? 'REACT_APP_API_BASE'
-  : typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')
-  ? 'runtime-fallback (Vercel detected)'
   : 'default (localhost)'
 
 // eslint-disable-next-line no-console
-console.log('[CMUShareCycle] API_BASE =', API_BASE, '| Source:', envSource)
+console.log('[CMUShareCycle] 🔍 API Configuration:')
+// eslint-disable-next-line no-console
+console.log('  API_BASE =', API_BASE)
+// eslint-disable-next-line no-console
+console.log('  Source =', envSource)
+// eslint-disable-next-line no-console
+console.log('  Hostname =', typeof window !== 'undefined' ? window.location.hostname : 'server-side')
 
 // Warn if in production but still using localhost
 if (process.env.NODE_ENV === 'production' && API_BASE.includes('localhost')) {
