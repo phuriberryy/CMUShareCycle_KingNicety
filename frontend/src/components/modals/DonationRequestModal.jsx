@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import Modal from '../ui/Modal'
 import { donationRequestApi } from '../../lib/api'
 import { useAuth } from '../../context/AuthContext'
+import { useToast } from '../../context/ToastContext'
 
 export default function DonationRequestModal({ open, onClose, itemId }) {
   const navigate = useNavigate()
+  const toast = useToast()
   const [recipientName, setRecipientName] = useState('')
   const [recipientContact, setRecipientContact] = useState('')
   const [message, setMessage] = useState('')
@@ -15,20 +17,20 @@ export default function DonationRequestModal({ open, onClose, itemId }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!token) {
-      alert('Please log in before sending donation request')
+      toast.warning('กรุณาเข้าสู่ระบบก่อนส่งคำขอรับบริจาค', 'ยังไม่ได้เข้าสู่ระบบ')
       return
     }
     if (!itemId) {
-      alert('Item not found. Please try again')
+      toast.error('ไม่พบสินค้า กรุณาลองใหม่', 'เกิดข้อผิดพลาด')
       return
     }
 
     if (!recipientName.trim()) {
-      alert('Please enter recipient name')
+      toast.warning('กรุณากรอกชื่อผู้รับ', 'ข้อมูลไม่ครบ')
       return
     }
     if (!recipientContact.trim()) {
-      alert('Please enter recipient contact information')
+      toast.warning('กรุณากรอกข้อมูลติดต่อ', 'ข้อมูลไม่ครบ')
       return
     }
 
@@ -47,18 +49,20 @@ export default function DonationRequestModal({ open, onClose, itemId }) {
       setRecipientName('')
       setRecipientContact('')
       setMessage('')
+    toast.success('ส่งคำขอรับบริจาคสำเร็จ!', 'สำเร็จ')
     } catch (err) {
       console.error('Donation request error:', err)
-      let errorMsg = err.message || 'Failed to send request'
+      let errorMsg = err.message || 'ไม่สามารถส่งคำขอได้'
       
       if (err.existingRequestId) {
         // If request already exists, navigate to that request
+        toast.info('คุณมีคำขอรับบริจาคสำหรับสินค้านี้อยู่แล้ว', 'มีคำขออยู่แล้ว')
         navigate(`/donation-requests/${err.existingRequestId}`)
         onClose()
         return
       }
       
-      alert(errorMsg)
+      toast.error(errorMsg, 'เกิดข้อผิดพลาด')
     } finally {
       setSubmitting(false)
     }

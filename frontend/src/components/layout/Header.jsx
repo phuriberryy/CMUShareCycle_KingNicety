@@ -101,14 +101,29 @@ function Header({ unread, onNotificationsClick }) {
           )}
         </div>
 
-        {/* Mobile Menu Button */}
-        <button
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white sm:hidden"
-          onClick={() => setOpen((prev) => !prev)}
-          aria-label="toggle menu"
-        >
-          {open ? <X size={20} /> : <Menu size={20} />}
-        </button>
+        {/* Mobile Actions */}
+        <div className="flex items-center gap-2 sm:hidden">
+          <button
+            type="button"
+            onClick={onNotificationsClick}
+            className="relative flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white"
+            aria-label="notifications"
+          >
+            <Bell size={18} />
+            {unread > 0 && (
+              <span className="absolute -right-1 -top-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+                {unread}
+              </span>
+            )}
+          </button>
+          <button
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white"
+            onClick={() => setOpen((prev) => !prev)}
+            aria-label="toggle menu"
+          >
+            {open ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile Menu */}

@@ -12,6 +12,7 @@ import {
   Trash2,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { useToast } from '../context/ToastContext'
 import { profileApi, exchangeApi, donationApi, itemsApi, API_BASE } from '../lib/api'
 import { io } from 'socket.io-client'
 import EditItemModal from '../components/modals/EditItemModal'
@@ -41,6 +42,7 @@ export default function ProfilePage() {
   const [showManageItemModal, setShowManageItemModal] = useState(false)
   const [selectedItem, setSelectedItem] = useState(null)
   const { user, token } = useAuth()
+  const toast = useToast()
 
   // แยก items ที่หมดอายุแล้วแต่ยังไม่ถูกแลกเปลี่ยน
   const activeItems = myItems.filter(item => !item.is_expired)
@@ -225,6 +227,7 @@ export default function ProfilePage() {
 
     try {
       await itemsApi.delete(token, item.id)
+      toast.success('ลบโพสต์สำเร็จ!', 'สำเร็จ')
       // Refresh items list
       if (activeTab === 'posts' || activeTab === 'expired') {
         const data = await profileApi.getMyItems(token)
@@ -232,7 +235,7 @@ export default function ProfilePage() {
       }
     } catch (err) {
       console.error('Failed to delete item:', err)
-      alert(err.message || 'Failed to delete item')
+      toast.error(err.message || 'ไม่สามารถลบโพสต์ได้', 'เกิดข้อผิดพลาด')
     }
   }
 
@@ -279,15 +282,15 @@ export default function ProfilePage() {
   const stats = profile?.stats || { itemsShared: 0, co2Reduced: '0.00' }
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-0">
-      <section className="overflow-hidden rounded-[40px] bg-white shadow-soft">
-        <div className="h-40 bg-gradient-to-r from-[#1B843C] via-[#2D7D3F] to-[#76BE7B]" />
-        <div className="relative px-8 pb-10 pt-4">
-          <div className="absolute -top-16 left-10 flex h-32 w-32 items-center justify-center rounded-full border-[6px] border-white bg-primary text-4xl font-bold text-white shadow-soft">
+    <div className="mx-auto max-w-5xl px-4 py-6 sm:py-10 sm:px-6 lg:px-0">
+      <section className="overflow-hidden rounded-[24px] sm:rounded-[40px] bg-white shadow-soft">
+        <div className="h-28 sm:h-40 bg-gradient-to-r from-[#1B843C] via-[#2D7D3F] to-[#76BE7B]" />
+        <div className="relative px-4 sm:px-8 pb-8 sm:pb-10 pt-4">
+          <div className="absolute -top-12 sm:-top-16 left-4 sm:left-10 flex h-24 w-24 sm:h-32 sm:w-32 items-center justify-center rounded-full border-4 sm:border-[6px] border-white bg-primary text-2xl sm:text-4xl font-bold text-white shadow-soft">
             {initials}
           </div>
 
-          <div className="mt-16 flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+          <div className="mt-14 sm:mt-16 flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
             <div className="flex-1">
               <h1 className="text-3xl font-bold text-gray-900">{displayUser.name || 'Your Name'}</h1>
               <div className="mt-4 space-y-3">
@@ -327,50 +330,50 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-4 border-t border-gray-100 px-8 py-4">
-          <div className="flex flex-1 items-center justify-center gap-2 rounded-full bg-[#F0F7F1] px-4 py-2">
+        <div className="border-t border-gray-100 px-4 sm:px-8 py-4">
+          <div className="flex overflow-x-auto gap-2 sm:gap-3 rounded-full bg-[#F0F7F1] p-2 scrollbar-hide">
           <button
             onClick={() => setActiveTab('posts')}
-              className={`flex flex-1 items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition ${
+              className={`flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap rounded-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition ${
               activeTab === 'posts'
                   ? 'bg-gray-200 text-gray-800'
                   : 'bg-transparent text-gray-700'
             }`}
           >
-            <Package size={16} />
-            My Posts
+            <Package size={14} className="sm:w-4 sm:h-4" />
+            <span className="hidden xs:inline">My</span> Posts
           </button>
           <button
             onClick={() => setActiveTab('expired')}
-              className={`flex flex-1 items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition ${
+              className={`flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap rounded-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition ${
               activeTab === 'expired'
                   ? 'bg-gray-200 text-gray-800'
                   : 'bg-transparent text-gray-700'
             }`}
           >
-            <Clock3 size={16} />
+            <Clock3 size={14} className="sm:w-4 sm:h-4" />
             Expired ({expiredItems.length})
           </button>
           <button
             onClick={() => setActiveTab('history')}
-              className={`flex flex-1 items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition ${
+              className={`flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap rounded-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition ${
               activeTab === 'history'
                   ? 'bg-gray-200 text-gray-800'
                   : 'bg-transparent text-gray-700'
             }`}
           >
-            <ArrowRightLeft size={16} />
-            Exchange History
+            <ArrowRightLeft size={14} className="sm:w-4 sm:h-4" />
+            <span className="hidden xs:inline">Exchange</span> History
           </button>
           <button
             onClick={() => setActiveTab('donations')}
-              className={`flex flex-1 items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition ${
+              className={`flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap rounded-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition ${
               activeTab === 'donations'
                   ? 'bg-gray-200 text-gray-800'
                   : 'bg-transparent text-gray-700'
             }`}
           >
-            <Heart size={16} />
+            <Heart size={14} className="sm:w-4 sm:h-4" />
             Donations ({donationHistory.length})
           </button>
           </div>

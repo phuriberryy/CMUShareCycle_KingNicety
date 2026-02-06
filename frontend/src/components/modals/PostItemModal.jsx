@@ -3,8 +3,10 @@ import { Image as ImageIcon } from 'lucide-react'
 import Modal from '../ui/Modal'
 import { itemsApi } from '../../lib/api'
 import { useAuth } from '../../context/AuthContext'
+import { useToast } from '../../context/ToastContext'
 
 export default function PostItemModal({ open, onClose, onSuccess }) {
+  const toast = useToast()
   const [formData, setFormData] = useState({
     itemName: '',
     category: '',
@@ -38,21 +40,21 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!token) {
-      alert('Please log in before posting item')
+      toast.warning('กรุณาเข้าสู่ระบบก่อนโพสต์สินค้า', 'ยังไม่ได้เข้าสู่ระบบ')
       return
     }
     // Validate required fields
     if (!imagePreview) {
-      alert('Please upload an image')
+      toast.warning('กรุณาอัปโหลดรูปภาพ', 'ข้อมูลไม่ครบ')
       return
     }
     if (!formData.itemName || !formData.category || !formData.condition) {
-      alert('Please fill in all required fields')
+      toast.warning('กรุณากรอกข้อมูลที่จำเป็นให้ครบ', 'ข้อมูลไม่ครบ')
       return
     }
     // Validate lookingFor only for exchange type
     if (formData.listingType === 'exchange' && !formData.lookingFor) {
-      alert('Please specify what you are looking for in exchange')
+      toast.warning('กรุณาระบุสิ่งที่ต้องการแลกเปลี่ยน', 'ข้อมูลไม่ครบ')
       return
     }
     setSubmitting(true)
@@ -81,8 +83,9 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
         listingType: 'exchange',
       })
       setImagePreview(null)
+    toast.success('โพสต์สินค้าสำเร็จ!', 'สำเร็จ')
     } catch (err) {
-      alert(err.message || 'Failed to post')
+      toast.error(err.message || 'ไม่สามารถโพสต์ได้', 'เกิดข้อผิดพลาด')
     } finally {
       setSubmitting(false)
     }
@@ -198,7 +201,7 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
         </div>
 
         {/* Category and Condition */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="mb-2 block text-sm font-bold text-gray-900">
               Category <span className="text-red-500">*</span>

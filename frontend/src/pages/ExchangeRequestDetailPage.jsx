@@ -12,12 +12,14 @@ import {
 } from 'lucide-react'
 import { exchangeApi, chatApi } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
+import { useToast } from '../context/ToastContext'
 import { calculateItemCO2, calculateExchangeCO2Reduction } from '../utils/co2Calculator'
 
 export default function ExchangeRequestDetailPage() {
   const { requestId } = useParams()
   const navigate = useNavigate()
   const { token } = useAuth()
+  const toast = useToast()
   const [exchangeRequest, setExchangeRequest] = useState(null)
   const [loading, setLoading] = useState(true)
   const [processing, setProcessing] = useState(false)
@@ -64,7 +66,7 @@ export default function ExchangeRequestDetailPage() {
       } else {
         // Check if owner has accepted before allowing requester to accept
         if (!exchangeRequest.owner_accepted) {
-          alert('Please wait for the post owner to accept the exchange request first')
+          toast.warning('กรุณารอให้เจ้าของโพสต์ยอมรับคำขอแลกเปลี่ยนก่อน', 'รอการยืนยัน')
           setProcessing(false)
           return
         }
@@ -93,12 +95,12 @@ export default function ExchangeRequestDetailPage() {
         
         if (isChatting || bothAccepted) {
           setExchangeRequest(data)
-          // Don't show alert or redirect - let user click "Start Chat" button
+          toast.success('ยอมรับคำขอแลกเปลี่ยนสำเร็จ!', 'สำเร็จ')
         } else {
-          alert('Failed to accept exchange request: ' + (err.message || 'Unknown error'))
+          toast.error('ไม่สามารถยอมรับคำขอแลกเปลี่ยนได้: ' + (err.message || 'เกิดข้อผิดพลาด'), 'เกิดข้อผิดพลาด')
         }
       } catch (refreshErr) {
-      alert('Failed to accept exchange request: ' + (err.message || 'Unknown error'))
+        toast.error('ไม่สามารถยอมรับคำขอแลกเปลี่ยนได้: ' + (err.message || 'เกิดข้อผิดพลาด'), 'เกิดข้อผิดพลาด')
       }
     } finally {
       setProcessing(false)
@@ -115,11 +117,11 @@ export default function ExchangeRequestDetailPage() {
     try {
       setProcessing(true)
       await exchangeApi.reject(token, requestId)
-      alert('Exchange request rejected successfully')
+      toast.success('ปฏิเสธคำขอแลกเปลี่ยนสำเร็จ', 'สำเร็จ')
       navigate('/profile')
     } catch (err) {
       console.error('Failed to reject exchange:', err)
-      alert('Failed to reject exchange request: ' + (err.message || 'Unknown error'))
+      toast.error('ไม่สามารถปฏิเสธคำขอแลกเปลี่ยนได้: ' + (err.message || 'เกิดข้อผิดพลาด'), 'เกิดข้อผิดพลาด')
     } finally {
       setProcessing(false)
     }
@@ -159,7 +161,7 @@ export default function ExchangeRequestDetailPage() {
       }
     } catch (err) {
       console.error('Failed to start chat:', err)
-      alert('Failed to start chat: ' + (err.message || 'Unknown error'))
+      toast.error('ไม่สามารถเริ่มแชทได้: ' + (err.message || 'เกิดข้อผิดพลาด'), 'เกิดข้อผิดพลาด')
     }
   }
 

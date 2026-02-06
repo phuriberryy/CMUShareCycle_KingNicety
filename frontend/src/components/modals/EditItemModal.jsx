@@ -3,8 +3,10 @@ import { Image as ImageIcon } from 'lucide-react'
 import Modal from '../ui/Modal'
 import { itemsApi } from '../../lib/api'
 import { useAuth } from '../../context/AuthContext'
+import { useToast } from '../../context/ToastContext'
 
 export default function EditItemModal({ open, onClose, item, onSuccess }) {
+  const toast = useToast()
   const [formData, setFormData] = useState({
     itemName: '',
     category: '',
@@ -52,7 +54,7 @@ export default function EditItemModal({ open, onClose, item, onSuccess }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!token || !item) {
-      alert('Please log in before editing post')
+      toast.warning('กรุณาเข้าสู่ระบบก่อนแก้ไขโพสต์', 'ยังไม่ได้เข้าสู่ระบบ')
       return
     }
     setSubmitting(true)
@@ -67,10 +69,11 @@ export default function EditItemModal({ open, onClose, item, onSuccess }) {
         imageUrl: imagePreview,
         pickupLocation: formData.pickupLocation,
       })
+      toast.success('แก้ไขโพสต์สำเร็จ!', 'สำเร็จ')
       onSuccess?.()
       onClose()
     } catch (err) {
-      alert(err.message || 'Failed to edit post')
+      toast.error(err.message || 'ไม่สามารถแก้ไขโพสต์ได้', 'เกิดข้อผิดพลาด')
     } finally {
       setSubmitting(false)
     }
@@ -157,7 +160,7 @@ export default function EditItemModal({ open, onClose, item, onSuccess }) {
         </div>
 
         {/* Category and Condition */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="mb-2 block text-sm font-bold text-gray-900">
               Category <span className="text-red-500">*</span>

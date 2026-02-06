@@ -12,12 +12,14 @@ import {
 } from 'lucide-react'
 import { donationRequestApi, chatApi } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
+import { useToast } from '../context/ToastContext'
 import { calculateItemCO2 } from '../utils/co2Calculator'
 
 export default function DonationRequestDetailPage() {
   const { requestId } = useParams()
   const navigate = useNavigate()
   const { token } = useAuth()
+  const toast = useToast()
   const [donationRequest, setDonationRequest] = useState(null)
   const [loading, setLoading] = useState(true)
   const [processing, setProcessing] = useState(false)
@@ -61,7 +63,7 @@ export default function DonationRequestDetailPage() {
         response = await donationRequestApi.acceptByOwner(token, requestId)
       } else {
         if (!donationRequest.owner_accepted) {
-          alert('Please wait for the post owner to accept the donation request first')
+          toast.warning('กรุณารอให้เจ้าของโพสต์ยอมรับคำขอรับบริจาคก่อน', 'รอการยืนยัน')
           setProcessing(false)
           return
         }
@@ -84,11 +86,12 @@ export default function DonationRequestDetailPage() {
         
         if (isChatting || bothAccepted) {
           setDonationRequest(data)
+          toast.success('ยอมรับคำขอรับบริจาคสำเร็จ!', 'สำเร็จ')
         } else {
-          alert('Failed to accept donation request: ' + (err.message || 'Unknown error'))
+          toast.error('ไม่สามารถยอมรับคำขอรับบริจาคได้: ' + (err.message || 'เกิดข้อผิดพลาด'), 'เกิดข้อผิดพลาด')
         }
       } catch (refreshErr) {
-        alert('Failed to accept donation request: ' + (err.message || 'Unknown error'))
+        toast.error('ไม่สามารถยอมรับคำขอรับบริจาคได้: ' + (err.message || 'เกิดข้อผิดพลาด'), 'เกิดข้อผิดพลาด')
       }
     } finally {
       setProcessing(false)
@@ -105,11 +108,11 @@ export default function DonationRequestDetailPage() {
     try {
       setProcessing(true)
       await donationRequestApi.reject(token, requestId)
-      alert('Donation request rejected successfully')
+      toast.success('ปฏิเสธคำขอรับบริจาคสำเร็จ', 'สำเร็จ')
       navigate('/profile')
     } catch (err) {
       console.error('Failed to reject donation:', err)
-      alert('Failed to reject donation request: ' + (err.message || 'Unknown error'))
+      toast.error('ไม่สามารถปฏิเสธคำขอรับบริจาคได้: ' + (err.message || 'เกิดข้อผิดพลาด'), 'เกิดข้อผิดพลาด')
     } finally {
       setProcessing(false)
     }
@@ -145,7 +148,7 @@ export default function DonationRequestDetailPage() {
       }
     } catch (err) {
       console.error('Failed to start chat:', err)
-      alert('Failed to start chat: ' + (err.message || 'Unknown error'))
+      toast.error('ไม่สามารถเริ่มแชทได้: ' + (err.message || 'เกิดข้อผิดพลาด'), 'เกิดข้อผิดพลาด')
     }
   }
 

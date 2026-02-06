@@ -32,7 +32,7 @@ export default function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose()
@@ -41,17 +41,17 @@ export default function Modal({
     >
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity" />
       <div
-        className={`relative z-10 w-full ${sizeClasses[size]} max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-2xl`}
+        className={`relative z-10 w-full ${sizeClasses[size]} max-h-[95vh] sm:max-h-[90vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl bg-white shadow-2xl`}
         onClick={(e) => e.stopPropagation()}
       >
         {(title || showCloseButton) && (
-          <div className="sticky top-0 z-10 flex items-start justify-between border-b border-gray-200 bg-white px-6 py-5 rounded-t-2xl">
+          <div className="sticky top-0 z-10 flex items-start justify-between border-b border-gray-200 bg-white px-4 sm:px-6 py-4 sm:py-5 rounded-t-2xl">
             <div className="flex-1 pr-4">
               {title && (
-                <h2 className="text-xl font-bold text-gray-900">{title}</h2>
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900">{title}</h2>
               )}
               {subtitle && (
-                <p className="mt-1.5 text-sm text-gray-600 leading-relaxed">{subtitle}</p>
+                <p className="mt-1 sm:mt-1.5 text-xs sm:text-sm text-gray-600 leading-relaxed">{subtitle}</p>
               )}
             </div>
             {showCloseButton && (
@@ -66,7 +66,7 @@ export default function Modal({
             )}
           </div>
         )}
-        <div className="p-6">{children}</div>
+        <div className="p-4 sm:p-6 pb-safe">{children}</div>
       </div>
     </div>
   )

@@ -18,6 +18,7 @@ import NotificationsModal from './components/modals/NotificationsModal'
 import ChatModal from './components/modals/ChatModal'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { ToastProvider } from './context/ToastContext'
 import { API_BASE, notificationApi } from './lib/api'
 
 const SOCKET_URL = API_BASE.replace(/\/api$/, '')
@@ -248,7 +249,9 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <ToastProvider>
+        <AppContent />
+      </ToastProvider>
     </AuthProvider>
   )
 }

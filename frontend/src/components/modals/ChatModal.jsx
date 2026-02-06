@@ -6,11 +6,13 @@ import { Send, MessageCircle, Loader2, Check, X, QrCode, CheckCheck, MapPin } fr
 import Modal from '../ui/Modal'
 import { API_BASE, chatApi } from '../../lib/api'
 import { useAuth } from '../../context/AuthContext'
+import { useToast } from '../../context/ToastContext'
 
 const SOCKET_URL = API_BASE.replace(/\/api$/, '')
 
 export default function ChatModal({ open, onClose, initialChatId }) {
   const { token, user } = useAuth()
+  const toast = useToast()
   const [chats, setChats] = useState([])
   const [messages, setMessages] = useState([])
   const [activeChatId, setActiveChatId] = useState(null)
@@ -24,6 +26,7 @@ export default function ChatModal({ open, onClose, initialChatId }) {
   const [qrError, setQrError] = useState('')
   const [actionError, setActionError] = useState('')
   const [isQrExpanded, setIsQrExpanded] = useState(true);
+  const [showChatList, setShowChatList] = useState(true) // For mobile: show chat list or chat view
   const socketRef = useRef(null)
   const bottomRef = useRef(null)
   const activeChatRef = useRef(null)
@@ -129,7 +132,7 @@ export default function ChatModal({ open, onClose, initialChatId }) {
     })
     
     socket.on('chat:error', ({ message }) => {
-      alert(message || 'Failed to send message')
+      toast.error(message || 'ไม่สามารถส่งข้อความได้', 'เกิดข้อผิดพลาด')
     })
 
     socket.on('chat:message', (message) => {
@@ -178,7 +181,7 @@ export default function ChatModal({ open, onClose, initialChatId }) {
       setActiveChatId(null)
       activeChatRef.current = null
     }
-  }, [token, open])
+  }, [token, open, toast])
 
   useEffect(() => {
     if (!open) return
@@ -345,7 +348,7 @@ export default function ChatModal({ open, onClose, initialChatId }) {
       // Wait a bit for reconnection
       await new Promise(resolve => setTimeout(resolve, 500))
       if (!socketRef.current?.connected) {
-        alert('Cannot connect to server. Please wait a moment and try again')
+        toast.warning('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ กรุณารอสักครู่', 'เชื่อมต่อไม่ได้')
         return
       }
     }
@@ -355,7 +358,7 @@ export default function ChatModal({ open, onClose, initialChatId }) {
       setNewMessage('')
     } catch (err) {
       console.error('Failed to send message:', err)
-      alert('Failed to send message. Please try again')
+      toast.error('ไม่สามารถส่งข้อความได้ กรุณาลองใหม่', 'เกิดข้อผิดพลาด')
     }
   }
 
@@ -392,11 +395,11 @@ export default function ChatModal({ open, onClose, initialChatId }) {
     if (!recipientEmail || !token) return
     const trimmedEmail = recipientEmail.trim()
     if (!trimmedEmail) {
-      alert('Please enter email')
+      toast.warning('กรุณากรอกอีเมล', 'ข้อมูลไม่ครบ')
       return
     }
     if (!trimmedEmail.endsWith('@cmu.ac.th')) {
-      alert('Must use @cmu.ac.th email only')
+      toast.warning('ต้องใช้อีเมล @cmu.ac.th เท่านั้น', 'อีเมลไม่ถูกต้อง')
       return
     }
     try {
@@ -407,10 +410,11 @@ export default function ChatModal({ open, onClose, initialChatId }) {
         }
         setRecipientEmail('')
         setActiveChatId(chat.id)
+        toast.success('เริ่มแชทสำเร็จ!', 'สำเร็จ')
       }
     } catch (err) {
       console.error('Failed to start chat:', err)
-      alert(err.message || 'Failed to start chat. Please try again')
+      toast.error(err.message || 'ไม่สามารถเริ่มแชทได้ กรุณาลองใหม่', 'เกิดข้อผิดพลาด')
     }
   }
 
@@ -439,13 +443,25 @@ export default function ChatModal({ open, onClose, initialChatId }) {
   // หลังจากยืนยัน QR แล้วไม่สามารถส่งข้อความได้อีก
   const chatDisabled = chatDeclined || !activeChat?.canSendMessages || qrConfirmed 
 
+  // Handle selecting a chat on mobile
+  const handleSelectChat = (chatId) => {
+    setActiveChatId(chatId)
+    setShowChatList(false) // Hide chat list on mobile
+  }
+
+  // Handle going back to chat list on mobile
+  const handleBackToList = () => {
+    setShowChatList(true)
+  }
+
   return (
     <Modal open={open} onClose={onClose} title="Messages" size="xl">
       {!token ? (
         <p className="text-sm text-gray-500">Please log in to use chat</p>
       ) : (
-        <div className="flex gap-4">
-          <div className="w-64 space-y-3">
+        <div className="flex flex-col md:flex-row gap-4">
+          {/* Chat List - Hidden on mobile when viewing a chat */}
+          <div className={`${!showChatList && activeChatId ? 'hidden md:block' : 'block'} w-full md:w-64 space-y-3`}>
             <div>
               <label className="text-xs font-semibold text-gray-500">Start chat with CMU email</label>
               <div className="mt-2 flex gap-2">
@@ -467,7 +483,7 @@ export default function ChatModal({ open, onClose, initialChatId }) {
             </div>
             <div className="rounded-2xl bg-surface p-3">
               <p className="mb-2 text-xs font-semibold text-gray-500">Conversations</p>
-              <div className="space-y-2 max-h-72 overflow-y-auto">
+              <div className="space-y-2 max-h-72 md:max-h-96 overflow-y-auto">
                 {loading && (
                   <div className="flex items-center gap-2 text-xs text-gray-500">
                     <Loader2 className="animate-spin" size={14} /> Loading...
@@ -479,10 +495,10 @@ export default function ChatModal({ open, onClose, initialChatId }) {
                     return (
                       <button
                         key={chat.id}
-                        className={`w-full rounded-xl px-3 py-2 text-left text-sm ${
+                        className={`w-full rounded-xl px-3 py-2.5 text-left text-sm ${
                           activeChatId === chat.id ? 'bg-white shadow-sm' : 'hover:bg-white/60'
                         }`}
-                        onClick={() => setActiveChatId(chat.id)}
+                        onClick={() => handleSelectChat(chat.id)}
                       >
                         <p className="font-semibold text-gray-800">{chat.participant_name || 'CMU Student'}</p>
                         <p className="text-xs text-gray-500">{chat.participant_email || ''}</p>
@@ -501,22 +517,31 @@ export default function ChatModal({ open, onClose, initialChatId }) {
             </div>
           </div>
 
-          <div className="flex-1 rounded-3xl bg-white p-4 shadow-inner">
+          {/* Chat View - Hidden on mobile when viewing chat list */}
+          <div className={`${showChatList && !activeChatId ? 'hidden md:block' : 'block'} flex-1 rounded-3xl bg-white p-3 sm:p-4 shadow-inner`}>
             {activeChat ? (
-              <div className="flex h-[520px] flex-col">
+              <div className="flex h-[60vh] sm:h-[520px] flex-col">
                 <div className="mb-3 flex items-center justify-between gap-2 border-b border-gray-100 pb-2">
-                  <div className="flex items-center gap-2">
-                  <MessageCircle size={18} className="text-primary" />
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold">{activeChat?.participant_name || 'CMU Student'}</p>
-                    <p className="text-xs text-gray-500">{activeChat?.participant_email || ''}</p>
+                  {/* Back button - Mobile only */}
+                  <button
+                    type="button"
+                    onClick={handleBackToList}
+                    className="md:hidden flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  >
+                    <X size={16} />
+                  </button>
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <MessageCircle size={18} className="text-primary flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold truncate">{activeChat?.participant_name || 'CMU Student'}</p>
+                    <p className="text-xs text-gray-500 truncate">{activeChat?.participant_email || ''}</p>
                     {activeChat?.itemTitle && (
-                      <div className="mt-1 flex items-center gap-2">
-                        <span className="rounded-full bg-primary/10 px-3 py-1 text-[11px] font-semibold text-primary">
+                      <div className="mt-1 flex items-center gap-2 flex-wrap">
+                        <span className="rounded-full bg-primary/10 px-2 sm:px-3 py-1 text-[10px] sm:text-[11px] font-semibold text-primary truncate max-w-[150px]">
                           {activeChat.itemTitle}
                         </span>
                         {activeChat?.itemPickupLocation && (
-                          <span className="flex items-center gap-1 text-[11px] text-gray-600">
+                          <span className="hidden sm:flex items-center gap-1 text-[11px] text-gray-600">
                             <MapPin size={12} />
                             {activeChat.itemPickupLocation}
                           </span>
@@ -884,9 +909,9 @@ export default function ChatModal({ open, onClose, initialChatId }) {
                 </div>
               </div>
             ) : (
-              <div className="flex h-full flex-col items-center justify-center text-sm text-gray-500">
-                <MessageCircle className="mb-2 text-primary" />
-                Select a conversation or start a new one with CMU email
+              <div className="flex h-[40vh] sm:h-[400px] flex-col items-center justify-center text-sm text-gray-500">
+                <MessageCircle className="mb-2 text-primary" size={32} />
+                <p className="text-center px-4">Select a conversation or start a new one with CMU email</p>
               </div>
             )}
           </div>

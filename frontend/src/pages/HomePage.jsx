@@ -366,63 +366,60 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
           <p className="mt-2 text-lg text-gray-600">Discover items posted by fellow CMU students</p>
         </div>
 
-        <div className="mb-10 flex flex-col gap-4 rounded-[32px] bg-white/80 p-5 shadow-soft lg:flex-row lg:items-center lg:p-6">
+        <div className="mb-10 flex flex-col gap-4 rounded-2xl sm:rounded-[32px] bg-white/80 p-4 sm:p-5 shadow-soft lg:flex-row lg:items-center lg:p-6">
           <div className="flex-1">
             <label className="sr-only" htmlFor="search-items">
               Search items
             </label>
             <div className="relative">
-              <Search size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Search size={20} className="absolute left-4 sm:left-5 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
                 id="search-items"
                 type="text"
                 placeholder="Search items..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-full border border-primary/10 bg-surface px-5 py-3 pl-12 text-sm font-medium text-gray-800 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/30"
+                className="w-full rounded-full border border-primary/10 bg-surface px-4 sm:px-5 py-3 pl-11 sm:pl-12 text-sm font-medium text-gray-800 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/30"
               />
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="relative">
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="appearance-none rounded-full border border-primary/15 bg-white px-5 py-3 pr-12 text-sm font-semibold text-gray-800 focus:border-primary focus:ring-2 focus:ring-primary/20"
-              >
-                {categoryOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-            </div>
+          <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3">
+            <div className="grid grid-cols-2 sm:flex gap-3">
+              <div className="relative">
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="w-full appearance-none rounded-full border border-primary/15 bg-white px-4 sm:px-5 py-3 pr-10 sm:pr-12 text-xs sm:text-sm font-semibold text-gray-800 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                >
+                  {categoryOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+              </div>
 
-            <div className="relative">
-              <select
-                value={selectedCondition}
-                onChange={(e) => setSelectedCondition(e.target.value)}
-                className="appearance-none rounded-full border border-primary/15 bg-white px-5 py-3 pr-12 text-sm font-semibold text-gray-800 focus:border-primary focus:ring-2 focus:ring-primary/20"
-              >
-                {conditionOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+              <div className="relative">
+                <select
+                  value={selectedCondition}
+                  onChange={(e) => setSelectedCondition(e.target.value)}
+                  className="w-full appearance-none rounded-full border border-primary/15 bg-white px-4 sm:px-5 py-3 pr-10 sm:pr-12 text-xs sm:text-sm font-semibold text-gray-800 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                >
+                  {conditionOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+              </div>
             </div>
-
-            <button className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-white shadow-card transition hover:bg-primary-dark">
-              <Search size={16} />
-              <span>Search</span>
-            </button>
 
             <button
               onClick={onPostItem}
-              className="inline-flex items-center gap-2 rounded-full bg-primary px-8 py-4 text-base font-semibold text-white shadow-card transition hover:bg-primary-dark"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base font-semibold text-white shadow-card transition hover:bg-primary-dark"
             >
               <Plus size={20} />
               Post Item

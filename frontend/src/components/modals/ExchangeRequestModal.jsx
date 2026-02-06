@@ -4,9 +4,11 @@ import { useNavigate } from 'react-router-dom'
 import Modal from '../ui/Modal'
 import { exchangeApi } from '../../lib/api'
 import { useAuth } from '../../context/AuthContext'
+import { useToast } from '../../context/ToastContext'
 
 export default function ExchangeRequestModal({ open, onClose, itemId }) {
   const navigate = useNavigate()
+  const toast = useToast()
   const [formData, setFormData] = useState({
     itemName: '',
     category: '',
@@ -38,29 +40,29 @@ export default function ExchangeRequestModal({ open, onClose, itemId }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!token) {
-      alert('Please log in before sending exchange request')
+      toast.warning('กรุณาเข้าสู่ระบบก่อนส่งคำขอแลกเปลี่ยน', 'ยังไม่ได้เข้าสู่ระบบ')
       return
     }
     if (!itemId) {
-      alert('Item not found. Please try again')
+      toast.error('ไม่พบสินค้า กรุณาลองใหม่', 'เกิดข้อผิดพลาด')
       return
     }
 
     // Validate form fields
     if (!formData.itemName.trim()) {
-      alert('Please enter your item name')
+      toast.warning('กรุณากรอกชื่อสินค้าของคุณ', 'ข้อมูลไม่ครบ')
       return
     }
     if (!formData.category) {
-      alert('Please select category')
+      toast.warning('กรุณาเลือกหมวดหมู่', 'ข้อมูลไม่ครบ')
       return
     }
     if (!formData.condition) {
-      alert('Please select condition')
+      toast.warning('กรุณาเลือกสภาพสินค้า', 'ข้อมูลไม่ครบ')
       return
     }
     if (!formData.description.trim()) {
-      alert('Please enter item description')
+      toast.warning('กรุณากรอกรายละเอียดสินค้า', 'ข้อมูลไม่ครบ')
       return
     }
 
@@ -83,7 +85,7 @@ export default function ExchangeRequestModal({ open, onClose, itemId }) {
       }
 
       await exchangeApi.request(token, payload)
-      alert('Exchange request sent successfully')
+      toast.success('ส่งคำขอแลกเปลี่ยนสำเร็จ!', 'สำเร็จ')
       onClose()
       setFormData({
         itemName: '',
@@ -110,17 +112,13 @@ export default function ExchangeRequestModal({ open, onClose, itemId }) {
         errorMsg = 'You have already sent an exchange request for this item'
       }
       
-      // ถ้ามี existingRequestId แสดงข้อความและถามว่าต้องการดูคำขอที่มีอยู่หรือไม่
+      // ถ้ามี existingRequestId แสดงข้อความและนำไปยังคำขอที่มีอยู่
       if (err.existingRequestId) {
-        const shouldView = window.confirm(
-          errorMsg + '\n\nDo you want to view the existing request?'
-        )
-        if (shouldView) {
-          onClose()
-          navigate(`/exchange/${err.existingRequestId}`)
-        }
+        toast.info(errorMsg, 'มีคำขอแลกเปลี่ยนอยู่แล้ว')
+        onClose()
+        navigate(`/exchange/${err.existingRequestId}`)
       } else {
-        alert('Failed to send exchange request: ' + errorMsg)
+        toast.error(errorMsg, 'ไม่สามารถส่งคำขอได้')
       }
     } finally {
       setSubmitting(false)
@@ -206,7 +204,7 @@ export default function ExchangeRequestModal({ open, onClose, itemId }) {
         </div>
 
         {/* Category and Condition */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="mb-2 block text-sm font-bold text-gray-900">
               Category <span className="text-red-500">*</span>
