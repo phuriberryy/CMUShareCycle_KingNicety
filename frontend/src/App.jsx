@@ -134,7 +134,7 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-surface">
+    <div className="min-h-screen flex flex-col bg-surface overflow-x-hidden">
       {isAuthenticated && !isLoginPage && (
         <Header
           unread={unreadCount}

@@ -25,15 +25,15 @@ function Header({ unread, onNotificationsClick }) {
   }, [user])
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-gray-200 bg-white/95 backdrop-blur-sm shadow-sm">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-40 w-full border-b border-gray-200 bg-white/95 backdrop-blur-sm shadow-sm overflow-x-hidden">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 sm:py-4 lg:px-8">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-white shadow-md">
-            <Leaf size={24} />
+        <Link to="/" className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+          <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl sm:rounded-2xl bg-primary text-white shadow-md">
+            <Leaf size={20} className="sm:w-6 sm:h-6" />
           </div>
-          <div className="leading-tight">
-            <p className="text-lg font-bold text-primary">CMU ShareCycle</p>
+          <div className="leading-tight hidden xs:block">
+            <p className="text-base sm:text-lg font-bold text-primary">CMU ShareCycle</p>
             <p className="text-xs text-gray-600">Green Campus</p>
           </div>
         </Link>

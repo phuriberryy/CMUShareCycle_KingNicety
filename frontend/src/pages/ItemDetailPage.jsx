@@ -109,7 +109,7 @@ export default function ItemDetailPage({ onExchangeItem, onDonationItem }) {
   const co2Footprint = calculateItemCO2(item.category, item.item_condition)
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10">
+    <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8 overflow-x-hidden">
       {/* Back Button */}
       <Link
         to="/"
@@ -196,7 +196,7 @@ export default function ItemDetailPage({ onExchangeItem, onDonationItem }) {
         </div>
 
         {/* Content Section */}
-        <div className="p-6 md:p-8">
+        <div className="p-4 sm:p-6 lg:p-8">
           {/* Header */}
           <div className="mb-6">
             <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -225,7 +225,7 @@ export default function ItemDetailPage({ onExchangeItem, onDonationItem }) {
           </div>
 
           {/* Details Grid */}
-          <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
             {/* Owner */}
             <div className="rounded-xl bg-gray-50 p-4">
               <div className="mb-2 flex items-center gap-3">

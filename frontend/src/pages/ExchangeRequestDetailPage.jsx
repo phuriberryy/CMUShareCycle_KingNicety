@@ -256,7 +256,7 @@ export default function ExchangeRequestDetailPage() {
   const co2Data = calculateCO2()
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-0">
+    <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8 overflow-x-hidden">
       {/* Back Button */}
       <button
         onClick={() => navigate(-1)}
@@ -267,17 +267,17 @@ export default function ExchangeRequestDetailPage() {
       </button>
 
       {/* Header Section */}
-      <div className="mb-6 flex items-start gap-4">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-2xl font-bold text-white">
+      <div className="mb-6 flex flex-col sm:flex-row items-start gap-4">
+        <div className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-primary text-xl sm:text-2xl font-bold text-white flex-shrink-0">
           {otherUserAvatar ? (
             <img src={otherUserAvatar} alt={otherUser} className="h-full w-full rounded-full object-cover" />
           ) : (
             <span>{(otherUser && otherUser.charAt(0)) || 'U'}</span>
           )}
         </div>
-        <div className="flex-1">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-gray-900">{otherUser}</h1>
+        <div className="flex-1 w-full">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{otherUser}</h1>
             {otherUserFaculty && (
               <span className="rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">
                 {otherUserFaculty}
@@ -304,7 +304,7 @@ export default function ExchangeRequestDetailPage() {
         </div>
 
         {/* Items Display */}
-        <div className="mb-6 flex items-center gap-4">
+        <div className="mb-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
           {/* Owner's Item (Left side - Post owner's item) */}
           <div className="flex-1 rounded-[16px] bg-white p-4 shadow-sm">
             <div className="mb-3 aspect-square w-full overflow-hidden rounded-lg bg-gray-100">
@@ -375,7 +375,7 @@ export default function ExchangeRequestDetailPage() {
           </div>
 
           {/* Exchange Icon */}
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white flex-shrink-0 mx-auto sm:mx-0">
             <RefreshCw size={24} />
           </div>
 
@@ -538,24 +538,24 @@ export default function ExchangeRequestDetailPage() {
             </p>
           </div>
           {(canAccept || canReject) && (
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <button
                 onClick={handleAccept}
                 disabled={processing}
-                className="flex-1 rounded-full bg-primary px-6 py-4 text-lg font-semibold text-white shadow-card transition hover:bg-primary-dark disabled:opacity-50"
+                className="w-full sm:flex-1 rounded-full bg-primary px-6 py-3 sm:py-4 text-base sm:text-lg font-semibold text-white shadow-card transition hover:bg-primary-dark disabled:opacity-50"
               >
                 <div className="flex items-center justify-center gap-2">
-                  <CheckCircle size={24} />
+                  <CheckCircle size={20} className="sm:w-6 sm:h-6" />
                   <span>Accept</span>
                 </div>
               </button>
               <button
                 onClick={handleReject}
                 disabled={processing}
-                className="flex-1 rounded-full bg-[#DC2626] px-6 py-4 text-lg font-semibold text-white shadow-card transition hover:bg-[#B91C1C] disabled:opacity-50"
+                className="w-full sm:flex-1 rounded-full bg-[#DC2626] px-6 py-3 sm:py-4 text-base sm:text-lg font-semibold text-white shadow-card transition hover:bg-[#B91C1C] disabled:opacity-50"
               >
                 <div className="flex items-center justify-center gap-2">
-                  <XCircle size={24} />
+                  <XCircle size={20} className="sm:w-6 sm:h-6" />
                   <span>Reject</span>
                 </div>
               </button>

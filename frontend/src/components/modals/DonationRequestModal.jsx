@@ -122,18 +122,18 @@ export default function DonationRequestModal({ open, onClose, itemId }) {
         </div>
 
         {/* Actions */}
-        <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+        <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-gray-200">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl border border-gray-200 bg-white px-6 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
+            className="w-full sm:w-auto rounded-xl border border-gray-200 bg-white px-6 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-xl bg-red-500 px-6 py-3 text-sm font-semibold text-white shadow-md hover:bg-red-600 transition disabled:opacity-60"
+            className="w-full sm:w-auto rounded-xl bg-red-500 px-6 py-3 text-sm font-semibold text-white shadow-md hover:bg-red-600 transition disabled:opacity-60"
           >
             {submitting ? 'Sending...' : 'Send Request'}
           </button>
