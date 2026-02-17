@@ -10,6 +10,7 @@ import {
   Clock3,
   Heart,
   Trash2,
+  Star,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
@@ -318,14 +319,29 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="mt-8 flex flex-col gap-6 border-t border-gray-100 pt-6 sm:flex-row sm:justify-center">
+          <div className="mt-8 flex flex-col gap-4 border-t border-gray-100 pt-6 sm:flex-row sm:justify-center sm:gap-8">
             <div className="text-center">
-              <p className="text-4xl font-bold text-primary">{stats.itemsShared || 0}</p>
+              <div className="mb-1 flex items-center justify-center gap-1.5">
+                <Star size={18} className="text-yellow-500" />
+                <p className="text-3xl font-bold text-primary sm:text-4xl">{(stats.totalPoints || 0).toLocaleString()}</p>
+              </div>
+              <p className="text-sm text-gray-500">Points</p>
+            </div>
+            <div className="text-center">
+              <p className="text-3xl font-bold text-primary sm:text-4xl">{stats.itemsShared || 0}</p>
               <p className="text-sm text-gray-500">Items Shared</p>
             </div>
             <div className="text-center">
-              <p className="text-4xl font-bold text-primary">{stats.co2Reduced || '0.00'}kg</p>
+              <p className="text-3xl font-bold text-emerald-600 sm:text-4xl">{stats.co2Reduced || '0.00'}kg</p>
               <p className="text-sm text-gray-500">CO₂ Reduced</p>
+            </div>
+            <div className="text-center">
+              <p className="text-3xl font-bold text-purple-600 sm:text-4xl">{stats.totalExchanges || 0}</p>
+              <p className="text-sm text-gray-500">Exchanges</p>
+            </div>
+            <div className="text-center">
+              <p className="text-3xl font-bold text-red-500 sm:text-4xl">{stats.totalDonations || 0}</p>
+              <p className="text-sm text-gray-500">Donations</p>
             </div>
           </div>
         </div>

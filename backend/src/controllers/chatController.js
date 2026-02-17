@@ -3,6 +3,7 @@ import { validationResult } from 'express-validator'
 import { query } from '../db/pool.js'
 import { getChatServer } from '../services/chatService.js'
 import { calculateItemCO2, calculateExchangeCO2Reduction } from '../utils/co2Calculator.js'
+import { awardExchangePoints, awardDonationPoints } from '../utils/pointsService.js'
 
 export const getChats = async (req, res) => {
   if (!req.user) {
@@ -677,6 +678,20 @@ export const confirmChatQr = async (req, res) => {
             ]
           )
           
+          // ให้แต้มสะสมทั้งสองฝ่าย
+          const insertedHistory = await query(
+            `SELECT id FROM exchange_history WHERE exchange_request_id=$1 ORDER BY created_at DESC LIMIT 1`,
+            [chatRow.exchange_request_id]
+          )
+          if (insertedHistory.rowCount > 0) {
+            await awardExchangePoints(
+              exchangeData.owner_id,
+              exchangeData.requester_id,
+              insertedHistory.rows[0].id,
+              parseFloat(co2Reduced.toFixed(2))
+            )
+          }
+
           // Emit socket event for real-time update
           const io = getChatServer()
           if (io) {
@@ -747,6 +762,20 @@ export const confirmChatQr = async (req, res) => {
             ]
           )
           
+          // ให้แต้มสะสม ผู้ให้ + ผู้รับ
+          const insertedDonation = await query(
+            `SELECT id FROM donation_history WHERE item_id=$1 AND recipient_id=$2 ORDER BY created_at DESC LIMIT 1`,
+            [donationData.item_id, donationData.requester_id]
+          )
+          if (insertedDonation.rowCount > 0) {
+            await awardDonationPoints(
+              donationData.owner_id,
+              donationData.requester_id,
+              insertedDonation.rows[0].id,
+              parseFloat(co2Reduced.toFixed(2))
+            )
+          }
+
           // อัปเดต item status เป็น 'donated'
           await query(
             `UPDATE items SET status='donated', updated_at=NOW() WHERE id=$1`,

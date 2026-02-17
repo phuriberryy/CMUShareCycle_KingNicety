@@ -246,6 +246,15 @@ export const donationApi = {
   getStatistics: () => request('/donations/statistics'),
 }
 
+export const leaderboardApi = {
+  getLeaderboard: (type = 'points', period = 'all', limit = 10) =>
+    request(`/leaderboard?type=${type}&period=${period}&limit=${limit}`),
+  getFacultyLeaderboard: (type = 'co2') =>
+    request(`/leaderboard/faculty?type=${type}`),
+  getMyRank: (token, type = 'points') =>
+    request(`/leaderboard/me?type=${type}`, { token }),
+}
+
 export const donationRequestApi = {
   request: (token, payload) =>
     request('/donation-requests', {

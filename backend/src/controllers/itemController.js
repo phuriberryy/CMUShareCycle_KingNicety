@@ -3,6 +3,7 @@ import { query } from '../db/pool.js'
 import { calculateItemCO2 } from '../utils/co2Calculator.js'
 import { detectSpam, validateImage, checkDuplicateContent } from '../utils/contentModeration.js'
 import { getChatServer } from '../services/chatService.js'
+import { awardPostItemPoints } from '../utils/pointsService.js'
 
 // ดึง items ทั้งหมด (public)
 export const getItems = async (_req, res) => {
@@ -169,6 +170,9 @@ export const createItem = async (req, res) => {
     
     // คำนวณ CO₂ footprint
     item.co2_footprint = calculateItemCO2(item.category, item.item_condition)
+
+    // ให้แต้มสะสมสำหรับการโพสต์รายการใหม่
+    await awardPostItemPoints(req.user.id, item.id)
 
     // Emit socket event for real-time update
     const io = getChatServer()

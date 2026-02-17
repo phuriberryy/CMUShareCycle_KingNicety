@@ -11,6 +11,7 @@ import RegisterPage from './pages/RegisterPage'
 import ExchangeRequestDetailPage from './pages/ExchangeRequestDetailPage'
 import DonationRequestDetailPage from './pages/DonationRequestDetailPage'
 import ItemDetailPage from './pages/ItemDetailPage'
+import LeaderboardPage from './pages/LeaderboardPage'
 import PostItemModal from './components/modals/PostItemModal'
 import ExchangeRequestModal from './components/modals/ExchangeRequestModal'
 import DonationRequestModal from './components/modals/DonationRequestModal'
@@ -163,6 +164,14 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/leaderboard"
+            element={
+              <ProtectedRoute>
+                <LeaderboardPage />
               </ProtectedRoute>
             }
           />

@@ -1,10 +1,11 @@
-import { Bell, Menu, X, Leaf } from 'lucide-react'
+import { Bell, Menu, X, Leaf, Trophy } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 
 const navLinks = [
   { label: 'Home', to: '/' },
+  { label: 'Leaderboard', to: '/leaderboard', icon: Trophy },
   { label: 'Profile', to: '/profile' },
 ]
 

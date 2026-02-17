@@ -9,7 +9,7 @@ export const getProfile = async (req, res) => {
   try {
     // ดึงข้อมูลผู้ใช้
     const userResult = await query(
-      'SELECT id, name, faculty, email, avatar_url, created_at FROM users WHERE id=$1',
+      'SELECT id, name, faculty, email, avatar_url, created_at, total_points, total_exchanges, total_donations, total_co2_reduced FROM users WHERE id=$1',
       [req.user.id]
     )
 
@@ -38,6 +38,9 @@ export const getProfile = async (req, res) => {
       stats: {
         itemsShared,
         co2Reduced: co2Reduced.toFixed(2),
+        totalPoints: parseInt(user.total_points) || 0,
+        totalExchanges: parseInt(user.total_exchanges) || 0,
+        totalDonations: parseInt(user.total_donations) || 0,
       },
     })
   } catch (err) {

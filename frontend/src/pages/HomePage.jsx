@@ -21,8 +21,12 @@ import {
   CheckCircle,
   BarChart3,
   Heart,
+  Trophy,
+  Medal,
+  Crown,
+  Star,
 } from 'lucide-react'
-import { itemsApi, statisticsApi, API_BASE } from '../lib/api'
+import { itemsApi, statisticsApi, leaderboardApi, API_BASE } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import { io } from 'socket.io-client'
 
@@ -47,6 +51,7 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
   const [loading, setLoading] = useState(false)
   const [statistics, setStatistics] = useState(null)
   const [loadingStats, setLoadingStats] = useState(false)
+  const [topLeaders, setTopLeaders] = useState([])
 
   const categoryOptions = [
     { value: 'All Categories', label: 'All Categories' },
@@ -149,6 +154,11 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
         console.error('Failed to load statistics:', err)
       })
       .finally(() => setLoadingStats(false))
+
+    leaderboardApi
+      .getLeaderboard('points', 'all', 5)
+      .then((data) => setTopLeaders(data.leaders || []))
+      .catch(() => setTopLeaders([]))
   }, [])
 
   const filteredItems = useMemo(() => {
@@ -354,6 +364,81 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
           </div>
         </section>
       ) : null}
+
+      {/* LEADERBOARD WIDGET */}
+      {topLeaders.length > 0 && (
+        <section className="mb-16">
+          <div className="mb-6">
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-white px-4 py-1 text-xs font-semibold uppercase tracking-wide text-primary shadow-sm">
+              <Trophy size={14} />
+              Leaderboard
+            </div>
+            <h2 className="text-3xl font-bold text-gray-900">Top Contributors</h2>
+            <p className="mt-2 text-lg text-gray-600">Leading the way in sustainable sharing</p>
+          </div>
+
+          <div className="overflow-hidden rounded-2xl border border-white/60 bg-white shadow-soft">
+            <div className="divide-y divide-gray-50">
+              {topLeaders.map((leader, index) => {
+                const initials = leader.name
+                  ? leader.name.split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase()
+                  : '??'
+                return (
+                  <div
+                    key={leader.id}
+                    className={`flex items-center gap-4 px-5 py-4 transition hover:bg-gray-50 ${
+                      index === 0 ? 'bg-gradient-to-r from-yellow-50/60 to-transparent' : ''
+                    }`}
+                  >
+                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center">
+                      {leader.rank === 1 ? (
+                        <Crown size={22} className="text-yellow-500" />
+                      ) : leader.rank === 2 ? (
+                        <Medal size={22} className="text-gray-400" />
+                      ) : leader.rank === 3 ? (
+                        <Medal size={22} className="text-orange-400" />
+                      ) : (
+                        <span className="text-sm font-bold text-gray-400">#{leader.rank}</span>
+                      )}
+                    </div>
+                    <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ${
+                      leader.rank === 1
+                        ? 'bg-yellow-500'
+                        : leader.rank === 2
+                        ? 'bg-gray-400'
+                        : leader.rank === 3
+                        ? 'bg-orange-400'
+                        : 'bg-primary'
+                    }`}>
+                      {initials}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 truncate">{leader.name}</p>
+                      {leader.faculty && (
+                        <p className="text-xs text-gray-500 truncate">{leader.faculty}</p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Star size={14} className="text-yellow-500" />
+                      <span className="text-sm font-bold text-primary">{parseInt(leader.value).toLocaleString()} pts</span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+            <div className="border-t border-gray-100 px-5 py-3">
+              <button
+                onClick={() => navigate('/leaderboard')}
+                className="flex w-full items-center justify-center gap-2 rounded-full bg-primary/10 px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary/20"
+              >
+                <Trophy size={16} />
+                View Full Leaderboard
+                <ArrowRight size={16} />
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ITEMS */}
       <section id="items-section">
