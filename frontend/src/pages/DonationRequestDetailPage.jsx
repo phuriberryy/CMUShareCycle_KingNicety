@@ -231,7 +231,7 @@ export default function DonationRequestDetailPage() {
   const co2Reduced = co2Footprint ? co2Footprint * 0.8 : null
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-0">
+    <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8 overflow-x-hidden">
       {/* Back Button */}
       <button
         onClick={() => navigate(-1)}
@@ -242,17 +242,17 @@ export default function DonationRequestDetailPage() {
       </button>
 
       {/* Header Section */}
-      <div className="mb-6 flex items-start gap-4">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-500 text-2xl font-bold text-white">
+      <div className="mb-6 flex flex-col sm:flex-row items-start gap-4">
+        <div className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-red-500 text-xl sm:text-2xl font-bold text-white flex-shrink-0">
           {otherUserAvatar ? (
             <img src={otherUserAvatar} alt={otherUser} className="h-full w-full rounded-full object-cover" />
           ) : (
             <span>{(otherUser && otherUser.charAt(0)) || 'U'}</span>
           )}
         </div>
-        <div className="flex-1">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-gray-900">{otherUser}</h1>
+        <div className="flex-1 w-full">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{otherUser}</h1>
             {otherUserFaculty && (
               <span className="rounded-full bg-red-500/10 px-3 py-1 text-sm font-semibold text-red-600">
                 {otherUserFaculty}

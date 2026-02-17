@@ -177,9 +177,9 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
   }, [items, searchQuery, selectedCategory, selectedCondition])
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-0">
+    <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8 overflow-x-hidden">
       {/* HERO */}
-      <section className="relative mb-16 overflow-hidden rounded-[40px] bg-gradient-to-r from-[#F3F9F2] via-[#EEF6EE] to-[#F8FBF7] px-8 py-14 shadow-soft">
+      <section className="relative mb-8 sm:mb-12 lg:mb-16 overflow-hidden rounded-2xl sm:rounded-[32px] lg:rounded-[40px] bg-gradient-to-r from-[#F3F9F2] via-[#EEF6EE] to-[#F8FBF7] px-4 py-8 sm:px-6 sm:py-12 lg:px-8 lg:py-14 shadow-soft">
         <div className="absolute -left-10 top-12 hidden text-primary/10 lg:block">
           <RefreshCcw className="h-[360px] w-[360px]" strokeWidth={1} />
         </div>
@@ -192,18 +192,18 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
               <Leaf size={16} />
               CMU ShareCycle · Green Campus
             </p>
-            <div className="space-y-3">
-              <p className="text-6xl font-extrabold leading-none text-gray-900 sm:text-7xl">
+            <div className="space-y-2 sm:space-y-3">
+              <p className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold leading-none text-gray-900">
                 Exchange
               </p>
-              <p className="text-5xl font-bold text-[#5FA660] sm:text-6xl">What You Have</p>
-              <p className="text-5xl font-bold text-[#5FA660] sm:text-6xl">For What You Need</p>
+              <p className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-[#5FA660]">What You Have</p>
+              <p className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-[#5FA660]">For What You Need</p>
             </div>
-            <p className="mt-6 text-lg text-gray-600 sm:text-xl">
+            <p className="mt-4 sm:mt-6 text-base sm:text-lg lg:text-xl text-gray-600">
               The smartest way for CMU students to exchange items.{' '}
               <span className="font-semibold text-gray-900">No money, no waste, just community.</span>
             </p>
-            <div className="mt-8 flex flex-wrap items-center gap-3">
+            <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3">
               <button 
                 onClick={() => {
                   const itemsSection = document.getElementById('items-section')
@@ -211,12 +211,12 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
                     itemsSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
                   }
                 }}
-                className="inline-flex items-center gap-3 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-white shadow-card transition hover:bg-primary-dark"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 sm:gap-3 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-white shadow-card transition hover:bg-primary-dark"
               >
                 <span>Browse Items</span>
                 <ArrowRight size={18} />
               </button>
-              <div className="flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-semibold text-primary shadow-sm">
+              <div className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-semibold text-primary shadow-sm">
                 <Zap size={16} />
                 Zero waste campus mission
               </div>
@@ -245,20 +245,20 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
 
       {/* STATISTICS DASHBOARD */}
       {loadingStats ? (
-        <section className="mb-16">
-          <div className="rounded-2xl bg-white p-12 text-center shadow-soft">
+        <section className="mb-8 sm:mb-12 lg:mb-16">
+          <div className="rounded-2xl bg-white p-8 sm:p-12 text-center shadow-soft">
             <p className="text-sm text-gray-500">Loading statistics...</p>
           </div>
         </section>
       ) : statistics ? (
-        <section className="mb-16">
-          <div className="mb-6">
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-white px-4 py-1 text-xs font-semibold uppercase tracking-wide text-primary shadow-sm">
+        <section className="mb-8 sm:mb-12 lg:mb-16">
+          <div className="mb-4 sm:mb-6">
+            <div className="mb-2 sm:mb-3 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-white px-3 sm:px-4 py-1 text-xs font-semibold uppercase tracking-wide text-primary shadow-sm">
               <BarChart3 size={14} />
               Platform Statistics
             </div>
-            <h2 className="text-3xl font-bold text-gray-900">Community Impact</h2>
-            <p className="mt-2 text-lg text-gray-600">See how we're making a difference together</p>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Community Impact</h2>
+            <p className="mt-2 text-base sm:text-lg text-gray-600">See how we're making a difference together</p>
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -325,7 +325,7 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
           </div>
 
           {/* Additional Stats Row */}
-          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2">
             <div className="rounded-2xl border border-white/60 bg-gradient-to-br from-orange-50 to-orange-100/50 p-6 shadow-soft">
               <div className="mb-4 flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/20 text-orange-600">
@@ -442,13 +442,13 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
 
       {/* ITEMS */}
       <section id="items-section">
-        <div className="mb-8">
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-white px-4 py-1 text-xs font-semibold uppercase tracking-wide text-primary shadow-sm">
+        <div className="mb-6 sm:mb-8">
+          <div className="mb-2 sm:mb-3 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-white px-3 sm:px-4 py-1 text-xs font-semibold uppercase tracking-wide text-primary shadow-sm">
             <RefreshCcw size={14} />
             Browse Items
           </div>
-          <h2 className="text-4xl font-bold text-gray-900">Available for Exchange</h2>
-          <p className="mt-2 text-lg text-gray-600">Discover items posted by fellow CMU students</p>
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">Available for Exchange</h2>
+          <p className="mt-2 text-base sm:text-lg text-gray-600">Discover items posted by fellow CMU students</p>
         </div>
 
         <div className="mb-10 flex flex-col gap-4 rounded-2xl sm:rounded-[32px] bg-white/80 p-4 sm:p-5 shadow-soft lg:flex-row lg:items-center lg:p-6">
@@ -513,13 +513,13 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
         </div>
 
         {loading && (
-          <div className="rounded-2xl bg-white p-12 text-center text-sm text-gray-500 shadow-md">
+          <div className="rounded-2xl bg-white p-8 sm:p-12 text-center text-sm text-gray-500 shadow-md">
             Loading items...
           </div>
         )}
         {!loading && filteredItems.length === 0 && (
-          <div className="rounded-2xl bg-white p-12 text-center shadow-md">
-            <p className="text-lg font-medium text-gray-600">No items available right now.</p>
+          <div className="rounded-2xl bg-white p-8 sm:p-12 text-center shadow-md">
+            <p className="text-base sm:text-lg font-medium text-gray-600">No items available right now.</p>
             <p className="mt-2 text-sm text-gray-500">Be the first to post an item!</p>
           </div>
         )}

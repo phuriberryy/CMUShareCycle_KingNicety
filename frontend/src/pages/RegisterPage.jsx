@@ -42,9 +42,9 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#F5F6F0] px-4 py-12">
+    <div className="flex min-h-screen items-center justify-center bg-[#F5F6F0] px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
       <div className="w-full max-w-md">
-        <div className="rounded-2xl bg-white p-8 shadow-lg">
+        <div className="rounded-2xl bg-white p-6 shadow-lg sm:p-8">
           <h1 className="mb-2 text-center text-2xl font-bold text-gray-900">Sign Up</h1>
           <p className="mb-6 text-center text-sm text-gray-700">
             Use @cmu.ac.th email to verify student identity
