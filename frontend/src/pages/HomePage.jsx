@@ -36,7 +36,8 @@ const fetchItems = ({ setItems, setLoading, setLoadError }) => {
   itemsApi
     .list()
     .then((data) => {
-      setItems(Array.isArray(data) ? data : [])
+      const list = Array.isArray(data) ? data : (data?.items && Array.isArray(data.items) ? data.items : [])
+      setItems(list)
     })
     .catch(() => {
       setItems([])

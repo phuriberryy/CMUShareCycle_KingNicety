@@ -5,39 +5,76 @@ import { detectSpam, validateImage, checkDuplicateContent } from '../utils/conte
 import { getChatServer } from '../services/chatService.js'
 import { awardPostItemPoints } from '../utils/pointsService.js'
 
-const ITEMS_LIST_SQL = `SELECT items.*, users.name as owner_name, users.faculty as owner_faculty
- FROM items
- JOIN users ON items.user_id = users.id
- WHERE (status = 'active' OR status = 'in_progress' OR status IS NULL)
-   AND (status IS NULL OR status != 'donated')
-   AND (available_until IS NULL OR available_until >= CURRENT_DATE)
- ORDER BY created_at DESC`
+// Query หลัก: LEFT JOIN เพื่อไม่ทิ้ง item ถ้า user ถูกลบ, กรอง status และวันที่
+const ITEMS_LIST_SQL = `
+  SELECT i.id, i.user_id, i.title, i.category, i.item_condition, i.looking_for, i.description,
+         i.available_until, i.image_url, i.pickup_location, i.status, i.listing_type,
+         i.created_at, i.updated_at,
+         u.name AS owner_name, u.faculty AS owner_faculty
+  FROM items i
+  LEFT JOIN users u ON i.user_id = u.id
+  WHERE (COALESCE(i.status, 'active') IN ('active', 'in_progress'))
+    AND COALESCE(i.status, '') != 'donated'
+    AND (i.available_until IS NULL OR i.available_until >= CURRENT_DATE)
+  ORDER BY i.created_at DESC
+`
 
-// ดึง items ทั้งหมด (public) – ลองซ้ำ 1 ครั้งถ้า connection หลุด (Supabase pooler)
+// Fallback: ถ้า DB ไม่มี column status/available_until ใช้ query นี้แล้วกรองในโค้ด
+const ITEMS_LIST_FALLBACK_SQL = `
+  SELECT i.*, u.name AS owner_name, u.faculty AS owner_faculty
+  FROM items i
+  LEFT JOIN users u ON i.user_id = u.id
+  ORDER BY i.created_at DESC
+`
+
+function filterAndMapItems(rows) {
+  const today = new Date().toISOString().slice(0, 10)
+  return rows
+    .filter((item) => {
+      const status = item.status == null ? 'active' : item.status
+      if (status === 'donated' || status === 'exchanged') return false
+      if (status !== 'active' && status !== 'in_progress') return false
+      if (item.available_until && String(item.available_until).slice(0, 10) < today) return false
+      return true
+    })
+    .map((item) => ({
+      ...item,
+      co2_footprint: calculateItemCO2(item.category, item.item_condition),
+    }))
+}
+
+// ดึง items ทั้งหมด (public)
 export const getItems = async (_req, res) => {
-  const run = async () => {
-    const result = await query(ITEMS_LIST_SQL)
-    return result.rows.map((item) => ({
+  const run = async (useFallback = false) => {
+    const sql = useFallback ? ITEMS_LIST_FALLBACK_SQL : ITEMS_LIST_SQL
+    const result = await query(sql.trim())
+    return useFallback ? filterAndMapItems(result.rows) : result.rows.map((item) => ({
       ...item,
       co2_footprint: calculateItemCO2(item.category, item.item_condition),
     }))
   }
   try {
-    const itemsWithCO2 = await run()
-    return res.json(itemsWithCO2)
+    const itemsWithCO2 = await run(false)
+    return res.json(Array.isArray(itemsWithCO2) ? itemsWithCO2 : [])
   } catch (err) {
     const isConnectionError = /terminated|ECONNRESET|ETIMEDOUT|Connection/.test(err?.message || '')
     if (isConnectionError) {
       try {
-        const itemsWithCO2 = await run()
-        return res.json(itemsWithCO2)
+        const itemsWithCO2 = await run(false)
+        return res.json(Array.isArray(itemsWithCO2) ? itemsWithCO2 : [])
       } catch (retryErr) {
         console.error('Get items error (after retry):', retryErr.message)
         return res.status(500).json({ message: 'Internal server error' })
       }
     }
-    console.error('Get items error:', err.message)
-    return res.status(500).json({ message: 'Internal server error' })
+    // ถ้า query หลัก fail (เช่น column ไม่มี) ลอง fallback
+    try {
+      const itemsWithCO2 = await run(true)
+      return res.json(Array.isArray(itemsWithCO2) ? itemsWithCO2 : [])
+    } catch (fallbackErr) {
+      console.error('Get items error:', fallbackErr.message)
+      return res.status(500).json({ message: 'Internal server error' })
+    }
   }
 }
 
