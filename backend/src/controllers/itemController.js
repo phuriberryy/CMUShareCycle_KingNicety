@@ -5,28 +5,38 @@ import { detectSpam, validateImage, checkDuplicateContent } from '../utils/conte
 import { getChatServer } from '../services/chatService.js'
 import { awardPostItemPoints } from '../utils/pointsService.js'
 
-// ดึง items ทั้งหมด (public)
-export const getItems = async (_req, res) => {
-  try {
-    const result = await query(
-      `SELECT items.*, users.name as owner_name, users.faculty as owner_faculty
-       FROM items
-       JOIN users ON items.user_id = users.id
-       WHERE (status='active' OR status='in_progress')
-         AND status != 'donated'
-         AND (available_until IS NULL OR available_until >= CURRENT_DATE)
-       ORDER BY created_at DESC`
-    )
+const ITEMS_LIST_SQL = `SELECT items.*, users.name as owner_name, users.faculty as owner_faculty
+ FROM items
+ JOIN users ON items.user_id = users.id
+ WHERE (status = 'active' OR status = 'in_progress' OR status IS NULL)
+   AND (status IS NULL OR status != 'donated')
+   AND (available_until IS NULL OR available_until >= CURRENT_DATE)
+ ORDER BY created_at DESC`
 
-    // คำนวณ CO₂ footprint สำหรับแต่ละ item
-    const itemsWithCO2 = result.rows.map((item) => ({
+// ดึง items ทั้งหมด (public) – ลองซ้ำ 1 ครั้งถ้า connection หลุด (Supabase pooler)
+export const getItems = async (_req, res) => {
+  const run = async () => {
+    const result = await query(ITEMS_LIST_SQL)
+    return result.rows.map((item) => ({
       ...item,
       co2_footprint: calculateItemCO2(item.category, item.item_condition),
     }))
-
+  }
+  try {
+    const itemsWithCO2 = await run()
     return res.json(itemsWithCO2)
   } catch (err) {
-    console.error('Get items error:', err)
+    const isConnectionError = /terminated|ECONNRESET|ETIMEDOUT|Connection/.test(err?.message || '')
+    if (isConnectionError) {
+      try {
+        const itemsWithCO2 = await run()
+        return res.json(itemsWithCO2)
+      } catch (retryErr) {
+        console.error('Get items error (after retry):', retryErr.message)
+        return res.status(500).json({ message: 'Internal server error' })
+      }
+    }
+    console.error('Get items error:', err.message)
     return res.status(500).json({ message: 'Internal server error' })
   }
 }
@@ -149,8 +159,8 @@ export const createItem = async (req, res) => {
     const validListingType = listingType === 'donation' ? 'donation' : 'exchange'
     
     const result = await query(
-      `INSERT INTO items (user_id, title, category, item_condition, looking_for, description, available_until, image_url, pickup_location, listing_type)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+      `INSERT INTO items (user_id, title, category, item_condition, looking_for, description, available_until, image_url, pickup_location, listing_type, status)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'active')
        RETURNING *`,
       [
         req.user.id,

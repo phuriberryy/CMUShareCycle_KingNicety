@@ -14,8 +14,17 @@ import {
 
 const router = Router()
 
-// Public routes
-router.get('/', getItems)
+// รายการ items – จับ GET ที่ path ว่างหรือ '/' ก่อน (ต้อง await เพื่อไม่ให้ไปโดน /:itemId แล้วได้ 400)
+router.use(async (req, res, next) => {
+  if (req.method !== 'GET' || (req.path !== '' && req.path !== '/')) {
+    return next()
+  }
+  try {
+    await getItems(req, res)
+  } catch (err) {
+    next(err)
+  }
+})
 
 // Specific routes must come before parameterized routes
 router.get(

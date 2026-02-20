@@ -283,7 +283,7 @@ export default function ProfilePage() {
   const stats = profile?.stats || { itemsShared: 0, co2Reduced: '0.00' }
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-6 sm:py-10 sm:px-6 lg:px-8 overflow-x-hidden">
+    <div className="mx-auto max-w-5xl px-4 py-6 sm:py-10 sm:px-6 lg:px-0">
       <section className="overflow-hidden rounded-[24px] sm:rounded-[40px] bg-white shadow-soft">
         <div className="h-28 sm:h-40 bg-gradient-to-r from-[#1B843C] via-[#2D7D3F] to-[#76BE7B]" />
         <div className="relative px-4 sm:px-8 pb-8 sm:pb-10 pt-4">

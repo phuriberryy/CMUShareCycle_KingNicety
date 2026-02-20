@@ -79,7 +79,9 @@ const handleResponse = async (res) => {
   return data
 }
 
-const request = async (path, { token, headers, ...options } = {}) => {
+const DEFAULT_TIMEOUT_MS = 15000 // 15 วินาที – ถ้า backend ไม่ตอบจะไม่ค้างตลอด
+
+const request = async (path, { token, headers, timeoutMs = DEFAULT_TIMEOUT_MS, ...options } = {}) => {
   const mergedHeaders = {
     'Content-Type': 'application/json',
     ...(headers || {}),
@@ -89,11 +91,16 @@ const request = async (path, { token, headers, ...options } = {}) => {
     mergedHeaders['Authorization'] = `Bearer ${token}`
   }
 
+  const controller = new AbortController()
+  const timeoutId = timeoutMs > 0 ? setTimeout(() => controller.abort(), timeoutMs) : null
+
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
     headers: mergedHeaders,
+    signal: controller.signal,
   })
 
+  if (timeoutId) clearTimeout(timeoutId)
   return handleResponse(res)
 }
 
@@ -267,7 +274,7 @@ export const donationRequestApi = {
       token,
     }),
   getMyRequests: (token) =>
-    request('/donation-requests/my/requests', {
+    request('/donation-requests/my-requests', {
       token,
     }),
   acceptByOwner: (token, requestId) =>

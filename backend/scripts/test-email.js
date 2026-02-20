@@ -10,14 +10,21 @@ const __dirname = path.dirname(__filename)
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const {
+  RESEND_API_KEY,
   EMAIL_HOST,
   EMAIL_PORT,
   EMAIL_USER,
   EMAIL_PASS
 } = process.env;
 
-if (!EMAIL_HOST || !EMAIL_PORT || !EMAIL_USER || !EMAIL_PASS) {
-  console.error('Missing one or more email env vars. Check EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASS');
+// ใช้ Resend ได้แค่ RESEND_API_KEY หรือใช้ SMTP ต้องมีครบ
+const hasResend = Boolean(RESEND_API_KEY && RESEND_API_KEY.startsWith('re_'));
+const hasSmtp = EMAIL_HOST && EMAIL_USER && EMAIL_PASS;
+
+if (!hasResend && !hasSmtp) {
+  console.error('❌ ไม่พบการตั้งค่าอีเมล');
+  console.error('   วิธีที่ 1 (Resend): ใส่ RESEND_API_KEY=re_... ใน .env หรือรัน npm run email:resend');
+  console.error('   วิธีที่ 2 (SMTP): ใส่ EMAIL_HOST, EMAIL_USER, EMAIL_PASS ใน .env');
   process.exit(1);
 }
 
@@ -76,8 +83,16 @@ async function test() {
     console.log(`📧 กำลังส่งอีเมลทดสอบไปยัง ${testEmail}...`)
     console.log('')
 
-    await sendTestEmail(testEmail)
+    const result = await sendTestEmail(testEmail)
     console.log('')
+    const actuallySent = result && result.accepted && result.accepted.length > 0 && !result.error
+    if (!actuallySent) {
+      console.error('❌ ส่งอีเมลไม่สำเร็จ (API/เครือข่ายล้มเหลว)')
+      if (result && result.error) console.error('   Error:', result.error)
+      console.log('')
+      console.log('💡 ตรวจสอบ: 1) RESEND_API_KEY ถูกต้อง 2) มีเน็ต 3) ไม่ถูก firewall บล็อก')
+      process.exit(1)
+    }
     console.log('✅ ส่งอีเมลสำเร็จ!')
     console.log(`📬 กรุณาตรวจสอบ inbox ของ ${testEmail}`)
     console.log('💡 หากไม่พบอีเมล กรุณาตรวจสอบใน Junk/Spam folder')

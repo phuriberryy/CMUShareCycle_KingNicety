@@ -38,6 +38,8 @@ const schema = z.object({
   EMAIL_USER: z.string().min(1).optional(),
   EMAIL_PASS: z.string().min(1).optional(),
   EMAIL_FROM: z.string().min(1).optional(),
+  // Resend (ทางเลือกแทน SMTP - ใช้ API key จาก resend.com หรือ Supabase + Resend)
+  RESEND_API_KEY: z.string().min(1).optional(),
 })
 
 const parsed = schema.parse(process.env)
@@ -59,6 +61,7 @@ const env = {
   emailUser: parsed.EMAIL_USER,
   emailPass: parsed.EMAIL_PASS,
   emailFrom: parsed.EMAIL_FROM || parsed.EMAIL_USER,
+  resendApiKey: parsed.RESEND_API_KEY,
 }
 
 export default env

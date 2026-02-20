@@ -52,20 +52,30 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
       toast.warning('กรุณากรอกข้อมูลที่จำเป็นให้ครบ', 'ข้อมูลไม่ครบ')
       return
     }
+    if (formData.itemName.trim().length < 3) {
+      toast.warning('ชื่อสินค้าต้องมีอย่างน้อย 3 ตัวอักษร', 'ข้อมูลไม่ถูกต้อง')
+      return
+    }
     // Validate lookingFor only for exchange type
     if (formData.listingType === 'exchange' && !formData.lookingFor) {
       toast.warning('กรุณาระบุสิ่งที่ต้องการแลกเปลี่ยน', 'ข้อมูลไม่ครบ')
       return
     }
+    // ส่งวันที่เป็น ISO (YYYY-MM-DD) ถ้ามี
+    let availableUntil = formData.availableUntil || undefined
+    if (availableUntil && availableUntil.includes('/')) {
+      const [d, m, y] = availableUntil.split('/')
+      if (y && m && d) availableUntil = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`
+    }
     setSubmitting(true)
     try {
       await itemsApi.create(token, {
-        title: formData.itemName,
+        title: formData.itemName.trim(),
         category: formData.category,
         itemCondition: formData.condition,
         lookingFor: formData.lookingFor,
         description: formData.description,
-        availableUntil: formData.availableUntil,
+        availableUntil: availableUntil || formData.availableUntil || undefined,
         imageUrl: imagePreview,
         pickupLocation: formData.pickupLocation,
         listingType: formData.listingType,
@@ -85,7 +95,8 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
       setImagePreview(null)
     toast.success('โพสต์สินค้าสำเร็จ!', 'สำเร็จ')
     } catch (err) {
-      toast.error(err.message || 'ไม่สามารถโพสต์ได้', 'เกิดข้อผิดพลาด')
+      const msg = err.errors?.[0]?.msg || err.message || 'ไม่สามารถโพสต์ได้'
+      toast.error(msg, 'เกิดข้อผิดพลาด')
     } finally {
       setSubmitting(false)
     }

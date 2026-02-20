@@ -18,8 +18,8 @@ function question(query) {
 }
 
 async function main() {
-  console.log('📧 Gmail SMTP Setup Helper\n')
-  console.log('คู่มือนี้จะช่วยตั้งค่า Gmail SMTP สำหรับส่งอีเมลจริง\n')
+  console.log('📧 Gmail SMTP Setup – ส่งจาก @gmail ไปยัง @cmu.ac.th\n')
+  console.log('คู่มือนี้จะตั้งค่า Gmail SMTP สำหรับส่งอีเมลแจ้งเตือนจริง (จาก Gmail ไป Outlook @cmu.ac.th)\n')
   console.log('📖 วิธีสร้าง Gmail App Password:')
   console.log('   1. ไปที่ https://myaccount.google.com/')
   console.log('   2. ไปที่ Security → 2-Step Verification (ต้องเปิดก่อน)')
@@ -69,9 +69,9 @@ async function main() {
     process.exit(1)
   }
 
-  // อัพเดทหรือสร้างไฟล์ .env
+  // อัพเดทหรือสร้างไฟล์ .env (Gmail ส่งไป @cmu.ac.th)
   const emailConfig = `
-# Email Configuration (Gmail SMTP)
+# Email: Gmail SMTP (ส่งจาก @gmail ไป @cmu.ac.th)
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
 EMAIL_USER=${emailUser}
@@ -90,7 +90,9 @@ EMAIL_FROM=${emailUser}
              !trimmed.startsWith('EMAIL_USER') &&
              !trimmed.startsWith('EMAIL_PASS') &&
              !trimmed.startsWith('EMAIL_FROM') &&
-             !trimmed.startsWith('# Email Configuration')
+             !trimmed.startsWith('RESEND_API_KEY') &&
+             !trimmed.startsWith('# Email Configuration') &&
+             !trimmed.startsWith('# ----- Resend')
     })
     
     // เพิ่ม email config ใหม่
@@ -118,22 +120,11 @@ ${emailConfig}`
   console.log(`   From: ${emailUser}`)
   console.log(`   Password: ${'*'.repeat(emailPass.length)}`)
 
-  // ถามว่าต้องการทดสอบการส่งอีเมลหรือไม่
-  const testEmail = await question('\nต้องการทดสอบการส่งอีเมลไปยัง phurichaya_lamsawat@cmu.ac.th หรือไม่? (y/n): ')
-  
-  if (testEmail.toLowerCase() === 'y' || testEmail.toLowerCase() === 'yes') {
-    console.log(`\n🧪 กำลังทดสอบการส่งอีเมล...`)
-    console.log('   (รันคำสั่ง: npm run test:email phurichaya_lamsawat@cmu.ac.th)')
-    console.log('\n💡 คุณสามารถรันคำสั่งนี้ได้เอง:')
-    console.log(`   npm run test:email phurichaya_lamsawat@cmu.ac.th`)
-  }
-
-  console.log('\n✅ การตั้งค่า Gmail SMTP เสร็จสมบูรณ์!')
+  console.log('\n✅ ตั้งค่า Gmail SMTP เสร็จแล้ว (ส่งจาก Gmail ไป @cmu.ac.th)')
   console.log('\n📝 ขั้นตอนต่อไป:')
-  console.log('   1. รีสตาร์ท backend server (ถ้ากำลังรันอยู่)')
-  console.log('   2. ทดสอบการส่งอีเมล: npm run test:email phurichaya_lamsawat@cmu.ac.th')
-  console.log('   3. ตรวจสอบ inbox ของ phurichaya_lamsawat@cmu.ac.th')
-  console.log('   4. ทดสอบการสร้าง exchange request')
+  console.log('   1. รีสตาร์ท backend: npm start')
+  console.log('   2. ทดสอบส่งเมลไป @cmu: npm run test:email your_email@cmu.ac.th')
+  console.log('   3. ตรวจสอบ Inbox / Junk ของอีเมล @cmu.ac.th')
   
   rl.close()
 }
