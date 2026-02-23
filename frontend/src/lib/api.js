@@ -223,6 +223,11 @@ export const chatApi = {
       body: JSON.stringify(payload),
       token,
     }),
+  delete: (token, chatId) =>
+    request(`/chats/${chatId}`, {
+      method: 'DELETE',
+      token,
+    }),
 }
 
 export const statisticsApi = {

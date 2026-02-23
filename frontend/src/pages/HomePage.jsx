@@ -176,24 +176,30 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
         <div className="absolute -right-6 bottom-0 hidden text-primary/15 lg:block">
           <Leaf className="h-[300px] w-[300px]" strokeWidth={1} />
         </div>
-        <div className="relative flex flex-col gap-12 lg:flex-row">
-          <div className="max-w-xl">
+        <div className="relative flex flex-col items-center gap-10 lg:flex-row lg:items-stretch lg:gap-16">
+          <div className="max-w-xl text-center lg:text-left mx-auto lg:mx-0">
             <p className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-sm font-semibold text-primary shadow-sm">
               <Leaf size={16} />
               CMU ShareCycle · Green Campus
             </p>
             <div className="space-y-2 sm:space-y-3">
-              <p className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold leading-none text-gray-900">
+              <p className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-extrabold leading-tight text-gray-900">
                 Exchange
               </p>
-              <p className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-[#5FA660]">What You Have</p>
-              <p className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-[#5FA660]">For What You Need</p>
+              <p className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-[#5FA660]">
+                What You Have
+              </p>
+              <p className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-[#5FA660]">
+                For What You Need
+              </p>
             </div>
-            <p className="mt-4 sm:mt-6 text-base sm:text-lg lg:text-xl text-gray-600">
-              The smartest way for CMU students to exchange items.{' '}
-              <span className="font-semibold text-gray-900">No money, no waste, just community.</span>
+            <p className="mt-4 sm:mt-6 text-sm sm:text-base lg:text-lg text-gray-600 max-w-xl mx-auto lg:mx-0">
+              The smartest way for CMU students to exchange items.
+              <span className="block sm:inline font-semibold text-gray-900">
+                {' '}No money, no waste, just community.
+              </span>
             </p>
-            <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3">
+            <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center lg:items-start gap-3 w-full">
               <button 
                 onClick={() => {
                   const itemsSection = document.getElementById('items-section')
@@ -201,19 +207,19 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
                     itemsSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
                   }
                 }}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 sm:gap-3 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-white shadow-card transition hover:bg-primary-dark"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 sm:gap-3 rounded-full bg-primary px-6 py-3 text-sm sm:text-base font-semibold text-white shadow-card transition hover:bg-primary-dark"
               >
                 <span>Browse Items</span>
                 <ArrowRight size={18} />
               </button>
-              <div className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-semibold text-primary shadow-sm">
+              <div className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-full bg-white px-4 py-2 text-xs sm:text-sm font-semibold text-primary shadow-sm">
                 <Zap size={16} />
                 Zero waste campus mission
               </div>
             </div>
           </div>
 
-          <div className="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid w-full flex-1 grid-cols-2 gap-4">
             {benefitCards.map((benefit) => (
               <div
                 key={benefit.title}
@@ -236,22 +242,25 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
       {/* STATISTICS DASHBOARD */}
       {loadingStats ? (
         <section className="mb-8 sm:mb-12 lg:mb-16">
-          <div className="rounded-2xl bg-white p-8 sm:p-12 text-center shadow-soft">
+          <div className="rounded-2xl bg-white p-6 sm:p-8 text-center shadow-soft">
             <p className="text-sm text-gray-500">Loading statistics...</p>
           </div>
         </section>
       ) : statistics ? (
         <section className="mb-8 sm:mb-12 lg:mb-16">
-          <div className="mb-4 sm:mb-6">
-            <div className="mb-2 sm:mb-3 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-white px-3 sm:px-4 py-1 text-xs font-semibold uppercase tracking-wide text-primary shadow-sm">
-              <BarChart3 size={14} />
-              Platform Statistics
+          <div className="rounded-2xl border border-white/70 bg-white/70 p-4 sm:p-6 lg:p-8 shadow-soft">
+            <div className="mb-4 sm:mb-6">
+              <div className="mb-2 sm:mb-3 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-white px-3 sm:px-4 py-1 text-xs font-semibold uppercase tracking-wide text-primary shadow-sm">
+                <BarChart3 size={14} />
+                Platform Statistics
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Community Impact</h2>
+              <p className="mt-2 text-sm sm:text-base lg:text-lg text-gray-600">
+                See how we're making a difference together
+              </p>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Community Impact</h2>
-            <p className="mt-2 text-base sm:text-lg text-gray-600">See how we're making a difference together</p>
-          </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-4">
             {/* Total Users */}
             <div className="group relative overflow-hidden rounded-2xl border border-white/60 bg-gradient-to-br from-blue-50 to-blue-100/50 p-6 shadow-soft transition hover:-translate-y-1 hover:shadow-card">
               <div className="mb-4 flex items-center justify-between">
@@ -262,9 +271,9 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
                   Active
                 </div>
               </div>
-              <p className="text-3xl font-bold text-gray-900">{statistics.totalUsers.toLocaleString()}</p>
+              <p className="text-2xl sm:text-3xl font-bold text-gray-900">{statistics.totalUsers.toLocaleString()}</p>
               <p className="mt-1 text-sm font-medium text-gray-600">Total Users</p>
-              <p className="mt-2 text-xs text-gray-500">CMU students joined</p>
+              <p className="mt-2 text-xs sm:text-sm text-gray-500">CMU students joined</p>
             </div>
 
             {/* Total Items */}
@@ -277,9 +286,9 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
                   {statistics.activeItems} Active
                 </div>
               </div>
-              <p className="text-3xl font-bold text-gray-900">{statistics.totalItems.toLocaleString()}</p>
+              <p className="text-2xl sm:text-3xl font-bold text-gray-900">{statistics.totalItems.toLocaleString()}</p>
               <p className="mt-1 text-sm font-medium text-gray-600">Total Items</p>
-              <p className="mt-2 text-xs text-gray-500">{statistics.activeItems} available now</p>
+              <p className="mt-2 text-xs sm:text-sm text-gray-500">{statistics.activeItems} available now</p>
             </div>
 
             {/* Successful Exchanges */}
@@ -292,9 +301,9 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
                   Completed
                 </div>
               </div>
-              <p className="text-3xl font-bold text-gray-900">{statistics.totalExchanges.toLocaleString()}</p>
+              <p className="text-2xl sm:text-3xl font-bold text-gray-900">{statistics.totalExchanges.toLocaleString()}</p>
               <p className="mt-1 text-sm font-medium text-gray-600">Successful Exchanges</p>
-              <p className="mt-2 text-xs text-gray-500">Items exchanged</p>
+              <p className="mt-2 text-xs sm:text-sm text-gray-500">Items exchanged</p>
             </div>
 
             {/* CO₂ Reduced */}
@@ -308,25 +317,29 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
                   Impact
                 </div>
               </div>
-              <p className="text-3xl font-bold text-gray-900">{statistics.totalCO2Reduced.toLocaleString()}</p>
+              <p className="text-2xl sm:text-3xl font-bold text-gray-900">
+                {statistics.totalCO2Reduced.toLocaleString()}
+              </p>
               <p className="mt-1 text-sm font-medium text-gray-600">kg CO₂ Reduced</p>
-              <p className="mt-2 text-xs text-gray-500">Environmental impact</p>
+              <p className="mt-2 text-xs sm:text-sm text-gray-500">Environmental impact</p>
             </div>
-          </div>
+            </div>
 
-          {/* Additional Stats Row */}
-          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2">
+            {/* Additional Stats Row */}
+            <div className="mt-4 grid grid-cols-2 gap-4">
             <div className="rounded-2xl border border-white/60 bg-gradient-to-br from-orange-50 to-orange-100/50 p-6 shadow-soft">
               <div className="mb-4 flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/20 text-orange-600">
                   <RefreshCcw size={20} />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-gray-900">{statistics.totalRequests.toLocaleString()}</p>
+                  <p className="text-xl sm:text-2xl font-bold text-gray-900">
+                    {statistics.totalRequests.toLocaleString()}
+                  </p>
                   <p className="text-sm font-medium text-gray-600">Total Exchange Requests</p>
                 </div>
               </div>
-              <div className="mt-3 flex items-center gap-2 text-xs text-gray-500">
+              <div className="mt-3 flex items-center gap-2 text-xs sm:text-sm text-gray-500">
                 <Clock3 size={14} />
                 <span>{statistics.pendingRequests} pending approval</span>
               </div>
@@ -338,7 +351,7 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
                   <Zap size={20} />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-xl sm:text-2xl font-bold text-gray-900">
                     {statistics.totalExchanges > 0 
                       ? ((statistics.totalExchanges / statistics.totalUsers) * 100).toFixed(1)
                       : '0'}%
@@ -346,11 +359,12 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
                   <p className="text-sm font-medium text-gray-600">Exchange Rate</p>
                 </div>
               </div>
-              <div className="mt-3 flex items-center gap-2 text-xs text-gray-500">
+              <div className="mt-3 flex items-center gap-2 text-xs sm:text-sm text-gray-500">
                 <Users size={14} />
                 <span>Average exchanges per user</span>
               </div>
             </div>
+          </div>
           </div>
         </section>
       ) : null}
@@ -439,7 +453,7 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
           </div>
         )}
 
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-2 gap-6">
           {filteredItems.map((item) => {
             const isInProgress = item.status === 'in_progress'
             const isDonated = item.status === 'donated'
