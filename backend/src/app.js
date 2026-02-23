@@ -13,6 +13,7 @@ import statisticsRoutes from './routes/statistics.routes.js'
 import donationRoutes from './routes/donation.routes.js'
 import donationRequestRoutes from './routes/donationRequest.routes.js'
 import leaderboardRoutes from './routes/leaderboard.routes.js'
+import adminRoutes from './routes/admin.routes.js'
 
 const app = express()
 
@@ -38,6 +39,7 @@ app.use('/api/statistics', statisticsRoutes)
 app.use('/api/donations', donationRoutes)
 app.use('/api/donation-requests', donationRequestRoutes)
 app.use('/api/leaderboard', leaderboardRoutes)
+app.use('/api/admin', adminRoutes)
 
 app.use((err, _req, res, _next) => {
   console.error(err)

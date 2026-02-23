@@ -78,6 +78,7 @@ export const getChatMessages = async (req, res) => {
           CASE WHEN m.read_at IS NOT NULL THEN true ELSE false END as is_read
          FROM messages m
          WHERE m.chat_id=$1 
+           AND (m.deleted_at IS NULL)
          ORDER BY m.created_at ASC`
       : `SELECT 
           m.*,
@@ -85,6 +86,7 @@ export const getChatMessages = async (req, res) => {
           false as is_read
          FROM messages m
          WHERE m.chat_id=$1 
+           AND (m.deleted_at IS NULL)
          ORDER BY m.created_at ASC`,
     [chatId, req.user.id]
   )

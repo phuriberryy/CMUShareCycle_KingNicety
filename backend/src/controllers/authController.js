@@ -27,7 +27,7 @@ export const register = async (req, res) => {
   const result = await query(
     `INSERT INTO users (name, faculty, email, password_hash)
      VALUES ($1,$2,$3,$4)
-     RETURNING id, name, faculty, email, created_at`,
+     RETURNING id, name, faculty, email, created_at, role, is_suspended`,
     [name, faculty, email, passwordHash]
   )
 
@@ -47,6 +47,8 @@ export const register = async (req, res) => {
       faculty: user.faculty,
       email: user.email,
       created_at: user.created_at,
+      role: user.role || 'user',
+      is_suspended: user.is_suspended || false,
     }
   })
 }
@@ -69,7 +71,14 @@ export const login = async (req, res) => {
     return res.status(401).json({ message: 'Invalid credentials' })
   }
 
-  const token = signToken({ id: user.id, email: user.email, name: user.name })
+  const role = user.role || 'user'
+  const isSuspended = Boolean(user.is_suspended)
+
+  if (isSuspended) {
+    return res.status(403).json({ message: 'Account is suspended. Please contact support.' })
+  }
+
+  const token = signToken({ id: user.id, email: user.email, name: user.name, role })
 
   return res.json({
     user: {
@@ -78,6 +87,8 @@ export const login = async (req, res) => {
       faculty: user.faculty,
       email: user.email,
       created_at: user.created_at,
+      role,
+      is_suspended: isSuspended,
     },
     token,
   })
