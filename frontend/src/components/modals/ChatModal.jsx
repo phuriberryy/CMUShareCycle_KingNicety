@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { QRCodeCanvas } from 'qrcode.react'
 import { Html5Qrcode } from 'html5-qrcode'
 import { io } from 'socket.io-client'
-import { Send, MessageCircle, Loader2, Check, X, QrCode, CheckCheck, MapPin } from 'lucide-react'
+import { Send, MessageCircle, Loader2, Check, X, QrCode, CheckCheck, MapPin, Trash2 } from 'lucide-react'
 import Modal from '../ui/Modal'
 import { API_BASE, chatApi } from '../../lib/api'
 import { useAuth } from '../../context/AuthContext'
@@ -27,6 +27,7 @@ export default function ChatModal({ open, onClose, initialChatId }) {
   const [actionError, setActionError] = useState('')
   const [isQrExpanded, setIsQrExpanded] = useState(true);
   const [showChatList, setShowChatList] = useState(true) // For mobile: show chat list or chat view
+  const [deletingChatId, setDeletingChatId] = useState(null)
   const socketRef = useRef(null)
   const bottomRef = useRef(null)
   const activeChatRef = useRef(null)
@@ -454,6 +455,31 @@ export default function ChatModal({ open, onClose, initialChatId }) {
     setShowChatList(true)
   }
 
+  const handleDeleteChat = async (chatId) => {
+    if (!token || !chatId) return
+    const confirmed = window.confirm('Delete this chat? This cannot be undone.')
+    if (!confirmed) return
+    try {
+      setDeletingChatId(chatId)
+      await chatApi.delete(token, chatId)
+      setChats((prev) => prev.filter((chat) => chat.id !== chatId))
+      if (activeChatId === chatId) {
+        setActiveChatId(null)
+        setMessages([])
+      }
+      if (typeof toast?.success === 'function') {
+        toast.success('Chat deleted')
+      }
+    } catch (err) {
+      console.error('Failed to delete chat:', err)
+      if (typeof toast?.error === 'function') {
+        toast.error(err.message || 'Failed to delete chat')
+      }
+    } finally {
+      setDeletingChatId(null)
+    }
+  }
+
   return (
     <Modal open={open} onClose={onClose} title="Messages" size="xl">
       {!token ? (
@@ -464,7 +490,7 @@ export default function ChatModal({ open, onClose, initialChatId }) {
           <div className={`${!showChatList && activeChatId ? 'hidden md:block' : 'block'} w-full md:w-64 space-y-3`}>
             <div>
               <label className="text-xs font-semibold text-gray-500">Start chat with CMU email</label>
-              <div className="mt-2 flex gap-2">
+              <div className="mt-2 flex flex-wrap gap-2">
                 <input
                   type="email"
                   value={recipientEmail}
@@ -475,7 +501,7 @@ export default function ChatModal({ open, onClose, initialChatId }) {
                 <button
                   type="button"
                   onClick={handleStartChat}
-                  className="rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-white"
+                  className="shrink-0 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-white"
                 >
                   Start
                 </button>
@@ -492,22 +518,39 @@ export default function ChatModal({ open, onClose, initialChatId }) {
                 {Array.isArray(chats) && chats.length > 0 ? (
                   chats.map((chat) => {
                     if (!chat || !chat.id) return null
+                    const isDeleting = deletingChatId === chat.id
                     return (
-                      <button
-                        key={chat.id}
-                        className={`w-full rounded-xl px-3 py-2.5 text-left text-sm ${
-                          activeChatId === chat.id ? 'bg-white shadow-sm' : 'hover:bg-white/60'
-                        }`}
-                        onClick={() => handleSelectChat(chat.id)}
-                      >
-                        <p className="font-semibold text-gray-800">{chat.participant_name || 'CMU Student'}</p>
-                        <p className="text-xs text-gray-500">{chat.participant_email || ''}</p>
-                        {(chat.isExchangeChat || chat.isDonationChat) && (
-                          <p className="mt-1 text-[11px] font-semibold text-primary">
-                            {getChatStatusLabel(chat)}
+                      <div key={chat.id} className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          className={`flex-1 rounded-xl px-3 py-2.5 text-left text-sm ${
+                            activeChatId === chat.id ? 'bg-white shadow-sm' : 'hover:bg-white/60'
+                          }`}
+                          onClick={() => handleSelectChat(chat.id)}
+                        >
+                          <p className="font-semibold text-gray-800">
+                            {chat.participant_name || 'CMU Student'}
                           </p>
-                        )}
-                      </button>
+                          <p className="text-xs text-gray-500">{chat.participant_email || ''}</p>
+                          {(chat.isExchangeChat || chat.isDonationChat) && (
+                            <p className="mt-1 text-[11px] font-semibold text-primary">
+                              {getChatStatusLabel(chat)}
+                            </p>
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteChat(chat.id)}
+                          disabled={isDeleting}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-red-50 text-red-500 hover:bg-red-100 disabled:opacity-50"
+                        >
+                          {isDeleting ? (
+                            <Loader2 size={14} className="animate-spin" />
+                          ) : (
+                            <Trash2 size={14} />
+                          )}
+                        </button>
+                      </div>
                     )
                   })
                 ) : (
