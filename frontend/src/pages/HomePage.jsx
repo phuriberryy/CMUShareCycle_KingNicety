@@ -637,7 +637,7 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
                   </span>
                 )}
               </div>
-              <div className="flex flex-1 flex-col space-y-4 p-5">
+              <div className="flex flex-1 flex-col space-y-3 p-4 sm:p-5">
                 {/* Category Badge */}
                 <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-semibold text-primary">
                   <Zap size={14} />
@@ -653,28 +653,39 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
                 </h3>
                 
                 {/* Details: Condition, Location, Seller */}
-                <div className="flex-1 space-y-2.5 text-base text-gray-600">
-                  <div className="flex items-center gap-2">
+                <div className="flex-1 space-y-2 text-sm sm:text-base text-gray-600">
+                  {/* Compact meta row on mobile */}
+                  <div className="flex items-center justify-between text-xs text-gray-500 sm:hidden">
+                    <span>{item.item_condition}</span>
+                    {item.pickup_location && (
+                      <span className="ml-2 flex-1 truncate text-right">
+                        {item.pickup_location}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Full details on tablet/desktop */}
+                  <div className="hidden items-center gap-2 sm:flex">
                     <span className="font-medium">Condition:</span>
                     <span>{item.item_condition}</span>
                   </div>
                   {item.pickup_location && (
-                    <div className="flex items-center gap-2">
+                    <div className="hidden items-center gap-2 sm:flex">
                       <MapPin size={18} className="text-gray-400" />
                       <span className="truncate">{item.pickup_location}</span>
                     </div>
                   )}
-                  <div className="flex items-center gap-2">
+                  <div className="hidden items-center gap-2 sm:flex">
                     <UserIcon size={18} className="text-gray-400" />
                     <span className="truncate">{item.owner_name || 'CMU Student'}</span>
                   </div>
                 </div>
                 
                 {/* Action Buttons */}
-                <div className="mt-auto flex gap-2">
+                <div className="mt-auto flex flex-col gap-2 sm:flex-row">
                   <button
                     onClick={() => navigate(`/items/${item.id}`)}
-                    className="flex-1 rounded-lg border-2 border-primary bg-white px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary/10"
+                    className="w-full flex-1 rounded-lg border-2 border-primary bg-white px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary/10"
                   >
                     <Eye size={16} className="mx-auto" />
                     <span className="mt-1 block text-xs">View Details</span>
@@ -682,7 +693,7 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
                   {isInProgress ? (
                     <button
                       disabled
-                      className="flex-1 rounded-lg bg-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-500 shadow-md cursor-not-allowed"
+                      className="w-full flex-1 rounded-lg bg-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-500 shadow-md cursor-not-allowed"
                     >
                       <RefreshCcw size={16} className="mx-auto" />
                       <span className="mt-1 block text-xs">In progress</span>
@@ -690,7 +701,7 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
                   ) : isDonated ? (
                     <button
                       disabled
-                      className="flex-1 rounded-lg bg-green-300 px-4 py-2.5 text-sm font-semibold text-green-700 shadow-md cursor-not-allowed"
+                      className="w-full flex-1 rounded-lg bg-green-300 px-4 py-2.5 text-sm font-semibold text-green-700 shadow-md cursor-not-allowed"
                     >
                       <Heart size={16} className="mx-auto" />
                       <span className="mt-1 block text-xs">Donated</span>
@@ -698,7 +709,7 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
                   ) : item.status === 'active' && item.listing_type !== 'donation' ? (
                     <button
                       onClick={() => onExchangeItem(item.id)}
-                      className="flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-primary-dark"
+                      className="w-full flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-primary-dark"
                     >
                       <RefreshCcw size={16} className="mx-auto" />
                       <span className="mt-1 block text-xs">Exchange</span>
