@@ -580,62 +580,70 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
                   alt={item.title}
                   className="h-full w-full object-cover"
                 />
-                {/* Left badge: X days remaining or expired */}
-                <div className="absolute left-4 top-4">
-                  {(() => {
-                    if (!item.available_until) {
+                {/* Top badges: days remaining + listing type */}
+                <div className="absolute inset-x-3 top-3 flex items-start justify-between gap-2 text-xs sm:text-sm">
+                  <div className="max-w-[65%]">
+                    {(() => {
+                      if (!item.available_until) {
+                        return null
+                      }
+                      // ใช้การเปรียบเทียบวันที่ (ไม่สนใจเวลา) เพื่อให้สอดคล้องกับ backend
+                      const today = new Date()
+                      today.setHours(0, 0, 0, 0)
+                      const expiryDate = new Date(item.available_until)
+                      expiryDate.setHours(0, 0, 0, 0)
+                      const diffTime = expiryDate - today
+                      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+                      
+                      // เมื่อ diffDays = 0 หมายถึง 0 days remaining (วันนี้เป็นวันสุดท้าย)
+                      // ซึ่ง backend จะถือว่า expired และไม่แสดงใน feed
+                      if (diffDays < 0) {
+                        return (
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-2.5 py-1 text-xs sm:text-sm font-semibold text-red-700">
+                            <Clock3 size={14} />
+                            Expired
+                          </span>
+                        )
+                      } else if (diffDays === 0) {
+                        // 0 days remaining - จะถูกย้ายไป expired tab
+                        return (
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-yellow-100 px-2.5 py-1 text-xs sm:text-sm font-semibold text-yellow-700">
+                            <Clock3 size={14} />
+                            <span className="sm:hidden">0 D</span>
+                            <span className="hidden sm:inline">0 days remaining</span>
+                          </span>
+                        )
+                      } else if (diffDays <= 7) {
+                        return (
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-yellow-100 px-2.5 py-1 text-xs sm:text-sm font-semibold text-yellow-700">
+                            <Clock3 size={14} />
+                            <span className="sm:hidden">{diffDays} D</span>
+                            <span className="hidden sm:inline">
+                              {diffDays} days remaining
+                            </span>
+                          </span>
+                        )
+                      }
                       return null
-                    }
-                    // ใช้การเปรียบเทียบวันที่ (ไม่สนใจเวลา) เพื่อให้สอดคล้องกับ backend
-                    const today = new Date()
-                    today.setHours(0, 0, 0, 0)
-                    const expiryDate = new Date(item.available_until)
-                    expiryDate.setHours(0, 0, 0, 0)
-                    const diffTime = expiryDate - today
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-                    
-                    // เมื่อ diffDays = 0 หมายถึง 0 days remaining (วันนี้เป็นวันสุดท้าย)
-                    // ซึ่ง backend จะถือว่า expired และไม่แสดงใน feed
-                    if (diffDays < 0) {
-                      return (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-3 py-1.5 text-sm font-semibold text-red-700">
-                          <Clock3 size={16} />
-                          Expired
-                        </span>
-                      )
-                    } else if (diffDays === 0) {
-                      // 0 days remaining - จะถูกย้ายไป expired tab
-                      return (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-yellow-100 px-3 py-1.5 text-sm font-semibold text-yellow-700">
-                          <Clock3 size={16} />
-                          0 days remaining
-                        </span>
-                      )
-                    } else if (diffDays <= 7) {
-                      return (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-yellow-100 px-3 py-1.5 text-sm font-semibold text-yellow-700">
-                          <Clock3 size={16} />
-                          {diffDays} days remaining
-                        </span>
-                      )
-                    }
-                    return null
-                  })()}
+                    })()}
+                  </div>
+
+                  <div className="shrink-0">
+                    {isInProgress ? (
+                      <span className="inline-flex rounded-full bg-yellow-500 px-3 py-1 text-xs sm:text-sm font-semibold text-white shadow-md">
+                        In progress
+                      </span>
+                    ) : item.listing_type === 'donation' ? (
+                      <span className="inline-flex rounded-full bg-red-500 px-3 py-1 text-xs sm:text-sm font-semibold text-white shadow-md">
+                        Donation
+                      </span>
+                    ) : (
+                      <span className="inline-flex rounded-full bg-primary px-3 py-1 text-xs sm:text-sm font-semibold text-white shadow-md">
+                        Exchange
+                      </span>
+                    )}
+                  </div>
                 </div>
-                {/* Right badge: Exchange/Donation or in progress */}
-                {isInProgress ? (
-                  <span className="absolute right-4 top-4 rounded-full bg-yellow-500 px-3 py-1.5 text-sm font-semibold text-white shadow-md">
-                    In progress
-                  </span>
-                ) : item.listing_type === 'donation' ? (
-                  <span className="absolute right-4 top-4 rounded-full bg-red-500 px-3 py-1.5 text-sm font-semibold text-white">
-                    Donation
-                  </span>
-                ) : (
-                  <span className="absolute right-4 top-4 rounded-full bg-primary px-3 py-1.5 text-sm font-semibold text-white">
-                    Exchange
-                  </span>
-                )}
               </div>
               <div className="flex flex-1 flex-col space-y-3 p-4 sm:p-5">
                 {/* Category Badge */}
