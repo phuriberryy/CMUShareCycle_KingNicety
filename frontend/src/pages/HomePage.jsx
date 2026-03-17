@@ -217,12 +217,12 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
                     itemsSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
                   }
                 }}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 sm:gap-3 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-white shadow-card transition hover:bg-primary-dark"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 sm:gap-3 rounded-full bg-primary px-6 py-3 text-sm sm:text-base font-semibold text-white shadow-card transition hover:bg-primary-dark"
               >
                 <span>Browse Items</span>
                 <ArrowRight size={18} />
               </button>
-              <div className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-semibold text-primary shadow-sm">
+              <div className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-full bg-white px-4 py-2 text-xs sm:text-sm font-semibold text-primary shadow-sm">
                 <Zap size={16} />
                 Zero waste campus mission
               </div>
@@ -252,7 +252,7 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
       {/* STATISTICS DASHBOARD */}
       {loadingStats ? (
         <section className="mb-8 sm:mb-12 lg:mb-16">
-          <div className="rounded-2xl bg-white p-8 sm:p-12 text-center shadow-soft">
+          <div className="rounded-2xl bg-white p-6 sm:p-8 text-center shadow-soft">
             <p className="text-sm text-gray-500">Loading statistics...</p>
           </div>
         </section>
@@ -572,64 +572,72 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
                   alt={item.title}
                   className="h-full w-full object-cover"
                 />
-                {/* Left badge: X days remaining or expired */}
-                <div className="absolute left-4 top-4">
-                  {(() => {
-                    if (!item.available_until) {
+                {/* Top badges: days remaining + listing type */}
+                <div className="absolute inset-x-3 top-3 flex items-start justify-between gap-2 text-xs sm:text-sm">
+                  <div className="max-w-[65%]">
+                    {(() => {
+                      if (!item.available_until) {
+                        return null
+                      }
+                      // ใช้การเปรียบเทียบวันที่ (ไม่สนใจเวลา) เพื่อให้สอดคล้องกับ backend
+                      const today = new Date()
+                      today.setHours(0, 0, 0, 0)
+                      const expiryDate = new Date(item.available_until)
+                      expiryDate.setHours(0, 0, 0, 0)
+                      const diffTime = expiryDate - today
+                      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+                      
+                      // เมื่อ diffDays = 0 หมายถึง 0 days remaining (วันนี้เป็นวันสุดท้าย)
+                      // ซึ่ง backend จะถือว่า expired และไม่แสดงใน feed
+                      if (diffDays < 0) {
+                        return (
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-2.5 py-1 text-xs sm:text-sm font-semibold text-red-700">
+                            <Clock3 size={14} />
+                            Expired
+                          </span>
+                        )
+                      } else if (diffDays === 0) {
+                        // 0 days remaining - จะถูกย้ายไป expired tab
+                        return (
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-yellow-100 px-2.5 py-1 text-xs sm:text-sm font-semibold text-yellow-700">
+                            <Clock3 size={14} />
+                            <span className="sm:hidden">0 D</span>
+                            <span className="hidden sm:inline">0 days remaining</span>
+                          </span>
+                        )
+                      } else if (diffDays <= 7) {
+                        return (
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-yellow-100 px-2.5 py-1 text-xs sm:text-sm font-semibold text-yellow-700">
+                            <Clock3 size={14} />
+                            <span className="sm:hidden">{diffDays} D</span>
+                            <span className="hidden sm:inline">
+                              {diffDays} days remaining
+                            </span>
+                          </span>
+                        )
+                      }
                       return null
-                    }
-                    // ใช้การเปรียบเทียบวันที่ (ไม่สนใจเวลา) เพื่อให้สอดคล้องกับ backend
-                    const today = new Date()
-                    today.setHours(0, 0, 0, 0)
-                    const expiryDate = new Date(item.available_until)
-                    expiryDate.setHours(0, 0, 0, 0)
-                    const diffTime = expiryDate - today
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-                    
-                    // เมื่อ diffDays = 0 หมายถึง 0 days remaining (วันนี้เป็นวันสุดท้าย)
-                    // ซึ่ง backend จะถือว่า expired และไม่แสดงใน feed
-                    if (diffDays < 0) {
-                      return (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-3 py-1.5 text-sm font-semibold text-red-700">
-                          <Clock3 size={16} />
-                          Expired
-                        </span>
-                      )
-                    } else if (diffDays === 0) {
-                      // 0 days remaining - จะถูกย้ายไป expired tab
-                      return (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-yellow-100 px-3 py-1.5 text-sm font-semibold text-yellow-700">
-                          <Clock3 size={16} />
-                          0 days remaining
-                        </span>
-                      )
-                    } else if (diffDays <= 7) {
-                      return (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-yellow-100 px-3 py-1.5 text-sm font-semibold text-yellow-700">
-                          <Clock3 size={16} />
-                          {diffDays} days remaining
-                        </span>
-                      )
-                    }
-                    return null
-                  })()}
+                    })()}
+                  </div>
+
+                  <div className="shrink-0">
+                    {isInProgress ? (
+                      <span className="inline-flex rounded-full bg-yellow-500 px-3 py-1 text-xs sm:text-sm font-semibold text-white shadow-md">
+                        In progress
+                      </span>
+                    ) : item.listing_type === 'donation' ? (
+                      <span className="inline-flex rounded-full bg-red-500 px-3 py-1 text-xs sm:text-sm font-semibold text-white shadow-md">
+                        Donation
+                      </span>
+                    ) : (
+                      <span className="inline-flex rounded-full bg-primary px-3 py-1 text-xs sm:text-sm font-semibold text-white shadow-md">
+                        Exchange
+                      </span>
+                    )}
+                  </div>
                 </div>
-                {/* Right badge: Exchange/Donation or in progress */}
-                {isInProgress ? (
-                  <span className="absolute right-4 top-4 rounded-full bg-yellow-500 px-3 py-1.5 text-sm font-semibold text-white shadow-md">
-                    In progress
-                  </span>
-                ) : item.listing_type === 'donation' ? (
-                  <span className="absolute right-4 top-4 rounded-full bg-red-500 px-3 py-1.5 text-sm font-semibold text-white">
-                    Donation
-                  </span>
-                ) : (
-                  <span className="absolute right-4 top-4 rounded-full bg-primary px-3 py-1.5 text-sm font-semibold text-white">
-                    Exchange
-                  </span>
-                )}
               </div>
-              <div className="flex flex-1 flex-col space-y-4 p-5">
+              <div className="flex flex-1 flex-col space-y-3 p-4 sm:p-5">
                 {/* Category Badge */}
                 <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-semibold text-primary">
                   <Zap size={14} />
@@ -645,28 +653,39 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
                 </h3>
                 
                 {/* Details: Condition, Location, Seller */}
-                <div className="flex-1 space-y-2.5 text-base text-gray-600">
-                  <div className="flex items-center gap-2">
+                <div className="flex-1 space-y-2 text-sm sm:text-base text-gray-600">
+                  {/* Compact meta row on mobile */}
+                  <div className="flex items-center justify-between text-xs text-gray-500 sm:hidden">
+                    <span>{item.item_condition}</span>
+                    {item.pickup_location && (
+                      <span className="ml-2 flex-1 truncate text-right">
+                        {item.pickup_location}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Full details on tablet/desktop */}
+                  <div className="hidden items-center gap-2 sm:flex">
                     <span className="font-medium">Condition:</span>
                     <span>{item.item_condition}</span>
                   </div>
                   {item.pickup_location && (
-                    <div className="flex items-center gap-2">
+                    <div className="hidden items-center gap-2 sm:flex">
                       <MapPin size={18} className="text-gray-400" />
                       <span className="truncate">{item.pickup_location}</span>
                     </div>
                   )}
-                  <div className="flex items-center gap-2">
+                  <div className="hidden items-center gap-2 sm:flex">
                     <UserIcon size={18} className="text-gray-400" />
                     <span className="truncate">{item.owner_name || 'CMU Student'}</span>
                   </div>
                 </div>
                 
                 {/* Action Buttons */}
-                <div className="mt-auto flex gap-2">
+                <div className="mt-auto flex flex-col gap-2 sm:flex-row">
                   <button
                     onClick={() => navigate(`/items/${item.id}`)}
-                    className="flex-1 rounded-lg border-2 border-primary bg-white px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary/10"
+                    className="w-full flex-1 rounded-lg border-2 border-primary bg-white px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary/10"
                   >
                     <Eye size={16} className="mx-auto" />
                     <span className="mt-1 block text-xs">View Details</span>
@@ -674,7 +693,7 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
                   {isInProgress ? (
                     <button
                       disabled
-                      className="flex-1 rounded-lg bg-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-500 shadow-md cursor-not-allowed"
+                      className="w-full flex-1 rounded-lg bg-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-500 shadow-md cursor-not-allowed"
                     >
                       <RefreshCcw size={16} className="mx-auto" />
                       <span className="mt-1 block text-xs">In progress</span>
@@ -682,7 +701,7 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
                   ) : isDonated ? (
                     <button
                       disabled
-                      className="flex-1 rounded-lg bg-green-300 px-4 py-2.5 text-sm font-semibold text-green-700 shadow-md cursor-not-allowed"
+                      className="w-full flex-1 rounded-lg bg-green-300 px-4 py-2.5 text-sm font-semibold text-green-700 shadow-md cursor-not-allowed"
                     >
                       <Heart size={16} className="mx-auto" />
                       <span className="mt-1 block text-xs">Donated</span>
@@ -690,7 +709,7 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
                   ) : item.status === 'active' && item.listing_type !== 'donation' ? (
                     <button
                       onClick={() => onExchangeItem(item.id)}
-                      className="flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-primary-dark"
+                      className="w-full flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-primary-dark"
                     >
                       <RefreshCcw size={16} className="mx-auto" />
                       <span className="mt-1 block text-xs">Exchange</span>

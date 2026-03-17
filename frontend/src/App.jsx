@@ -18,6 +18,8 @@ import DonationRequestModal from './components/modals/DonationRequestModal'
 import NotificationsModal from './components/modals/NotificationsModal'
 import ChatModal from './components/modals/ChatModal'
 import ProtectedRoute from './components/auth/ProtectedRoute'
+import AdminRoute from './components/auth/AdminRoute'
+import AdminLayout from './components/admin/AdminLayout'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ToastProvider } from './context/ToastContext'
 import { API_BASE, notificationApi } from './lib/api'
@@ -199,6 +201,16 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <DonationRequestDetailPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/*"
+            element={
+              <ProtectedRoute>
+                <AdminRoute>
+                  <AdminLayout />
+                </AdminRoute>
               </ProtectedRoute>
             }
           />

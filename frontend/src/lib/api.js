@@ -117,6 +117,77 @@ export const authApi = {
     }),
 }
 
+export const adminApi = {
+  getSummary: (token) => request('/admin/summary', { token }),
+  // Users
+  listUsers: (token, { page = 1, pageSize = 20, search = '' } = {}) =>
+    request(
+      `/admin/users?page=${encodeURIComponent(page)}&pageSize=${encodeURIComponent(
+        pageSize
+      )}&search=${encodeURIComponent(search)}`,
+      { token }
+    ),
+  updateUserRole: (token, userId, role) =>
+    request(`/admin/users/${userId}/role`, {
+      method: 'PATCH',
+      body: JSON.stringify({ role }),
+      token,
+    }),
+  updateUserSuspension: (token, userId, suspended) =>
+    request(`/admin/users/${userId}/suspension`, {
+      method: 'PATCH',
+      body: JSON.stringify({ suspended }),
+      token,
+    }),
+  deleteUser: (token, userId) =>
+    request(`/admin/users/${userId}`, {
+      method: 'DELETE',
+      token,
+    }),
+  // Items
+  listItems: (token, { page = 1, pageSize = 20, status = '' } = {}) =>
+    request(
+      `/admin/items?page=${encodeURIComponent(page)}&pageSize=${encodeURIComponent(
+        pageSize
+      )}&status=${encodeURIComponent(status)}`,
+      { token }
+    ),
+  deleteItem: (token, itemId) =>
+    request(`/admin/items/${itemId}`, {
+      method: 'DELETE',
+      token,
+    }),
+  // Reports
+  listReports: (token, { page = 1, pageSize = 20, status = '' } = {}) =>
+    request(
+      `/admin/reports?page=${encodeURIComponent(page)}&pageSize=${encodeURIComponent(
+        pageSize
+      )}&status=${encodeURIComponent(status)}`,
+      { token }
+    ),
+  updateReportStatus: (token, reportId, status) =>
+    request(`/admin/reports/${reportId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+      token,
+    }),
+  // Chats
+  listChats: (token, { page = 1, pageSize = 20 } = {}) =>
+    request(
+      `/admin/chats?page=${encodeURIComponent(page)}&pageSize=${encodeURIComponent(
+        pageSize
+      )}`,
+      { token }
+    ),
+  getChatMessages: (token, chatId) =>
+    request(`/admin/chats/${chatId}/messages`, { token }),
+  deleteMessage: (token, chatId, messageId) =>
+    request(`/admin/chats/${chatId}/messages/${messageId}`, {
+      method: 'DELETE',
+      token,
+    }),
+}
+
 export const itemsApi = {
   list: () => request('/items'),
   getById: (itemId) => request(`/items/${itemId}`),
