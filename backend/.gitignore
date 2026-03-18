@@ -22,6 +22,9 @@ node_modules
 dist
 build
 
+# Uploaded files
+uploads/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

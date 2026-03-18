@@ -21,7 +21,7 @@ export default function ManageItemModal({ open, onClose, item, onUpdate }) {
           setExchangeRequests(data)
         } catch (err) {
           console.error('Failed to fetch exchange requests:', err)
-          setError(err.message || 'Failed to load exchange requests')
+          setError(err.message || 'โหลดคำขอแลกไม่สำเร็จ')
         } finally {
           setLoading(false)
         }
@@ -43,7 +43,7 @@ export default function ManageItemModal({ open, onClose, item, onUpdate }) {
     const hours = Math.floor(diff / 3600000)
     const days = Math.floor(diff / 86400000)
 
-    if (minutes < 1) return 'Just now'
+    if (minutes < 1) return 'เมื่อสักครู่'
     if (minutes < 60) return `${minutes} minutes ago`
     if (hours < 24) return `${hours} hours ago`
     return `${days} days ago`
@@ -80,7 +80,7 @@ export default function ManageItemModal({ open, onClose, item, onUpdate }) {
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Manage Post</h2>
+            <h2 className="text-2xl font-bold text-gray-900">จัดการโพสต์</h2>
             <p className="mt-1 text-sm text-gray-600">{item.title}</p>
           </div>
           <button
@@ -95,22 +95,22 @@ export default function ManageItemModal({ open, onClose, item, onUpdate }) {
         <div className="flex-1 overflow-y-auto px-6 py-4">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <p className="text-gray-500">Loading...</p>
+              <p className="text-gray-500">กำลังโหลด...</p>
             </div>
           ) : error ? (
             <div className="rounded-lg bg-red-50 p-4 text-sm text-red-600">{error}</div>
           ) : exchangeRequests.length === 0 ? (
             <div className="rounded-lg bg-gray-50 p-12 text-center">
               <MessageCircle className="mx-auto mb-4 text-gray-400" size={48} />
-              <p className="text-lg font-semibold text-gray-700">No exchange requests yet</p>
+              <p className="text-lg font-semibold text-gray-700">ยังไม่มีคำขอแลกเปลี่ยน</p>
               <p className="mt-2 text-sm text-gray-500">
-                When someone is interested in exchanging with this post, requests will appear here
+                เมื่อมีคนสนใจแลกเปลี่ยน คำขอจะแสดงที่นี่
               </p>
             </div>
           ) : (
             <div className="space-y-4">
               <p className="text-sm font-semibold text-gray-700">
-                Exchange Requests ({exchangeRequests.length})
+                คำขอแลกเปลี่ยน ({exchangeRequests.length})
               </p>
               {exchangeRequests.map((request) => (
                 <div
@@ -162,7 +162,7 @@ export default function ManageItemModal({ open, onClose, item, onUpdate }) {
                         onClick={() => handleViewRequest(request.id)}
                         className="flex-1 rounded-lg border border-primary bg-white px-4 py-2 text-sm font-semibold text-primary transition hover:bg-primary/10"
                       >
-                        View Details
+                        ดูรายละเอียด
                       </button>
                     </div>
                   )}

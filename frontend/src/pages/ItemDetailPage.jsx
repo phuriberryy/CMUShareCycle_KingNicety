@@ -54,7 +54,7 @@ export default function ItemDetailPage({ onExchangeItem, onDonationItem }) {
 
 
   const formatDate = (dateString) => {
-    if (!dateString) return 'Not specified'
+    if (!dateString) return 'ไม่ได้ระบุ'
     const date = new Date(dateString)
     return date.toLocaleDateString('th-TH', {
       year: 'numeric',
@@ -77,9 +77,11 @@ export default function ItemDetailPage({ onExchangeItem, onDonationItem }) {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-10">
-        <div className="rounded-2xl bg-white p-12 text-center shadow-md">
-          <p className="text-lg text-gray-600">Loading data...</p>
+      <div className="min-h-screen bg-[#FAFBF9]">
+        <div className="mx-auto max-w-4xl px-4 py-10">
+          <div className="rounded-2xl border border-gray-200 bg-white p-12 text-center shadow-sm">
+            <p className="text-lg text-gray-600">Loading data...</p>
+          </div>
         </div>
       </div>
     )
@@ -87,17 +89,19 @@ export default function ItemDetailPage({ onExchangeItem, onDonationItem }) {
 
   if (error || !item) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-10">
-        <div className="rounded-2xl bg-white p-12 text-center shadow-md">
+      <div className="min-h-screen bg-[#FAFBF9]">
+        <div className="mx-auto max-w-4xl px-4 py-10">
+        <div className="rounded-2xl border border-gray-200 bg-white p-12 text-center shadow-sm">
           <AlertCircle className="mx-auto mb-4 h-12 w-12 text-red-500" />
-          <p className="text-lg font-semibold text-gray-900">{error || 'Item not found'}</p>
+          <p className="text-lg font-semibold text-gray-900">{error || 'ไม่พบสินค้า'}</p>
           <Link
             to="/"
             className="mt-4 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-white transition hover:bg-primary-dark"
           >
             <ArrowLeft size={16} />
-            Back to Home
+            กลับหน้าแรก
           </Link>
+        </div>
         </div>
       </div>
     )
@@ -109,17 +113,18 @@ export default function ItemDetailPage({ onExchangeItem, onDonationItem }) {
   const co2Footprint = calculateItemCO2(item.category, item.item_condition)
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8 overflow-x-hidden">
+    <div className="min-h-screen bg-[#FAFBF9]">
+      <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8 overflow-x-hidden">
       {/* Back Button */}
       <Link
         to="/"
         className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-gray-600 transition hover:text-gray-900"
       >
         <ArrowLeft size={18} />
-        <span>Back to Home</span>
+        <span>กลับหน้าแรก</span>
       </Link>
 
-      <div className="rounded-2xl bg-white shadow-md">
+      <div className="rounded-2xl border border-gray-200 bg-white shadow-sm">
         {/* Image Section */}
         <div className="relative aspect-[4/3] w-full overflow-hidden rounded-t-2xl bg-gray-100">
           {item.image_url ? (
@@ -156,7 +161,7 @@ export default function ItemDetailPage({ onExchangeItem, onDonationItem }) {
             <div className="flex h-full w-full items-center justify-center bg-gray-100 text-gray-400">
               <div className="text-center">
                 <Package size={64} className="mx-auto mb-2" />
-                <p className="text-sm">No image</p>
+                <p className="text-sm">ไม่มีรูป</p>
               </div>
             </div>
           )}
@@ -181,7 +186,7 @@ export default function ItemDetailPage({ onExchangeItem, onDonationItem }) {
           <div className="absolute right-4 top-4">
             {isInProgress ? (
               <span className="rounded-full bg-yellow-500 px-4 py-2 text-sm font-semibold text-white shadow-md">
-                In progress
+                กำลังดำเนินการ
               </span>
             ) : item.listing_type === 'donation' ? (
               <span className="rounded-full bg-red-500 px-4 py-2 text-sm font-semibold text-white">
@@ -234,16 +239,16 @@ export default function ItemDetailPage({ onExchangeItem, onDonationItem }) {
                 </div>
                 <div className="flex-1">
                   <p className="text-xs text-gray-500">Owner</p>
-                  <p className="font-semibold text-gray-900">{item.owner_name || 'Not specified'}</p>
+                  <p className="font-semibold text-gray-900">{item.owner_name || 'ไม่ได้ระบุ'}</p>
                 </div>
               </div>
               <div className="mt-2 border-t border-gray-200 pt-2">
                 <p className="text-xs text-gray-500">Faculty</p>
-                <p className="text-sm font-medium text-gray-700">{item.owner_faculty || 'Not specified'}</p>
+                <p className="text-sm font-medium text-gray-700">{item.owner_faculty || 'ไม่ได้ระบุ'}</p>
               </div>
               <div className="mt-2 border-t border-gray-200 pt-2">
                 <p className="text-xs text-gray-500">Email</p>
-                <p className="text-sm font-medium text-gray-700">{item.owner_email || 'Not specified'}</p>
+                <p className="text-sm font-medium text-gray-700">{item.owner_email || 'ไม่ได้ระบุ'}</p>
               </div>
             </div>
 
@@ -254,7 +259,7 @@ export default function ItemDetailPage({ onExchangeItem, onDonationItem }) {
               </div>
               <div>
                 <p className="text-xs text-gray-500">Pickup Location</p>
-                <p className="font-semibold text-gray-900">{item.pickup_location || 'Not specified'}</p>
+                <p className="font-semibold text-gray-900">{item.pickup_location || 'ไม่ได้ระบุ'}</p>
               </div>
             </div>
 
@@ -286,7 +291,7 @@ export default function ItemDetailPage({ onExchangeItem, onDonationItem }) {
                 <Calendar size={20} className="text-primary" />
               </div>
               <div>
-                <p className="text-xs text-gray-500">Posted date</p>
+                <p className="text-xs text-gray-500">วันที่โพสต์</p>
                 <p className="font-semibold text-gray-900">{formatDate(item.created_at)}</p>
               </div>
             </div>
@@ -296,7 +301,7 @@ export default function ItemDetailPage({ onExchangeItem, onDonationItem }) {
           {item.listing_type !== 'donation' && (
             <div className="mb-6 rounded-xl bg-yellow-50 p-4">
               <p className="mb-2 text-sm font-semibold text-yellow-900">Looking for:</p>
-              <p className="text-yellow-800">{item.looking_for || 'Not specified'}</p>
+              <p className="text-yellow-800">{item.looking_for || 'ไม่ได้ระบุ'}</p>
             </div>
           )}
 
@@ -308,7 +313,7 @@ export default function ItemDetailPage({ onExchangeItem, onDonationItem }) {
                 className="flex-1 rounded-full bg-red-500 px-6 py-3 text-base font-semibold text-white shadow-md transition hover:bg-red-600 flex items-center justify-center gap-2"
               >
                 <Heart size={20} />
-                Request Donation
+                ขอรับบริจาค
               </button>
             )}
             {!isOwner && !isInProgress && item.status === 'active' && item.listing_type !== 'donation' && (
@@ -316,25 +321,25 @@ export default function ItemDetailPage({ onExchangeItem, onDonationItem }) {
                 onClick={handleExchange}
                 className="flex-1 rounded-full bg-primary px-6 py-3 text-base font-semibold text-white shadow-md transition hover:bg-primary-dark"
               >
-                Request Exchange
+                ขอแลกเปลี่ยน
               </button>
             )}
             {isOwner && item.status === 'active' && (
               <div className="flex-1 rounded-xl bg-blue-50 p-4 text-center">
-                <p className="text-sm font-semibold text-blue-900">This is your item</p>
-                <p className="mt-1 text-xs text-blue-700">You can manage this item on the Profile page</p>
+                <p className="text-sm font-semibold text-blue-900">นี่คือสินค้าของคุณ</p>
+                <p className="mt-1 text-xs text-blue-700">คุณสามารถจัดการสินค้าได้ที่หน้าโปรไฟล์</p>
               </div>
             )}
             {isInProgress && (
               <div className="flex-1 rounded-xl bg-yellow-50 p-4 text-center">
-                <p className="text-sm font-semibold text-yellow-900">This item is currently in the exchange process</p>
+                <p className="text-sm font-semibold text-yellow-900">สินค้านี้กำลังอยู่ในขั้นตอนดำเนินการ</p>
               </div>
             )}
             {item.status === 'donated' && (
               <div className="flex-1 rounded-xl bg-green-50 p-4 text-center">
                 <p className="text-sm font-semibold text-green-900 flex items-center justify-center gap-2">
                   <Heart size={20} className="text-green-600" />
-                  This item has been donated
+                  สินค้านี้ถูกบริจาคแล้ว
                 </p>
               </div>
             )}
@@ -342,6 +347,7 @@ export default function ItemDetailPage({ onExchangeItem, onDonationItem }) {
         </div>
       </div>
 
+      </div>
     </div>
   )
 }

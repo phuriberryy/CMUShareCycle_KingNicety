@@ -94,7 +94,7 @@ export default function EditProfileModal({ isOpen, onClose, user, onUpdate }) {
                 name="name"
                 value={form.name}
                 onChange={handleChange}
-                placeholder="Your name"
+                placeholder="ชื่อของคุณ"
                 className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 pl-10 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0"
                 required
               />
@@ -136,14 +136,14 @@ export default function EditProfileModal({ isOpen, onClose, user, onUpdate }) {
               onClick={onClose}
               className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
             >
-              Cancel
+              ยกเลิก
             </button>
             <button
               type="submit"
               disabled={submitting}
               className="flex-1 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-primary-dark disabled:opacity-60"
             >
-              {submitting ? 'Saving...' : 'Save'}
+              {submitting ? 'กำลังบันทึก...' : 'บันทึก'}
             </button>
           </div>
         </form>

@@ -39,8 +39,9 @@ export const initChatServer = (server) => {
       }
     })
 
-    socket.on('chat:message', async ({ chatId, body }) => {
-      if (!body || !chatId) return
+    socket.on('chat:message', async ({ chatId, body, imageUrl }) => {
+      const hasContent = (body && String(body).trim()) || imageUrl
+      if (!hasContent || !chatId) return
 
       const membership = await query(
         `SELECT c.*, er.owner_accepted, er.requester_accepted
@@ -73,11 +74,12 @@ export const initChatServer = (server) => {
         return
       }
 
+      const bodyText = (body && String(body).trim()) || (imageUrl ? '' : '')
       const messageResult = await query(
-        `INSERT INTO messages (chat_id, sender_id, body)
-         VALUES ($1,$2,$3)
+        `INSERT INTO messages (chat_id, sender_id, body, image_url)
+         VALUES ($1,$2,$3,$4)
          RETURNING *`,
-        [chatId, user.id, body]
+        [chatId, user.id, bodyText, imageUrl || null]
       )
 
       const message = messageResult.rows[0]
@@ -107,10 +109,11 @@ export const initChatServer = (server) => {
       const recipient = recipientResult.rows[0]
       if (recipient?.email) {
         try {
+          const emailBody = (bodyText && bodyText.trim()) ? bodyText : (imageUrl ? '[ส่งรูปภาพ]' : '')
           await sendEmail({
             to: recipient.email,
             subject: 'คุณมีข้อความใหม่บน CMU ShareCycle',
-            html: `<p>${user.name} ส่งข้อความใหม่ถึงคุณ:</p><p>${body}</p>`,
+            html: `<p>${user.name} ส่งข้อความใหม่ถึงคุณ:</p><p>${emailBody || '(ข้อความ)'}</p>`,
           })
         } catch (err) {
           console.error('Failed to send chat email', err)

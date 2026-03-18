@@ -17,6 +17,9 @@ export const authenticate = (req, res, next) => {
     req.user = user
     return next()
   } catch (err) {
+    if (err.message === 'jwt expired') {
+      return res.status(401).json({ message: 'Session expired. Please log in again.' })
+    }
     console.error('❌ Token verification failed:', err.message)
     return res.status(401).json({ message: 'Invalid token' })
   }

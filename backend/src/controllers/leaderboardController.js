@@ -247,6 +247,7 @@ export const getMyRank = async (req, res) => {
       rank,
       totalUsers,
       percentile,
+      avatarUrl: user.avatar_url || null,
       totalPoints: parseInt(user.total_points) || 0,
       totalCO2Reduced: parseFloat(user.total_co2_reduced) || 0,
       totalExchanges: parseInt(user.total_exchanges) || 0,

@@ -21,7 +21,7 @@ export default function AdminLayout() {
   const { user } = useAuth()
 
   return (
-    <div className="min-h-screen bg-surface text-gray-900">
+    <div className="min-h-screen bg-[#FAFBF9] text-gray-900">
       <div className="flex flex-col md:flex-row">
         {/* Sidebar */}
         <aside className="md:w-64">

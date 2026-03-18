@@ -79,7 +79,8 @@ const handleResponse = async (res) => {
   return data
 }
 
-const DEFAULT_TIMEOUT_MS = 15000 // 15 วินาที – ถ้า backend ไม่ตอบจะไม่ค้างตลอด
+const DEFAULT_TIMEOUT_MS = 15000 // 15 วินาที
+const CHAT_TIMEOUT_MS = 30000 // แชทใช้ 30 วินาที — ลดโอกาส "Fetch is aborted"
 
 const request = async (path, { token, headers, timeoutMs = DEFAULT_TIMEOUT_MS, ...options } = {}) => {
   const mergedHeaders = {
@@ -94,14 +95,23 @@ const request = async (path, { token, headers, timeoutMs = DEFAULT_TIMEOUT_MS, .
   const controller = new AbortController()
   const timeoutId = timeoutMs > 0 ? setTimeout(() => controller.abort(), timeoutMs) : null
 
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers: mergedHeaders,
-    signal: controller.signal,
-  })
-
-  if (timeoutId) clearTimeout(timeoutId)
-  return handleResponse(res)
+  try {
+    const res = await fetch(`${API_BASE}${path}`, {
+      ...options,
+      headers: mergedHeaders,
+      signal: controller.signal,
+    })
+    if (timeoutId) clearTimeout(timeoutId)
+    return handleResponse(res)
+  } catch (err) {
+    if (timeoutId) clearTimeout(timeoutId)
+    if (err?.name === 'AbortError' || /aborted|fetch is aborted/i.test(String(err?.message || ''))) {
+      const e = new Error('การเชื่อมต่อช้าหรือถูกยกเลิก — กรุณาลองอีกครั้ง')
+      e.isAbort = true
+      throw e
+    }
+    throw err
+  }
 }
 
 export const authApi = {
@@ -288,24 +298,29 @@ export const profileApi = {
 
 export const chatApi = {
   create: (token, payload) =>
-    request('/chats', { method: 'POST', body: JSON.stringify(payload), token }),
-  list: (token) => request('/chats', { token }),
-  messages: (token, chatId) => request(`/chats/${chatId}/messages`, { token }),
+    request('/chats', { method: 'POST', body: JSON.stringify(payload), token, timeoutMs: CHAT_TIMEOUT_MS }),
+  list: (token) => request('/chats', { token, timeoutMs: CHAT_TIMEOUT_MS }),
+  messages: (token, chatId) => request(`/chats/${chatId}/messages`, { token, timeoutMs: CHAT_TIMEOUT_MS }),
+  uploadImage: (token, dataUrl) =>
+    request('/chats/upload-image', {
+      method: 'POST',
+      body: JSON.stringify({ image: dataUrl }),
+      token,
+      timeoutMs: CHAT_TIMEOUT_MS,
+    }),
   accept: (token, chatId) =>
-    request(`/chats/${chatId}/accept`, { method: 'PATCH', token }),
+    request(`/chats/${chatId}/accept`, { method: 'PATCH', token, timeoutMs: CHAT_TIMEOUT_MS }),
   decline: (token, chatId) =>
-    request(`/chats/${chatId}/decline`, { method: 'PATCH', token }),
+    request(`/chats/${chatId}/decline`, { method: 'PATCH', token, timeoutMs: CHAT_TIMEOUT_MS }),
   confirmQr: (token, chatId, payload) =>
     request(`/chats/${chatId}/confirm`, {
       method: 'POST',
       body: JSON.stringify(payload),
       token,
+      timeoutMs: CHAT_TIMEOUT_MS,
     }),
   delete: (token, chatId) =>
-    request(`/chats/${chatId}`, {
-      method: 'DELETE',
-      token,
-    }),
+    request(`/chats/${chatId}`, { method: 'DELETE', token, timeoutMs: CHAT_TIMEOUT_MS }),
 }
 
 export const statisticsApi = {

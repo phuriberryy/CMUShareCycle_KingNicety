@@ -274,7 +274,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-16 text-center">
-        <p className="text-lg text-gray-600">Loading...</p>
+        <p className="text-lg text-gray-600">กำลังโหลด...</p>
       </div>
     )
   }
@@ -283,11 +283,12 @@ export default function ProfilePage() {
   const stats = profile?.stats || { itemsShared: 0, co2Reduced: '0.00' }
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-6 sm:py-10 sm:px-6 lg:px-0">
-      <section className="overflow-hidden rounded-[24px] sm:rounded-[40px] bg-white shadow-soft">
+    <div className="min-h-screen bg-[#FAFBF9]">
+      <div className="mx-auto max-w-5xl px-4 py-6 sm:py-10 sm:px-6 lg:px-8">
+      <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
         <div className="h-28 sm:h-40 bg-gradient-to-r from-[#1B843C] via-[#2D7D3F] to-[#76BE7B]" />
         <div className="relative px-4 sm:px-8 pb-8 sm:pb-10 pt-4">
-          <div className="absolute -top-12 sm:-top-16 left-4 sm:left-10 flex h-24 w-24 sm:h-32 sm:w-32 items-center justify-center rounded-full border-4 sm:border-[6px] border-white bg-primary text-2xl sm:text-4xl font-bold text-white shadow-soft">
+          <div className="absolute -top-12 sm:-top-16 left-4 sm:left-10 flex h-24 w-24 sm:h-32 sm:w-32 items-center justify-center rounded-full border-4 sm:border-[6px] border-white bg-primary text-2xl sm:text-4xl font-bold text-white shadow-md">
             {initials}
           </div>
 
@@ -368,7 +369,7 @@ export default function ProfilePage() {
             }`}
           >
             <Clock3 size={14} className="sm:w-4 sm:h-4" />
-            Expired ({expiredItems.length})
+            หมดอายุ ({expiredItems.length})
           </button>
           <button
             onClick={() => setActiveTab('history')}
@@ -400,7 +401,7 @@ export default function ProfilePage() {
         {activeTab === 'posts' && (
           <div>
             {activeItems.length === 0 ? (
-              <div className="rounded-[32px] bg-white p-12 text-center shadow-soft">
+              <div className="rounded-2xl border border-gray-200 bg-white p-8 sm:p-12 text-center shadow-sm">
                 <p className="text-lg font-semibold text-gray-700">No active posts yet.</p>
                 <p className="mt-2 text-sm text-gray-500">Start sharing items to see them appear in your profile.</p>
               </div>
@@ -414,7 +415,7 @@ export default function ProfilePage() {
                   return (
                     <div
                       key={item.id}
-                      className="group relative overflow-hidden rounded-[24px] bg-white shadow-soft transition hover:shadow-card"
+                      className="group relative overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition hover:shadow-md hover:border-gray-300"
                     >
                       {/* Image with Status Badge */}
                       <div className="relative h-48 w-full overflow-hidden">
@@ -492,36 +493,36 @@ export default function ProfilePage() {
         )}
         {activeTab === 'expired' && (
           <div>
-            <div className="mb-6 rounded-[24px] bg-yellow-50 border border-yellow-200 p-6">
+            <div className="mb-6 rounded-2xl bg-yellow-50 border border-yellow-200 p-6">
               <div className="flex items-start gap-3">
                 <Clock3 size={24} className="text-yellow-600 flex-shrink-0 mt-1" />
                 <div>
-                  <h3 className="text-lg font-semibold text-yellow-900 mb-2">Expired Posts</h3>
+                  <h3 className="text-lg font-semibold text-yellow-900 mb-2">โพสต์หมดอายุ</h3>
                   <p className="text-sm text-yellow-800">
-                    These posts have expired but have not been exchanged. You can delete or update them.
+                    โพสต์เหล่านี้หมดอายุแล้วและยังไม่ได้แลกเปลี่ยน คุณสามารถลบหรือแก้ไขได้
                   </p>
                 </div>
               </div>
             </div>
             {expiredItems.length === 0 ? (
-              <div className="rounded-[32px] bg-white p-12 text-center shadow-soft">
+              <div className="rounded-2xl border border-gray-200 bg-white p-8 sm:p-12 text-center shadow-sm">
                 <Clock3 size={48} className="mx-auto mb-4 text-gray-400" />
-                <p className="text-lg font-semibold text-gray-700">No expired posts</p>
-                <p className="mt-2 text-sm text-gray-500">Expired posts will appear here</p>
+                <p className="text-lg font-semibold text-gray-700">ยังไม่มีโพสต์หมดอายุ</p>
+                <p className="mt-2 text-sm text-gray-500">โพสต์หมดอายุจะแสดงที่นี่</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {expiredItems.map((item) => {
                   const views = getItemViews(item.id)
                   const canEdit = canEditItem(item)
-                  const expiredDate = item.available_until ? new Date(item.available_until).toLocaleDateString('en-US') : 'Not specified'
+                  const expiredDate = item.available_until ? new Date(item.available_until).toLocaleDateString('th-TH') : 'ไม่ได้ระบุ'
 
                   return (
                     <div
                       key={item.id}
-                      className="group relative overflow-hidden rounded-[24px] bg-white border-2 border-yellow-200 shadow-soft transition hover:shadow-card opacity-90"
+                      className="group relative overflow-hidden rounded-2xl border-2 border-yellow-200 bg-white shadow-sm transition hover:shadow-md opacity-90"
                     >
-                      {/* Image with Expired Badge */}
+                      {/* Image with หมดอายุ Badge */}
                       <div className="relative h-48 w-full overflow-hidden">
                         {item.image_url ? (
                           <img
@@ -535,11 +536,11 @@ export default function ProfilePage() {
                           </div>
                         )}
                         <span className="absolute right-3 top-3 rounded-full bg-red-500 px-3 py-1 text-xs font-semibold text-white shadow-md">
-                          Expired
+                          หมดอายุ
                         </span>
                         <div className="absolute left-3 top-3 rounded-full bg-yellow-100 px-3 py-1 text-xs font-semibold text-yellow-800">
                           <Clock3 size={12} className="inline mr-1" />
-                          Expired: {expiredDate}
+                          หมดอายุ: {expiredDate}
                         </div>
                       </div>
 
@@ -603,7 +604,7 @@ export default function ProfilePage() {
         {activeTab === 'history' && (
           <div>
             {exchangeHistory.length === 0 ? (
-              <div className="rounded-[32px] bg-white p-12 text-center shadow-soft">
+              <div className="rounded-2xl border border-gray-200 bg-white p-8 sm:p-12 text-center shadow-sm">
                 <p className="text-lg font-semibold text-gray-700">No exchange history yet.</p>
                 <p className="mt-2 text-sm text-gray-500">Your exchange timeline will show up here.</p>
               </div>
@@ -615,7 +616,7 @@ export default function ProfilePage() {
                   return (
                     <div
                       key={history.id}
-                      className="rounded-[24px] bg-white p-6 shadow-soft transition hover:shadow-card"
+                      className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md"
                     >
                       {/* Date and CO2 Badge */}
                       <div className="mb-4 flex items-center justify-between">
@@ -641,7 +642,7 @@ export default function ProfilePage() {
                               {history.my_item_image_url ? (
                                 <img
                                   src={history.my_item_image_url}
-                                  alt={history.my_item_title || 'My item'}
+                                  alt={history.my_item_title || 'สินค้าของฉัน'}
                                   className="h-32 w-32 rounded-lg object-cover"
                                 />
                               ) : (
@@ -672,7 +673,7 @@ export default function ProfilePage() {
                               {history.received_item_image_url ? (
                                 <img
                                   src={history.received_item_image_url}
-                                  alt={history.received_item_title || 'Received item'}
+                                  alt={history.received_item_title || 'สินค้าที่ได้รับ'}
                                   className="h-32 w-32 rounded-lg object-cover"
                                 />
                               ) : (
@@ -706,7 +707,7 @@ export default function ProfilePage() {
         {activeTab === 'donations' && (
           <div>
             {donationHistory.length === 0 ? (
-              <div className="rounded-[32px] bg-white p-12 text-center shadow-soft">
+              <div className="rounded-2xl border border-gray-200 bg-white p-8 sm:p-12 text-center shadow-sm">
                 <Heart size={48} className="mx-auto mb-4 text-gray-400" />
                 <p className="text-lg font-semibold text-gray-700">No donations yet.</p>
                 <p className="mt-2 text-sm text-gray-500">Your donation history will show up here.</p>
@@ -719,7 +720,7 @@ export default function ProfilePage() {
                   return (
                     <div
                       key={donation.id}
-                      className="rounded-[24px] bg-white p-6 shadow-soft transition hover:shadow-card"
+                      className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md"
                     >
                       {/* Date and CO2 Badge */}
                       <div className="mb-4 flex items-center justify-between">
@@ -744,7 +745,7 @@ export default function ProfilePage() {
                               {donation.item_image_url ? (
                                 <img
                                   src={donation.item_image_url}
-                                  alt={donation.item_title || 'Donated item'}
+                                  alt={donation.item_title || 'สินค้าที่บริจาค'}
                                   className="h-32 w-32 rounded-lg object-cover"
                                 />
                               ) : (
@@ -780,7 +781,7 @@ export default function ProfilePage() {
                             )}
                             {donation.donation_location && (
                               <div className="mb-2">
-                                <p className="text-xs font-medium text-gray-500">Donation Location</p>
+                                <p className="text-xs font-medium text-gray-500">สถานที่รับของ</p>
                                 <p className="text-sm text-gray-700">{donation.donation_location}</p>
                               </div>
                             )}
@@ -823,6 +824,7 @@ export default function ProfilePage() {
         item={selectedItem}
         onUpdate={handleItemUpdate}
       />
+      </div>
     </div>
   )
 }

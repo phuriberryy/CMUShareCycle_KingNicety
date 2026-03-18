@@ -1,7 +1,11 @@
 import express from 'express'
+import path from 'path'
+import url from 'url'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import env from './config/env.js'
+
+const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
 import authRoutes from './routes/auth.routes.js'
 import itemRoutes from './routes/item.routes.js'
 import exchangeRoutes from './routes/exchange.routes.js'
@@ -17,16 +21,36 @@ import adminRoutes from './routes/admin.routes.js'
 
 const app = express()
 
-app.use(cors({
-  origin: env.allowedOrigins,
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow non-browser clients (no Origin header)
+    if (!origin) return callback(null, true)
+
+    // Explicit allow-list from env (production/deploy origins)
+    if (Array.isArray(env.allowedOrigins) && env.allowedOrigins.includes(origin)) {
+      return callback(null, origin)
+    }
+
+    // Dev: allow localhost / 127.0.0.1 on any port (e.g. 3000, 3001)
+    if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+      return callback(null, origin)
+    }
+
+    return callback(new Error(`CORS blocked for origin: ${origin}`))
+  },
   credentials: true,
-}));
+}
+
+app.use(cors(corsOptions))
 app.use(express.json({ limit: '10mb' }))
 app.use(cookieParser())
 
 app.get('/health', (_req, res) => res.json({ ok: true }))
 
-app.options("*", cors());
+app.options('*', cors(corsOptions))
+
+// Serve uploaded chat images (no auth - URLs are unguessable)
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')))
 
 app.use('/api/auth', authRoutes)
 app.use('/api/items', itemRoutes)

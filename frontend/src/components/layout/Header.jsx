@@ -1,4 +1,4 @@
-import { Bell, Menu, X, Leaf, Trophy } from 'lucide-react'
+import { Bell, Menu, X, Leaf, Trophy, MessageCircle } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
@@ -6,7 +6,6 @@ import { useAuth } from '../../context/AuthContext'
 const navLinks = [
   { label: 'Home', to: '/' },
   { label: 'Leaderboard', to: '/leaderboard', icon: Trophy },
-  { label: 'Profile', to: '/profile' },
 ]
 
 function Header({ unread, onNotificationsClick }) {
@@ -58,11 +57,18 @@ function Header({ unread, onNotificationsClick }) {
               </NavLink>
             ))}
           </nav>
+          <Link
+            to="/chat"
+            className="flex items-center justify-center rounded-full border border-gray-200 bg-white p-2.5 text-gray-700 transition hover:bg-gray-50"
+            aria-label="แชท"
+          >
+            <MessageCircle size={20} />
+          </Link>
           <button
             type="button"
             onClick={onNotificationsClick}
-            className="relative rounded-full border border-gray-200 bg-white p-2.5 text-gray-700 hover:bg-gray-50 transition"
-            aria-label="notifications"
+            className="relative flex items-center justify-center rounded-full border border-gray-200 bg-white p-2.5 text-gray-700 transition hover:bg-gray-50"
+            aria-label="การแจ้งเตือน"
           >
             <Bell size={20} />
             {unread > 0 && (
@@ -73,18 +79,21 @@ function Header({ unread, onNotificationsClick }) {
           </button>
           {user ? (
             <>
-              <div className="flex items-center gap-2 rounded-full bg-surface px-3 py-1.5 text-sm font-semibold text-gray-700">
+              <Link
+                to="/profile"
+                className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 hover:border-gray-300"
+              >
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white">
                   {initials}
                 </span>
                 <span>{user.name.split(' ')[0]}</span>
-              </div>
+              </Link>
               <button
                 type="button"
                 onClick={logout}
                 className="rounded-full border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
               >
-                Logout
+                ออกจากระบบ
               </button>
             </>
           ) : (
@@ -97,18 +106,25 @@ function Header({ unread, onNotificationsClick }) {
                   : 'border border-gray-200 text-gray-700 hover:bg-gray-50'
               }`}
             >
-              Log In
+              เข้าสู่ระบบ
             </button>
           )}
         </div>
 
         {/* Mobile Actions */}
         <div className="flex items-center gap-2 sm:hidden">
+          <Link
+            to="/chat"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white"
+            aria-label="แชท"
+          >
+            <MessageCircle size={18} />
+          </Link>
           <button
             type="button"
             onClick={onNotificationsClick}
             className="relative flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white"
-            aria-label="notifications"
+            aria-label="การแจ้งเตือน"
           >
             <Bell size={18} />
             {unread > 0 && (
@@ -131,6 +147,14 @@ function Header({ unread, onNotificationsClick }) {
       {open && (
         <div className="border-t border-gray-200 bg-white px-6 py-4 shadow-lg sm:hidden">
           <div className="mb-4 flex flex-col gap-2">
+            <Link to="/chat" onClick={() => setOpen(false)} className="rounded-xl px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+              <MessageCircle size={18} />
+              แชท
+            </Link>
+            <Link to="/notifications" onClick={() => setOpen(false)} className="rounded-xl px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+              <Bell size={18} />
+              การแจ้งเตือน
+            </Link>
             {navLinks.map((link) => (
               <NavLink
                 key={link.to}
@@ -156,7 +180,7 @@ function Header({ unread, onNotificationsClick }) {
                 }}
                 className="rounded-xl border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-700"
               >
-                Logout
+                ออกจากระบบ
               </button>
             ) : (
               <button
@@ -167,7 +191,7 @@ function Header({ unread, onNotificationsClick }) {
                 }}
                 className="rounded-xl border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-700"
               >
-                Log In
+                เข้าสู่ระบบ
               </button>
             )}
           </div>

@@ -89,7 +89,7 @@ export default function AdminChatsPage() {
 
       <div className="grid gap-4 md:grid-cols-[minmax(0,0.45fr)_minmax(0,0.55fr)]">
         {/* Chat list */}
-        <div className="overflow-hidden rounded-2xl bg-white shadow-soft">
+        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
           {loading && (
             <div className="p-4 text-sm text-gray-500">Loading chats...</div>
           )}
@@ -157,7 +157,7 @@ export default function AdminChatsPage() {
         </div>
 
         {/* Messages */}
-        <div className="flex flex-col overflow-hidden rounded-2xl bg-white shadow-soft">
+        <div className="flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
           <div className="border-b border-gray-100 px-4 py-3">
             {selectedChat ? (
               <div className="flex flex-col">
@@ -210,14 +210,13 @@ export default function AdminChatsPage() {
 
       <ConfirmDialog
         open={Boolean(confirmState)}
-        title="Delete message"
+        title="ลบข้อความ"
         description={
           confirmState?.message
-            ? 'Soft delete this message? It will be hidden from the conversation but kept in audit logs.'
+            ? 'ยืนยันการลบข้อความนี้? (ข้อความจะถูกซ่อนจากการสนทนา)'
             : ''
         }
-        confirmLabel="Delete"
-        cancelLabel="Cancel"
+        confirmLabel="ลบ"
         loading={confirmState?.loading}
         onConfirm={handleConfirm}
         onCancel={closeConfirm}

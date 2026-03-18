@@ -126,7 +126,7 @@ export default function ExchangeRequestModal({ open, onClose, itemId }) {
   }
 
   const categoryOptions = [
-    { value: '', label: 'Select category' },
+    { value: '', label: 'เลือกหมวดหมู่' },
     { value: 'Clothes & Fashion', label: '👕 Clothes & Fashion (เสื้อผ้า, กางเกง, รองเท้า)' },
     { value: 'Dorm Essentials', label: '🏡 Dorm Essentials (หม้อหุงข้าว, ราวตากผ้า, ผ้าห่ม)' },
     { value: 'Books & Study', label: '📚 Books & Study (ตำราเรียน, สมุด, ไฟอ่านหนังสือ)' },
@@ -138,25 +138,25 @@ export default function ExchangeRequestModal({ open, onClose, itemId }) {
   ]
 
   const conditionOptions = [
-    { value: '', label: 'Select condition' },
-    { value: 'Like New', label: 'Like New' },
-    { value: 'Good', label: 'Good' },
-    { value: 'Fair', label: 'Fair' },
+    { value: '', label: 'เลือกสภาพ' },
+    { value: 'Like New', label: 'เหมือนใหม่' },
+    { value: 'Good', label: 'ดี' },
+    { value: 'Fair', label: 'พอใช้' },
   ]
 
   return (
     <Modal
       open={open}
       onClose={onClose}
-      title="Request Exchange"
-      subtitle="Send Exchange Request"
+      title="ขอแลกเปลี่ยน"
+      subtitle=""
       size="lg"
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Image Upload */}
         <div>
           <label className="mb-2 block text-sm font-bold text-gray-900">
-            Upload Image of Your Item <span className="text-red-500">*</span>
+            รูปสินค้าของคุณ <span className="text-red-500">*</span>
           </label>
           <input
             type="file"
@@ -179,9 +179,9 @@ export default function ExchangeRequestModal({ open, onClose, itemId }) {
               <>
                 <ImageIcon className="mb-3 text-gray-400" size={48} />
                 <p className="mb-1 text-sm font-medium text-gray-700">
-                  Click to upload or drag and drop
+                  คลิกเพื่ออัปโหลดรูป
                 </p>
-                <p className="text-xs text-gray-500">PNG, JPG up to 5MB</p>
+                <p className="text-xs text-gray-500">PNG/JPG ขนาดไม่เกิน 5MB</p>
               </>
             )}
           </label>
@@ -190,14 +190,14 @@ export default function ExchangeRequestModal({ open, onClose, itemId }) {
         {/* Item Name */}
         <div>
           <label className="mb-2 block text-sm font-bold text-gray-900">
-            Your Item Name <span className="text-red-500">*</span>
+            ชื่อสินค้าของคุณ <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             name="itemName"
             value={formData.itemName}
             onChange={handleInputChange}
-            placeholder="e.g., Study Desk"
+            placeholder="เช่น โต๊ะอ่านหนังสือ"
             className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0"
             required
           />
@@ -207,7 +207,7 @@ export default function ExchangeRequestModal({ open, onClose, itemId }) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="mb-2 block text-sm font-bold text-gray-900">
-              Category <span className="text-red-500">*</span>
+              หมวดหมู่ <span className="text-red-500">*</span>
             </label>
             <select
               name="category"
@@ -225,7 +225,7 @@ export default function ExchangeRequestModal({ open, onClose, itemId }) {
           </div>
           <div>
             <label className="mb-2 block text-sm font-bold text-gray-900">
-              Condition <span className="text-red-500">*</span>
+              สภาพสินค้า <span className="text-red-500">*</span>
             </label>
             <select
               name="condition"
@@ -246,13 +246,13 @@ export default function ExchangeRequestModal({ open, onClose, itemId }) {
         {/* Description */}
         <div>
           <label className="mb-2 block text-sm font-bold text-gray-900">
-            Describe Your Item <span className="text-red-500">*</span>
+            รายละเอียด <span className="text-red-500">*</span>
           </label>
           <textarea
             name="description"
             value={formData.description}
             onChange={handleInputChange}
-            placeholder="Tell them about your item and why it's a good exchange..."
+            placeholder="บอกสภาพ/ตำหนิ/รายละเอียดสำคัญ เช่น ใช้งานมา 3 เดือน มีรอยเล็กน้อย"
             rows={4}
             className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0 resize-none"
             required
@@ -268,13 +268,13 @@ export default function ExchangeRequestModal({ open, onClose, itemId }) {
               onChange={(e) => setIncludeMessage(e.target.checked)}
               className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
             />
-            <span>Message to seller</span>
+            <span>ส่งข้อความถึงเจ้าของโพสต์</span>
           </label>
           {includeMessage && (
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Introduce yourself and explain why this would be a good exchange..."
+              placeholder="เขียนสั้นๆ เพื่อให้เจ้าของโพสต์เข้าใจ เช่น สะดวกนัดรับช่วงไหน"
               rows={4}
               className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0 resize-none"
             />
@@ -288,7 +288,7 @@ export default function ExchangeRequestModal({ open, onClose, itemId }) {
             onClick={onClose}
             className="w-full sm:w-auto rounded-xl border border-gray-200 bg-white px-6 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
           >
-            Cancel
+            ยกเลิก
           </button>
           <button
             type="submit"
@@ -296,7 +296,7 @@ export default function ExchangeRequestModal({ open, onClose, itemId }) {
             className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-md hover:bg-primary-dark transition disabled:opacity-60"
           >
             <CheckCircle size={18} />
-            {submitting ? 'Sending...' : 'Send Exchange Request'}
+            {submitting ? 'กำลังส่ง...' : 'ส่งคำขอ'}
           </button>
         </div>
       </form>

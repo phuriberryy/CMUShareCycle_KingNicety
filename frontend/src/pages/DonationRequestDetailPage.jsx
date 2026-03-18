@@ -153,31 +153,31 @@ export default function DonationRequestDetailPage() {
   }
 
   const formatTimeAgo = (date) => {
-    if (!date) return 'Unknown time'
+    if (!date) return 'ไม่ทราบเวลา'
     const now = new Date()
     const dateObj = new Date(date)
-    if (isNaN(dateObj.getTime())) return 'Unknown time'
+    if (isNaN(dateObj.getTime())) return 'ไม่ทราบเวลา'
     const diff = now - dateObj
-    if (isNaN(diff)) return 'Unknown time'
+    if (isNaN(diff)) return 'ไม่ทราบเวลา'
     const minutes = Math.floor(diff / 60000)
     const hours = Math.floor(diff / 3600000)
     const days = Math.floor(diff / 86400000)
 
-    if (minutes < 1) return 'Just now'
-    if (minutes < 60) return `${minutes} minutes ago`
-    if (hours < 24) return `${hours} hours ago`
-    return `${days} days ago`
+    if (minutes < 1) return 'เมื่อสักครู่'
+    if (minutes < 60) return `${minutes} นาทีที่แล้ว`
+    if (hours < 24) return `${hours} ชั่วโมงที่แล้ว`
+    return `${days} วันที่แล้ว`
   }
 
   const getStatusLabel = () => {
     if (!donationRequest) return 'Waiting for response'
-    if (donationRequest.status === 'completed') return 'Donation completed'
-    if (donationRequest.status === 'in_progress') return 'In progress'
-    if (donationRequest.status === 'chatting') return 'Ready to chat'
-    if (donationRequest.status === 'rejected') return 'Rejected'
-    if (donationRequest.owner_accepted && donationRequest.requester_accepted) return 'Ready to chat'
-    if (donationRequest.owner_accepted || donationRequest.requester_accepted) return 'Waiting for response'
-    return 'Waiting for response'
+    if (donationRequest.status === 'completed') return 'เสร็จสิ้น'
+    if (donationRequest.status === 'in_progress') return 'กำลังดำเนินการ'
+    if (donationRequest.status === 'chatting') return 'พร้อมแชท'
+    if (donationRequest.status === 'rejected') return 'ถูกปฏิเสธ'
+    if (donationRequest.owner_accepted && donationRequest.requester_accepted) return 'พร้อมแชท'
+    if (donationRequest.owner_accepted || donationRequest.requester_accepted) return 'รอการตอบรับ'
+    return 'รอการตอบรับ'
   }
 
   const getStatusColor = () => {
@@ -192,22 +192,30 @@ export default function DonationRequestDetailPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-16 text-center">
-        <p className="text-lg text-gray-600">Loading...</p>
+      <div className="min-h-screen bg-[#FAFBF9]">
+        <div className="mx-auto max-w-4xl px-4 py-16 text-center">
+          <div className="rounded-2xl border border-gray-200 bg-white p-12 shadow-sm">
+            <p className="text-lg text-gray-600">กำลังโหลด...</p>
+          </div>
+        </div>
       </div>
     )
   }
 
   if (error || !donationRequest) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-16 text-center">
-        <p className="text-lg text-red-600">{error || 'Donation request not found'}</p>
-        <button
-          onClick={() => navigate('/')}
-          className="mt-4 rounded-full bg-primary px-6 py-3 text-white"
-        >
-          Back to Home
-        </button>
+      <div className="min-h-screen bg-[#FAFBF9]">
+        <div className="mx-auto max-w-4xl px-4 py-16 text-center">
+          <div className="rounded-2xl border border-gray-200 bg-white p-12 shadow-sm">
+            <p className="text-lg text-red-600">{error || 'ไม่พบคำขอรับบริจาค'}</p>
+            <button
+              onClick={() => navigate('/')}
+              className="mt-4 rounded-full bg-primary px-6 py-3 text-white"
+            >
+              กลับหน้าแรก
+            </button>
+          </div>
+        </div>
       </div>
     )
   }
@@ -231,7 +239,8 @@ export default function DonationRequestDetailPage() {
   const co2Reduced = co2Footprint ? co2Footprint * 0.8 : null
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8 overflow-x-hidden">
+    <div className="min-h-screen bg-[#FAFBF9]">
+      <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8 overflow-x-hidden">
       {/* Back Button */}
       <button
         onClick={() => navigate(-1)}
@@ -267,11 +276,11 @@ export default function DonationRequestDetailPage() {
       </div>
 
       {/* Donation Request Card */}
-      <div className="mb-6 rounded-[24px] bg-red-50 p-6 shadow-soft">
+      <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-6 shadow-sm">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Heart size={20} className="text-red-500" />
-            <span className="text-lg font-semibold text-gray-900">Donation Request</span>
+            <span className="text-lg font-semibold text-gray-900">คำขอรับบริจาค</span>
           </div>
           <span className="rounded-full bg-white px-3 py-1 text-sm font-semibold text-gray-700">
             {isOwner ? 'You are the donor' : 'You are the recipient'}
@@ -395,6 +404,7 @@ export default function DonationRequestDetailPage() {
             Reject
           </button>
         )}
+      </div>
       </div>
     </div>
   )

@@ -67,10 +67,10 @@ export default function DonateModal({ open, onClose, item, onSuccess }) {
         <div className="mb-6">
           <div className="mb-2 flex items-center gap-2">
             <Heart size={24} className="text-red-500" />
-            <h2 className="text-2xl font-bold text-gray-900">Donate Item</h2>
+            <h2 className="text-2xl font-bold text-gray-900">ยืนยันการบริจาค</h2>
           </div>
           <p className="text-sm text-gray-600">
-            You are about to donate <strong>{item.title}</strong>
+            คุณกำลังจะบริจาค <strong>{item.title}</strong>
           </p>
         </div>
 
@@ -78,14 +78,14 @@ export default function DonateModal({ open, onClose, item, onSuccess }) {
           {/* Recipient Name (Optional) */}
           <div>
             <label className="mb-2 block text-sm font-semibold text-gray-900">
-              Recipient Name <span className="text-gray-400">(Optional)</span>
+              ชื่อผู้รับ <span className="text-gray-400">(ไม่บังคับ)</span>
             </label>
             <input
               type="text"
               name="recipientName"
               value={formData.recipientName}
               onChange={handleInputChange}
-              placeholder="Enter recipient name (if available)"
+              placeholder="กรอกชื่อผู้รับ (ถ้ามี)"
               className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0"
             />
           </div>
@@ -93,29 +93,29 @@ export default function DonateModal({ open, onClose, item, onSuccess }) {
           {/* Recipient Contact (Optional) */}
           <div>
             <label className="mb-2 block text-sm font-semibold text-gray-900">
-              Recipient Contact Information <span className="text-gray-400">(Optional)</span>
+              ช่องทางติดต่อ <span className="text-gray-400">(ไม่บังคับ)</span>
             </label>
             <input
               type="text"
               name="recipientContact"
               value={formData.recipientContact}
               onChange={handleInputChange}
-              placeholder="Phone number, email, or other contact information"
+              placeholder="เบอร์โทร / Line ID / อีเมล"
               className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0"
             />
           </div>
 
-          {/* Donation Location (Optional) */}
+          {/* สถานที่รับของ (ไม่บังคับ) */}
           <div>
             <label className="mb-2 block text-sm font-semibold text-gray-900">
-              Donation Location <span className="text-gray-400">(Optional)</span>
+              จุดนัดส่งมอบ <span className="text-gray-400">(ไม่บังคับ)</span>
             </label>
             <input
               type="text"
               name="donationLocation"
               value={formData.donationLocation}
               onChange={handleInputChange}
-              placeholder="Enter donation location (if available)"
+              placeholder="เช่น หอสมุดกลาง / คณะ / หน้าโรงอาหาร"
               className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0"
             />
           </div>
@@ -123,14 +123,14 @@ export default function DonateModal({ open, onClose, item, onSuccess }) {
           {/* Message (Optional) */}
           <div>
             <label className="mb-2 block text-sm font-semibold text-gray-900">
-              Additional Message <span className="text-gray-400">(Optional)</span>
+              ข้อความเพิ่มเติม <span className="text-gray-400">(ไม่บังคับ)</span>
             </label>
             <textarea
               name="message"
               value={formData.message}
               onChange={handleInputChange}
               rows={4}
-              placeholder="Additional message about the donation..."
+              placeholder="เขียนสั้นๆ เช่น สะดวกนัดรับวันไหน/ช่วงเวลา"
               className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0"
             />
           </div>
@@ -146,14 +146,14 @@ export default function DonateModal({ open, onClose, item, onSuccess }) {
               disabled={submitting}
               className="flex-1 rounded-xl border border-gray-300 bg-white px-6 py-3 font-semibold text-gray-700 transition hover:bg-gray-50 disabled:opacity-50"
             >
-              Cancel
+              ยกเลิก
             </button>
             <button
               type="submit"
               disabled={submitting}
               className="flex-1 rounded-xl bg-red-500 px-6 py-3 font-semibold text-white transition hover:bg-red-600 disabled:opacity-50"
             >
-              {submitting ? 'Donating...' : 'Confirm Donation'}
+              {submitting ? 'กำลังบันทึก...' : 'ยืนยันบริจาค'}
             </button>
           </div>
         </form>

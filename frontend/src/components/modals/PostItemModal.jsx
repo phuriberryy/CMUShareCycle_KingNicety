@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Image as ImageIcon } from 'lucide-react'
 import Modal from '../ui/Modal'
 import { itemsApi } from '../../lib/api'
@@ -7,12 +7,21 @@ import { useToast } from '../../context/ToastContext'
 
 export default function PostItemModal({ open, onClose, onSuccess }) {
   const toast = useToast()
+  const fileInputRef = useRef(null)
+
+  const getTodayIso = () => new Date().toISOString().split('T')[0]
+  const addDaysIso = (days) => {
+    const d = new Date()
+    d.setDate(d.getDate() + days)
+    return d.toISOString().split('T')[0]
+  }
+
   const [formData, setFormData] = useState({
     itemName: '',
     category: '',
     condition: '',
     lookingFor: '',
-    availableUntil: '',
+    availableUntil: addDaysIso(14),
     pickupLocation: '',
     description: '',
     listingType: 'exchange', // 'exchange' or 'donation'
@@ -20,6 +29,32 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
   const [imagePreview, setImagePreview] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const { token } = useAuth()
+
+  useEffect(() => {
+    if (!open) return
+    // Reset each time opened to avoid stale data
+    setFormData({
+      itemName: '',
+      category: '',
+      condition: '',
+      lookingFor: '',
+      availableUntil: addDaysIso(14),
+      pickupLocation: '',
+      description: '',
+      listingType: 'exchange',
+    })
+    setImagePreview(null)
+    setSubmitting(false)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }, [open])
+
+  useEffect(() => {
+    // ถ้าเป็นบริจาค ไม่ต้องกรอก lookingFor
+    if (formData.listingType !== 'donation') return
+    if (!formData.lookingFor) return
+    setFormData((prev) => ({ ...prev, lookingFor: '' }))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.listingType])
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -29,6 +64,11 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
   const handleImageChange = (e) => {
     const file = e.target.files?.[0]
     if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.warning('ไฟล์ใหญ่เกิน 5MB กรุณาเลือกไฟล์ใหม่', 'รูปภาพใหญ่เกินไป')
+        if (fileInputRef.current) fileInputRef.current.value = ''
+        return
+      }
       const reader = new FileReader()
       reader.onloadend = () => {
         setImagePreview(reader.result)
@@ -36,6 +76,29 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
       reader.readAsDataURL(file)
     }
   }
+
+  const normalized = useMemo(() => {
+    const itemName = (formData.itemName || '').trim()
+    const description = (formData.description || '').trim()
+    const pickupLocation = (formData.pickupLocation || '').trim()
+    const lookingFor = (formData.lookingFor || '').trim()
+    const availableUntil = formData.availableUntil || ''
+    return { itemName, description, pickupLocation, lookingFor, availableUntil }
+  }, [formData])
+
+  const canSubmit = useMemo(() => {
+    if (submitting) return false
+    if (!token) return false
+    if (!imagePreview) return false
+    if (normalized.itemName.length < 3) return false
+    if (!formData.category) return false
+    if (!formData.condition) return false
+    if (!normalized.description) return false
+    if (!normalized.pickupLocation) return false
+    if (!normalized.availableUntil) return false
+    if (formData.listingType === 'exchange' && !normalized.lookingFor) return false
+    return true
+  }, [submitting, token, imagePreview, normalized, formData.category, formData.condition, formData.listingType])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -48,52 +111,42 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
       toast.warning('กรุณาอัปโหลดรูปภาพ', 'ข้อมูลไม่ครบ')
       return
     }
-    if (!formData.itemName || !formData.category || !formData.condition) {
+    if (!normalized.itemName || !formData.category || !formData.condition) {
       toast.warning('กรุณากรอกข้อมูลที่จำเป็นให้ครบ', 'ข้อมูลไม่ครบ')
       return
     }
-    if (formData.itemName.trim().length < 3) {
+    if (normalized.itemName.length < 3) {
       toast.warning('ชื่อสินค้าต้องมีอย่างน้อย 3 ตัวอักษร', 'ข้อมูลไม่ถูกต้อง')
       return
     }
     // Validate lookingFor only for exchange type
-    if (formData.listingType === 'exchange' && !formData.lookingFor) {
+    if (formData.listingType === 'exchange' && !normalized.lookingFor) {
       toast.warning('กรุณาระบุสิ่งที่ต้องการแลกเปลี่ยน', 'ข้อมูลไม่ครบ')
       return
-    }
-    // ส่งวันที่เป็น ISO (YYYY-MM-DD) ถ้ามี
-    let availableUntil = formData.availableUntil || undefined
-    if (availableUntil && availableUntil.includes('/')) {
-      const [d, m, y] = availableUntil.split('/')
-      if (y && m && d) availableUntil = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`
     }
     setSubmitting(true)
     try {
       await itemsApi.create(token, {
-        title: formData.itemName.trim(),
+        // Send both camelCase + snake_case for backend compatibility
+        title: normalized.itemName,
         category: formData.category,
         itemCondition: formData.condition,
-        lookingFor: formData.lookingFor,
-        description: formData.description,
-        availableUntil: availableUntil || formData.availableUntil || undefined,
+        item_condition: formData.condition,
+        lookingFor: formData.listingType === 'exchange' ? normalized.lookingFor : '',
+        looking_for: formData.listingType === 'exchange' ? normalized.lookingFor : '',
+        description: normalized.description,
+        availableUntil: normalized.availableUntil,
+        available_until: normalized.availableUntil,
         imageUrl: imagePreview,
-        pickupLocation: formData.pickupLocation,
+        image_url: imagePreview,
+        pickupLocation: normalized.pickupLocation,
+        pickup_location: normalized.pickupLocation,
         listingType: formData.listingType,
+        listing_type: formData.listingType,
       })
       onSuccess?.()
       onClose()
-      setFormData({
-        itemName: '',
-        category: '',
-        condition: '',
-        lookingFor: '',
-        availableUntil: '',
-        pickupLocation: '',
-        description: '',
-        listingType: 'exchange',
-      })
-      setImagePreview(null)
-    toast.success('โพสต์สินค้าสำเร็จ!', 'สำเร็จ')
+      toast.success('โพสต์สินค้าสำเร็จ!', 'สำเร็จ')
     } catch (err) {
       const msg = err.errors?.[0]?.msg || err.message || 'ไม่สามารถโพสต์ได้'
       toast.error(msg, 'เกิดข้อผิดพลาด')
@@ -103,7 +156,7 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
   }
 
   const categoryOptions = [
-    { value: '', label: 'Select category' },
+    { value: '', label: 'เลือกหมวดหมู่' },
     { value: 'Clothes & Fashion', label: '👕 Clothes & Fashion (เสื้อผ้า, กางเกง, รองเท้า)' },
     { value: 'Dorm Essentials', label: '🏡 Dorm Essentials (หม้อหุงข้าว, ราวตากผ้า, ผ้าห่ม)' },
     { value: 'Books & Study', label: '📚 Books & Study (ตำราเรียน, สมุด, ไฟอ่านหนังสือ)' },
@@ -115,25 +168,34 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
   ]
 
   const conditionOptions = [
-    { value: '', label: 'Select condition' },
-    { value: 'Like New', label: 'Like New' },
-    { value: 'Good', label: 'Good' },
-    { value: 'Fair', label: 'Fair' },
+    { value: '', label: 'เลือกสภาพ' },
+    { value: 'Like New', label: 'เหมือนใหม่' },
+    { value: 'Good', label: 'ดี' },
+    { value: 'Fair', label: 'พอใช้' },
+  ]
+
+  const pickupSuggestions = [
+    'CMU Library (Main Library)',
+    'Engineering Building',
+    'CMU Dorm / หอพัก',
+    'Faculty Building',
+    'Student Union',
+    'Nimman (นิมมาน) / นัดใกล้มหาวิทยาลัย',
   ]
 
   return (
     <Modal
       open={open}
       onClose={onClose}
-      title={formData.listingType === 'donation' ? 'Post Item for Donation' : 'Post Item for Exchange'}
-      subtitle={formData.listingType === 'donation' ? 'Post an item you want to donate to CMU students' : 'Post an item you want to exchange with CMU students'}
+      title={formData.listingType === 'donation' ? 'โพสต์เพื่อบริจาค' : 'โพสต์เพื่อแลกเปลี่ยน'}
+      subtitle=""
       size="lg"
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Listing Type Selection */}
         <div>
           <label className="mb-2 block text-sm font-bold text-gray-900">
-            Listing Type <span className="text-red-500">*</span>
+            ประเภทโพสต์ <span className="text-red-500">*</span>
           </label>
           <div className="grid grid-cols-2 gap-3">
             <button
@@ -159,11 +221,16 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
               ❤️ Donation
             </button>
           </div>
+          <p className="mt-2 text-xs text-gray-500">
+            {formData.listingType === 'donation'
+              ? 'บริจาค: ไม่ต้องระบุ “ต้องการแลกอะไร”'
+              : 'แลกเปลี่ยน: กรุณาระบุสิ่งที่ต้องการแลก'}
+          </p>
         </div>
         {/* Image Upload */}
         <div>
           <label className="mb-2 block text-sm font-bold text-gray-900">
-            Upload Image <span className="text-red-500">*</span>
+            รูปสินค้า <span className="text-red-500">*</span>
           </label>
           <input
             type="file"
@@ -172,6 +239,7 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
             className="hidden"
             id="image-upload"
             name="image"
+            ref={fileInputRef}
           />
           <label
             htmlFor="image-upload"
@@ -187,9 +255,9 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
               <>
                 <ImageIcon className="mb-3 text-gray-400" size={48} />
                 <p className="mb-1 text-sm font-medium text-gray-700">
-                  Click to upload or drag and drop
+                  คลิกเพื่ออัปโหลดรูป
                 </p>
-                <p className="text-xs text-gray-500">PNG, JPG up to 5MB</p>
+                <p className="text-xs text-gray-500">PNG/JPG ขนาดไม่เกิน 5MB</p>
               </>
             )}
           </label>
@@ -198,24 +266,25 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
         {/* Item Name */}
         <div>
           <label className="mb-2 block text-sm font-bold text-gray-900">
-            Item Name <span className="text-red-500">*</span>
+            ชื่อสินค้า <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             name="itemName"
             value={formData.itemName}
             onChange={handleInputChange}
-            placeholder="e.g., Calculus Textbook"
+            placeholder="เช่น ตำรา Calculus, หม้อหุงข้าว, ราวตากผ้า"
             className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0"
             required
           />
+          <p className="mt-1 text-xs text-gray-500">แนะนำให้ใส่ชื่อที่คนค้นหาเจอง่าย (อย่างน้อย 3 ตัวอักษร)</p>
         </div>
 
         {/* Category and Condition */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="mb-2 block text-sm font-bold text-gray-900">
-              Category <span className="text-red-500">*</span>
+              หมวดหมู่ <span className="text-red-500">*</span>
             </label>
             <select
               name="category"
@@ -233,7 +302,7 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
           </div>
           <div>
             <label className="mb-2 block text-sm font-bold text-gray-900">
-              Condition <span className="text-red-500">*</span>
+              สภาพสินค้า <span className="text-red-500">*</span>
             </label>
             <select
               name="condition"
@@ -255,19 +324,19 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
         {formData.listingType === 'exchange' && (
           <div>
             <label className="mb-2 block text-sm font-bold text-gray-900">
-              Looking to Exchange For <span className="text-red-500">*</span>
+              ต้องการแลกกับอะไร <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               name="lookingFor"
               value={formData.lookingFor}
               onChange={handleInputChange}
-              placeholder="e.g., Laptop stand, Kitchen utensils, Study desk"
+              placeholder="เช่น ชั้นวางโน้ตบุ๊ก, อุปกรณ์ครัว, โคมไฟอ่านหนังสือ"
               className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0"
               required
             />
             <p className="mt-1 text-xs text-gray-500">
-              Let others know what you're looking for in exchange.
+              ระบุให้ชัด จะช่วยให้แมตช์ได้เร็วขึ้น
             </p>
           </div>
         )}
@@ -275,53 +344,82 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
         {/* Expiration Date */}
         <div>
           <label className="mb-2 block text-sm font-bold text-gray-900">
-            Post Expiration Date <span className="text-red-500">*</span>
+            หมดอายุโพสต์ <span className="text-red-500">*</span>
           </label>
-          <div className="flex gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <input
               type="date"
               name="availableUntil"
               value={formData.availableUntil}
               onChange={handleInputChange}
-              min={new Date().toISOString().split('T')[0]}
+              min={getTodayIso()}
               className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0"
               required
             />
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setFormData((prev) => ({ ...prev, availableUntil: addDaysIso(7) }))}
+                className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+              >
+                +7 วัน
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData((prev) => ({ ...prev, availableUntil: addDaysIso(14) }))}
+                className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+              >
+                +14 วัน
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData((prev) => ({ ...prev, availableUntil: addDaysIso(30) }))}
+                className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+              >
+                +30 วัน
+              </button>
+            </div>
           </div>
           <p className="mt-1 text-xs text-gray-500">
-            Set the date when this post will expire (when expired, the system will automatically keep it in history)
+            ตั้งวันหมดอายุเพื่อให้รายการไม่ค้างนานเกินไป
           </p>
         </div>
 
         {/* Pickup Location */}
         <div>
           <label className="mb-2 block text-sm font-bold text-gray-900">
-            Pickup Location <span className="text-red-500">*</span>
+            จุดนัดรับ/แลก <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             name="pickupLocation"
             value={formData.pickupLocation}
             onChange={handleInputChange}
-            placeholder="e.g., Engineering Building, Library 1st floor"
+            placeholder="เช่น หอสมุดกลาง, คณะวิศวะ, หน้าโรงอาหาร"
             className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0"
             required
+            list="pickup-suggestions"
           />
+          <datalist id="pickup-suggestions">
+            {pickupSuggestions.map((s) => (
+              <option key={s} value={s} />
+            ))}
+          </datalist>
           <p className="mt-1 text-xs text-gray-500">
-            Specify where people can meet you to exchange/pick up the item.
+            ระบุให้ชัดเจน (ในมหาวิทยาลัย หรือใกล้มหาวิทยาลัย)
           </p>
         </div>
 
         {/* Description */}
         <div>
           <label className="mb-2 block text-sm font-bold text-gray-900">
-            Description <span className="text-red-500">*</span>
+            รายละเอียด <span className="text-red-500">*</span>
           </label>
           <textarea
             name="description"
             value={formData.description}
             onChange={handleInputChange}
-            placeholder="Describe your item, its features, why you're sharing it..."
+            placeholder="บอกสภาพ/ตำหนิ/วิธีนัดรับ เช่น ใช้งานมา 6 เดือน มีรอยเล็กน้อย นัดรับที่หอสมุดช่วงเย็น"
             rows={4}
             className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0 resize-none"
             required
@@ -335,14 +433,14 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
             onClick={onClose}
             className="w-full sm:w-auto rounded-xl border border-gray-200 bg-white px-6 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
           >
-            Cancel
+            ยกเลิก
           </button>
           <button
             type="submit"
-            disabled={submitting}
-            className="w-full sm:w-auto rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-md hover:bg-primary-dark transition disabled:opacity-60"
+            disabled={!canSubmit}
+            className="w-full sm:w-auto rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-md hover:bg-primary-dark transition disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {submitting ? 'Saving...' : 'Post Item'}
+            {submitting ? 'กำลังบันทึก...' : 'โพสต์'}
           </button>
         </div>
       </form>

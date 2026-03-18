@@ -59,7 +59,7 @@ export default function Modal({
                 type="button"
                 onClick={onClose}
                 className="flex-shrink-0 rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition"
-                aria-label="Close"
+                aria-label="ปิด"
               >
                 <X size={20} />
               </button>

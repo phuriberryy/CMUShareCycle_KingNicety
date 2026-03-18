@@ -42,9 +42,9 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#F5F6F0] px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+    <div className="flex min-h-screen items-center justify-center bg-[#FAFBF9] px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
       <div className="w-full max-w-md">
-        <div className="rounded-2xl bg-white p-6 shadow-lg sm:p-8">
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
           <h1 className="mb-2 text-center text-2xl font-bold text-gray-900">Sign Up</h1>
           <p className="mb-6 text-center text-sm text-gray-700">
             Use @cmu.ac.th email to verify student identity
@@ -64,7 +64,7 @@ export default function RegisterPage() {
                   name="name"
                   value={form.name}
                   onChange={handleChange}
-                  placeholder="Your name"
+                  placeholder="ชื่อของคุณ"
                   className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 pl-10 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0"
                   required
                 />
@@ -154,16 +154,16 @@ export default function RegisterPage() {
               disabled={submitting}
               className="w-full rounded-xl bg-primary px-6 py-3 text-base font-semibold text-white shadow-md transition hover:bg-primary-dark disabled:opacity-60"
             >
-              {submitting ? 'Signing up...' : 'Create Account'}
+              {submitting ? 'กำลังสมัครสมาชิก...' : 'สร้างบัญชี'}
             </button>
           </form>
 
           {error && <p className="mt-4 text-center text-sm text-red-500">{error}</p>}
 
           <p className="mt-6 text-center text-sm text-gray-700">
-            Already have an account?{' '}
+            มีบัญชีอยู่แล้วใช่ไหม?{' '}
             <Link to="/login" className="font-semibold text-primary hover:underline">
-              Log In
+              เข้าสู่ระบบ
             </Link>
           </p>
         </div>

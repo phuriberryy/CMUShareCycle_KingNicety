@@ -98,7 +98,7 @@ export default function NotificationsModal({ open, onClose, onUnreadChange }) {
     const hours = Math.floor(diff / 3600000)
     const days = Math.floor(diff / 86400000)
 
-    if (minutes < 1) return 'Just now'
+    if (minutes < 1) return 'เมื่อสักครู่'
     if (minutes < 60) return `${minutes} minutes ago`
     if (hours < 24) return `${hours} hours ago`
     return `${days} days ago`
@@ -131,18 +131,18 @@ export default function NotificationsModal({ open, onClose, onUnreadChange }) {
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Notifications" size="xl">
+    <Modal open={open} onClose={onClose} title="การแจ้งเตือน" size="xl">
       {!token ? (
         <div className="rounded-2xl bg-white p-12 text-center shadow-md">
-          <p className="text-sm text-gray-500">Please log in to view notifications</p>
+          <p className="text-sm text-gray-500">กรุณาเข้าสู่ระบบเพื่อดูการแจ้งเตือน</p>
         </div>
       ) : (
         <div className="space-y-4">
-          {loading && <p className="text-sm text-gray-500">Loading...</p>}
+          {loading && <p className="text-sm text-gray-500">กำลังโหลด...</p>}
           {!loading && notifications.length === 0 && (
             <div className="rounded-2xl bg-white p-12 text-center shadow-md">
-              <p className="text-lg text-gray-600">No notifications</p>
-              <p className="mt-2 text-sm text-gray-500">Notifications will appear here!</p>
+              <p className="text-lg text-gray-700">ยังไม่มีการแจ้งเตือน</p>
+              <p className="mt-2 text-sm text-gray-500">การแจ้งเตือนจะแสดงที่นี่</p>
             </div>
           )}
           {!loading &&
@@ -202,13 +202,13 @@ export default function NotificationsModal({ open, onClose, onUnreadChange }) {
                       </div>
                       {(isExchangeRequest || isCompleted) && (
                         <div className="mt-3 flex items-center gap-2 text-sm text-primary">
-                          <span>View Details</span>
+                          <span>ดูรายละเอียด</span>
                           <ArrowRight size={16} />
                         </div>
                       )}
                       {isDonationRequest && (
                         <div className="mt-3 flex items-center gap-2 text-sm text-red-500">
-                          <span>View Details</span>
+                          <span>ดูรายละเอียด</span>
                           <ArrowRight size={16} />
                         </div>
                       )}

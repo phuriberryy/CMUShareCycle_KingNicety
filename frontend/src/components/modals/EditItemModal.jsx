@@ -80,7 +80,7 @@ export default function EditItemModal({ open, onClose, item, onSuccess }) {
   }
 
   const categoryOptions = [
-    { value: '', label: 'Select category' },
+    { value: '', label: 'เลือกหมวดหมู่' },
     { value: 'Clothes & Fashion', label: '👕 Clothes & Fashion (เสื้อผ้า, กางเกง, รองเท้า)' },
     { value: 'Dorm Essentials', label: '🏡 Dorm Essentials (หม้อหุงข้าว, ราวตากผ้า, ผ้าห่ม)' },
     { value: 'Books & Study', label: '📚 Books & Study (ตำราเรียน, สมุด, ไฟอ่านหนังสือ)' },
@@ -92,10 +92,10 @@ export default function EditItemModal({ open, onClose, item, onSuccess }) {
   ]
 
   const conditionOptions = [
-    { value: '', label: 'Select condition' },
-    { value: 'Like New', label: 'Like New' },
-    { value: 'Good', label: 'Good' },
-    { value: 'Fair', label: 'Fair' },
+    { value: '', label: 'เลือกสภาพ' },
+    { value: 'Like New', label: 'เหมือนใหม่' },
+    { value: 'Good', label: 'ดี' },
+    { value: 'Fair', label: 'พอใช้' },
   ]
 
   if (!item) return null
@@ -202,7 +202,7 @@ export default function EditItemModal({ open, onClose, item, onSuccess }) {
         {/* Looking to Exchange For */}
         <div>
           <label className="mb-2 block text-sm font-bold text-gray-900">
-            Looking to Exchange For <span className="text-red-500">*</span>
+            ต้องการแลกกับ <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
@@ -250,13 +250,13 @@ export default function EditItemModal({ open, onClose, item, onSuccess }) {
         {/* Description */}
         <div>
           <label className="mb-2 block text-sm font-bold text-gray-900">
-            Description <span className="text-red-500">*</span>
+            รายละเอียด <span className="text-red-500">*</span>
           </label>
           <textarea
             name="description"
             value={formData.description}
             onChange={handleInputChange}
-            placeholder="Describe your item, its features, why you're sharing it..."
+            placeholder="บอกสภาพ/ตำหนิ/รายละเอียดสำคัญ เช่น ใช้งานมา 6 เดือน มีรอยเล็กน้อย"
             rows={4}
             className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0 resize-none"
             required
@@ -270,14 +270,14 @@ export default function EditItemModal({ open, onClose, item, onSuccess }) {
             onClick={onClose}
             className="w-full sm:w-auto rounded-xl border border-gray-200 bg-white px-6 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
           >
-            Cancel
+            ยกเลิก
           </button>
           <button
             type="submit"
             disabled={submitting}
             className="w-full sm:w-auto rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-md hover:bg-primary-dark transition disabled:opacity-60"
           >
-            {submitting ? 'Saving...' : 'Save Changes'}
+            {submitting ? 'กำลังบันทึก...' : 'บันทึก'}
           </button>
         </div>
       </form>

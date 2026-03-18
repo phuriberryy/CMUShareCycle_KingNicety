@@ -79,14 +79,14 @@ export default function AdminItemsPage() {
           >
             <option value="">All statuses</option>
             <option value="active">Active</option>
-            <option value="in_progress">In progress</option>
+            <option value="in_progress">กำลังดำเนินการ</option>
             <option value="donated">Donated</option>
             <option value="removed_by_admin">Removed by admin</option>
           </select>
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-2xl bg-white shadow-soft">
+      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
         {loading && (
           <div className="p-4 text-sm text-gray-500">Loading items...</div>
         )}
@@ -157,7 +157,7 @@ export default function AdminItemsPage() {
                       colSpan={5}
                       className="px-4 py-6 text-center text-sm text-gray-500"
                     >
-                      No items found.
+                      ไม่พบรายการสินค้า
                     </td>
                   </tr>
                 )}
@@ -170,7 +170,7 @@ export default function AdminItemsPage() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between text-xs text-gray-500">
           <span>
-            Page {page} of {totalPages}
+            หน้า {page} จาก {totalPages}
           </span>
           <div className="flex gap-2">
             <button
@@ -179,7 +179,7 @@ export default function AdminItemsPage() {
               disabled={page === 1}
               className="rounded-full border border-gray-200 px-3 py-1 font-semibold text-gray-700 disabled:opacity-50"
             >
-              Previous
+              ก่อนหน้า
             </button>
             <button
               type="button"
@@ -187,7 +187,7 @@ export default function AdminItemsPage() {
               disabled={page === totalPages}
               className="rounded-full border border-gray-200 px-3 py-1 font-semibold text-gray-700 disabled:opacity-50"
             >
-              Next
+              ถัดไป
             </button>
           </div>
         </div>
@@ -195,14 +195,13 @@ export default function AdminItemsPage() {
 
       <ConfirmDialog
         open={Boolean(confirmState)}
-        title="Delete item"
+        title="ลบสินค้า"
         description={
           confirmState?.item
-            ? `Soft delete "${confirmState.item.title}"? It will be hidden from the platform but retained for audit.`
+            ? `ยืนยันการลบ "${confirmState.item.title}"? (รายการจะถูกซ่อนจากผู้ใช้ทั่วไป)`
             : ''
         }
-        confirmLabel="Delete"
-        cancelLabel="Cancel"
+        confirmLabel="ลบ"
         loading={confirmState?.loading}
         onConfirm={handleConfirm}
         onCancel={closeConfirm}

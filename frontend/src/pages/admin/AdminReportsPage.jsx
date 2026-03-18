@@ -91,7 +91,7 @@ export default function AdminReportsPage() {
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-2xl bg-white shadow-soft">
+      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
         {loading && (
           <div className="p-4 text-sm text-gray-500">Loading reports...</div>
         )}
@@ -223,15 +223,13 @@ export default function AdminReportsPage() {
       <ConfirmDialog
         open={Boolean(confirmState)}
         title={
-          confirmState?.status === 'approved' ? 'Approve report' : 'Reject report'
+          confirmState?.status === 'approved' ? 'อนุมัติรายงาน' : 'ปฏิเสธรายงาน'
         }
         description={
           confirmState?.report
-            ? `Are you sure you want to mark this report as ${confirmState.status}?`
+            ? 'ยืนยันการเปลี่ยนสถานะรายงานนี้?'
             : ''
         }
-        confirmLabel="Confirm"
-        cancelLabel="Cancel"
         loading={confirmState?.loading}
         onConfirm={handleConfirm}
         onCancel={closeConfirm}

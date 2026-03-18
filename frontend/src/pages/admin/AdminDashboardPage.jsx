@@ -55,13 +55,13 @@ export default function AdminDashboardPage() {
       </div>
 
       {loading && (
-        <div className="rounded-2xl bg-white p-6 text-sm text-gray-500 shadow-sm">
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 text-sm text-gray-500 shadow-sm">
           Loading dashboard...
         </div>
       )}
 
       {error && !loading && (
-        <div className="rounded-2xl bg-red-50 p-4 text-sm text-red-700 shadow-sm">
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 shadow-sm">
           {error}
         </div>
       )}
@@ -71,7 +71,7 @@ export default function AdminDashboardPage() {
           {cards.map(({ key, label, icon: Icon, tone }) => (
             <div
               key={key}
-              className={`group overflow-hidden rounded-2xl border border-white/70 bg-gradient-to-br ${toneClasses[tone]} p-4 sm:p-5 shadow-soft`}
+              className={`group overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm ${toneClasses[tone]} p-4 sm:p-5`}
             >
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/80 text-gray-800 shadow-sm">

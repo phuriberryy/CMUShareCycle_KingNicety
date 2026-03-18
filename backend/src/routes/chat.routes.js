@@ -9,12 +9,14 @@ import {
   declineChat,
   confirmChatQr,
 } from '../controllers/chatController.js'
+import { uploadChatImage } from '../controllers/uploadController.js'
 
 const router = Router()
 
 router.use(authenticate)
 
 router.get('/', getChats)
+router.post('/upload-image', uploadChatImage)
 router.get('/:chatId/messages', [param('chatId').isUUID()], getChatMessages)
 router.post(
   '/',

@@ -72,21 +72,21 @@ export default function DonationRequestModal({ open, onClose, itemId }) {
     <Modal
       open={open}
       onClose={onClose}
-      title="Request Donation"
-      subtitle="Enter recipient details to send a request to the post owner"
+      title="ขอรับบริจาค"
+      subtitle=""
       size="md"
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Recipient Name */}
         <div>
           <label className="mb-2 block text-sm font-bold text-gray-900">
-            Recipient Name <span className="text-red-500">*</span>
+            ชื่อผู้รับ <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             value={recipientName}
             onChange={(e) => setRecipientName(e.target.value)}
-            placeholder="Enter recipient name"
+            placeholder="กรอกชื่อ-นามสกุล"
             required
             className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0"
           />
@@ -95,13 +95,13 @@ export default function DonationRequestModal({ open, onClose, itemId }) {
         {/* Recipient Contact */}
         <div>
           <label className="mb-2 block text-sm font-bold text-gray-900">
-            Recipient Contact <span className="text-red-500">*</span>
+            ช่องทางติดต่อ <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             value={recipientContact}
             onChange={(e) => setRecipientContact(e.target.value)}
-            placeholder="Phone number, email, or other contact information"
+            placeholder="เบอร์โทร / Line ID / อีเมล"
             required
             className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0"
           />
@@ -110,12 +110,12 @@ export default function DonationRequestModal({ open, onClose, itemId }) {
         {/* Message */}
         <div>
           <label className="mb-2 block text-sm font-bold text-gray-900">
-            Additional Message <span className="text-gray-500">(Optional)</span>
+            ข้อความเพิ่มเติม <span className="text-gray-500">(ไม่บังคับ)</span>
           </label>
           <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            placeholder="Tell the owner why you want to receive this donation..."
+            placeholder="เขียนสั้นๆ เพื่อให้เจ้าของโพสต์เข้าใจ เช่น สะดวกรับวันไหน/ใช้ทำอะไร"
             rows={4}
             className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0 resize-none"
           />
@@ -128,14 +128,14 @@ export default function DonationRequestModal({ open, onClose, itemId }) {
             onClick={onClose}
             className="w-full sm:w-auto rounded-xl border border-gray-200 bg-white px-6 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
           >
-            Cancel
+            ยกเลิก
           </button>
           <button
             type="submit"
             disabled={submitting}
             className="w-full sm:w-auto rounded-xl bg-red-500 px-6 py-3 text-sm font-semibold text-white shadow-md hover:bg-red-600 transition disabled:opacity-60"
           >
-            {submitting ? 'Sending...' : 'Send Request'}
+            {submitting ? 'กำลังส่ง...' : 'ส่งคำขอ'}
           </button>
         </div>
       </form>

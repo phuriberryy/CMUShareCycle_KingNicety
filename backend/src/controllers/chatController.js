@@ -10,8 +10,9 @@ export const getChats = async (req, res) => {
     return res.status(401).json({ message: 'Unauthorized' })
   }
 
-  const rows = await fetchChatsForUser(req.user.id)
-  const allChats = rows.map((row) => mapChatRow(row, req.user.id))
+  try {
+    const rows = await fetchChatsForUser(req.user.id)
+    const allChats = rows.map((row) => mapChatRow(row, req.user.id))
 
   // กรองแชทที่มีอีเมลเดียวกันออก เหลือแค่แชทเดียว (ล่าสุด)
   const chatMap = new Map()
@@ -39,6 +40,14 @@ export const getChats = async (req, res) => {
   })
 
   return res.json(uniqueChats)
+  } catch (err) {
+    if (err.message?.includes('timeout') || err.code === 'ETIMEDOUT') {
+      console.error('Chats DB timeout:', err.message)
+      return res.status(503).json({ message: 'Service temporarily unavailable. Please try again.' })
+    }
+    console.error('getChats error:', err.message)
+    return res.status(500).json({ message: 'Failed to load chats' })
+  }
 }
 
 export const getChatMessages = async (req, res) => {

@@ -15,18 +15,10 @@ import {
   ChevronDown,
   MapPin,
   User as UserIcon,
-  Eye,
   Package,
-  TrendingUp,
   CheckCircle,
-  BarChart3,
-  Heart,
-  Trophy,
-  Medal,
-  Crown,
-  Star,
 } from 'lucide-react'
-import { itemsApi, statisticsApi, leaderboardApi, API_BASE } from '../lib/api'
+import { itemsApi, statisticsApi, API_BASE } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import { io } from 'socket.io-client'
 
@@ -57,33 +49,37 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
   const [loadError, setLoadError] = useState(false)
   const [statistics, setStatistics] = useState(null)
   const [loadingStats, setLoadingStats] = useState(false)
-  const [topLeaders, setTopLeaders] = useState([])
-
   const categoryOptions = [
-    { value: 'All Categories', label: 'All Categories' },
-    { value: 'Clothes & Fashion', label: '👕 Clothes & Fashion' },
-    { value: 'Dorm Essentials', label: '🏡 Dorm Essentials' },
-    { value: 'Books & Study', label: '📚 Books & Study' },
-    { value: 'Kitchen & Appliances', label: '🍳 Kitchen & Appliances' },
-    { value: 'Cleaning & Laundry', label: '🧼 Cleaning & Laundry' },
-    { value: 'Hobbies & Entertainment', label: '🎮 Hobbies & Entertainment' },
-    { value: 'Sports Gear', label: '🏀 Sports Gear' },
-    { value: 'Others', label: '✨ Others' },
+    { value: 'All Categories', label: 'ทุกหมวดหมู่' },
+    { value: 'Clothes & Fashion', label: '👕 เสื้อผ้า แฟชั่น' },
+    { value: 'Dorm Essentials', label: '🏡 ของใช้ในหอ' },
+    { value: 'Books & Study', label: '📚 หนังสือ การเรียน' },
+    { value: 'Kitchen & Appliances', label: '🍳 ครัว เครื่องใช้' },
+    { value: 'Cleaning & Laundry', label: '🧼 ทำความสะอาด ซักผ้า' },
+    { value: 'Hobbies & Entertainment', label: '🎮 งานอดิเรก ความบันเทิง' },
+    { value: 'Sports Gear', label: '🏀 กีฬา' },
+    { value: 'Others', label: '✨ อื่นๆ' },
   ]
 
   const conditionOptions = [
-    { value: 'All Conditions', label: 'All Conditions' },
-    { value: 'Like New', label: 'Like New' },
-    { value: 'Good', label: 'Good' },
-    { value: 'Fair', label: 'Fair' },
+    { value: 'All Conditions', label: 'ทุกสภาพ' },
+    { value: 'Like New', label: 'เหมือนใหม่' },
+    { value: 'Good', label: 'ดี' },
+    { value: 'Fair', label: 'พอใช้' },
   ]
 
   const benefitCards = [
-    { title: 'Fair Exchange', description: 'Trade value for value', icon: Handshake },
-    { title: 'Zero Waste', description: 'Everything reused', icon: Recycle },
-    { title: 'Build Community', description: 'Meet fellow students', icon: Users },
-    { title: 'Save Money', description: 'No buying needed', icon: PiggyBank },
+    { title: 'แลกอย่างยุติธรรม', description: 'แลกของให้คุ้มค่า', icon: Handshake, tone: 'blue' },
+    { title: 'ลดขยะ', description: 'ใช้ซ้ำให้คุ้ม', icon: Recycle, tone: 'emerald' },
+    { title: 'ชุมชน มช.', description: 'พบเพื่อนต่างคณะ', icon: Users, tone: 'purple' },
+    { title: 'ประหยัด', description: 'ไม่ต้องซื้อใหม่', icon: PiggyBank, tone: 'amber' },
   ]
+  const benefitToneClasses = {
+    blue: 'border-blue-200/80 bg-gradient-to-br from-blue-50/90 to-white text-blue-600 [&_.benefit-desc]:text-gray-500',
+    emerald: 'border-emerald-200/80 bg-gradient-to-br from-emerald-50/90 to-white text-emerald-600 [&_.benefit-desc]:text-gray-500',
+    purple: 'border-purple-200/80 bg-gradient-to-br from-purple-50/90 to-white text-purple-600 [&_.benefit-desc]:text-gray-500',
+    amber: 'border-amber-200/80 bg-gradient-to-br from-amber-50/90 to-white text-amber-600 [&_.benefit-desc]:text-gray-500',
+  }
 
   useEffect(() => {
     fetchItems({ setItems, setLoading, setLoadError })
@@ -160,11 +156,6 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
         console.error('Failed to load statistics:', err)
       })
       .finally(() => setLoadingStats(false))
-
-    leaderboardApi
-      .getLeaderboard('points', 'all', 5)
-      .then((data) => setTopLeaders(data.leaders || []))
-      .catch(() => setTopLeaders([]))
   }, [])
 
   const filteredItems = useMemo(() => {
@@ -183,536 +174,268 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
   }, [items, searchQuery, selectedCategory, selectedCondition])
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-0">
-      {/* HERO */}
-      <section className="relative mb-16 overflow-hidden rounded-[40px] bg-gradient-to-r from-[#F3F9F2] via-[#EEF6EE] to-[#F8FBF7] px-8 py-14 shadow-soft">
-        <div className="absolute -left-10 top-12 hidden text-primary/10 lg:block">
-          <RefreshCcw className="h-[360px] w-[360px]" strokeWidth={1} />
-        </div>
-        <div className="absolute -right-6 bottom-0 hidden text-primary/15 lg:block">
-          <Leaf className="h-[300px] w-[300px]" strokeWidth={1} />
-        </div>
-        <div className="relative flex flex-col items-center gap-10 lg:flex-row lg:items-stretch lg:gap-16">
-          <div className="max-w-xl text-center lg:text-left mx-auto lg:mx-0">
-            <p className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-sm font-semibold text-primary shadow-sm">
-              <Leaf size={16} />
-              CMU ShareCycle · Green Campus
-            </p>
-            <div className="space-y-2 sm:space-y-3">
-              <p className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold leading-none text-gray-900">
-                Exchange
+    <div className="min-h-screen bg-[#FAFBF9]">
+      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+        {/* HERO — Clear block with background */}
+        <section className="mb-6 sm:mb-8 overflow-hidden rounded-3xl border border-primary/15 bg-gradient-to-br from-primary/8 via-white to-primary/5 px-6 py-8 shadow-sm sm:px-8 sm:py-10 lg:px-12 lg:py-12">
+          <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between lg:gap-14">
+            <div className="max-w-xl">
+              <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/25 bg-white/90 px-3.5 py-1.5 text-xs font-semibold tracking-wide text-primary shadow-sm backdrop-blur-sm">
+                <Leaf size={14} strokeWidth={2.5} />
+                CMU ShareCycle · Green Campus
               </p>
-              <p className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-[#5FA660]">What You Have</p>
-              <p className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-[#5FA660]">For What You Need</p>
-            </div>
-            <p className="mt-4 sm:mt-6 text-base sm:text-lg lg:text-xl text-gray-600">
-              The smartest way for CMU students to exchange items.{' '}
-              <span className="font-semibold text-gray-900">No money, no waste, just community.</span>
-            </p>
-            <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3">
-              <button 
-                onClick={() => {
-                  const itemsSection = document.getElementById('items-section')
-                  if (itemsSection) {
-                    itemsSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                  }
-                }}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 sm:gap-3 rounded-full bg-primary px-6 py-3 text-sm sm:text-base font-semibold text-white shadow-card transition hover:bg-primary-dark"
-              >
-                <span>Browse Items</span>
-                <ArrowRight size={18} />
-              </button>
-              <div className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-full bg-white px-4 py-2 text-xs sm:text-sm font-semibold text-primary shadow-sm">
-                <Zap size={16} />
-                Zero waste campus mission
-              </div>
-            </div>
-          </div>
-
-          <div className="grid w-full flex-1 grid-cols-2 gap-4">
-            {benefitCards.map((benefit) => (
-              <div
-                key={benefit.title}
-                className="rounded-[28px] border border-white/60 bg-white px-5 py-6 shadow-card transition hover:-translate-y-0.5 hover:shadow-soft"
-              >
-                <div className="mb-4 flex items-center justify-between">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                    <benefit.icon size={24} />
-                  </div>
-                  <ArrowRight size={18} className="text-gray-300" />
-                </div>
-                <p className="text-base font-semibold text-gray-900">{benefit.title}</p>
-                <p className="text-sm text-gray-500">{benefit.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* STATISTICS DASHBOARD */}
-      {loadingStats ? (
-        <section className="mb-8 sm:mb-12 lg:mb-16">
-          <div className="rounded-2xl bg-white p-6 sm:p-8 text-center shadow-soft">
-            <p className="text-sm text-gray-500">Loading statistics...</p>
-          </div>
-        </section>
-      ) : statistics ? (
-        <section className="mb-8 sm:mb-12 lg:mb-16">
-          <div className="rounded-2xl border border-white/70 bg-white/70 p-4 sm:p-6 lg:p-8 shadow-soft">
-            <div className="mb-4 sm:mb-6">
-              <div className="mb-2 sm:mb-3 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-white px-3 sm:px-4 py-1 text-xs font-semibold uppercase tracking-wide text-primary shadow-sm">
-                <BarChart3 size={14} />
-                Platform Statistics
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Community Impact</h2>
-              <p className="mt-2 text-sm sm:text-base lg:text-lg text-gray-600">See how we're making a difference together</p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-            {/* Total Users */}
-            <div className="group relative overflow-hidden rounded-2xl border border-white/60 bg-gradient-to-br from-blue-50 to-blue-100/50 p-6 shadow-soft transition hover:-translate-y-1 hover:shadow-card">
-              <div className="mb-4 flex items-center justify-between">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/20 text-blue-600">
-                  <Users size={24} />
-                </div>
-                <div className="rounded-full bg-blue-500/10 px-3 py-1 text-xs font-semibold text-blue-700">
-                  Active
-                </div>
-              </div>
-              <p className="text-2xl sm:text-3xl font-bold text-gray-900">{statistics.totalUsers.toLocaleString()}</p>
-              <p className="mt-1 text-sm font-medium text-gray-600">Total Users</p>
-              <p className="mt-2 text-xs sm:text-sm text-gray-500">CMU students joined</p>
-            </div>
-
-            {/* Total Items */}
-            <div className="group relative overflow-hidden rounded-2xl border border-white/60 bg-gradient-to-br from-green-50 to-green-100/50 p-6 shadow-soft transition hover:-translate-y-1 hover:shadow-card">
-              <div className="mb-4 flex items-center justify-between">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-green-500/20 text-green-600">
-                  <Package size={24} />
-                </div>
-                <div className="rounded-full bg-green-500/10 px-3 py-1 text-xs font-semibold text-green-700">
-                  {statistics.activeItems} Active
-                </div>
-              </div>
-              <p className="text-2xl sm:text-3xl font-bold text-gray-900">{statistics.totalItems.toLocaleString()}</p>
-              <p className="mt-1 text-sm font-medium text-gray-600">Total Items</p>
-              <p className="mt-2 text-xs sm:text-sm text-gray-500">{statistics.activeItems} available now</p>
-            </div>
-
-            {/* Successful Exchanges */}
-            <div className="group relative overflow-hidden rounded-2xl border border-white/60 bg-gradient-to-br from-purple-50 to-purple-100/50 p-6 shadow-soft transition hover:-translate-y-1 hover:shadow-card">
-              <div className="mb-4 flex items-center justify-between">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-500/20 text-purple-600">
-                  <CheckCircle size={24} />
-                </div>
-                <div className="rounded-full bg-purple-500/10 px-3 py-1 text-xs font-semibold text-purple-700">
-                  Completed
-                </div>
-              </div>
-              <p className="text-2xl sm:text-3xl font-bold text-gray-900">{statistics.totalExchanges.toLocaleString()}</p>
-              <p className="mt-1 text-sm font-medium text-gray-600">Successful Exchanges</p>
-              <p className="mt-2 text-xs sm:text-sm text-gray-500">Items exchanged</p>
-            </div>
-
-            {/* CO₂ Reduced */}
-            <div className="group relative overflow-hidden rounded-2xl border border-white/60 bg-gradient-to-br from-emerald-50 to-emerald-100/50 p-6 shadow-soft transition hover:-translate-y-1 hover:shadow-card">
-              <div className="mb-4 flex items-center justify-between">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/20 text-emerald-600">
-                  <Leaf size={24} />
-                </div>
-                <div className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700">
-                  <TrendingUp size={12} className="inline mr-1" />
-                  Impact
-                </div>
-              </div>
-              <p className="text-2xl sm:text-3xl font-bold text-gray-900">
-                {statistics.totalCO2Reduced.toLocaleString()}
+              <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl lg:text-[2.75rem] lg:leading-[1.15]">
+                Swap what you have. Get what you need.
+              </h1>
+              <p className="mt-4 text-base text-gray-600 sm:text-lg">
+                Free exchange & donation. No money, less waste, real community.
               </p>
-              <p className="mt-1 text-sm font-medium text-gray-600">kg CO₂ Reduced</p>
-              <p className="mt-2 text-xs sm:text-sm text-gray-500">Environmental impact</p>
-            </div>
-            </div>
-
-          {/* Additional Stats Row */}
-          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2">
-            <div className="rounded-2xl border border-white/60 bg-gradient-to-br from-orange-50 to-orange-100/50 p-6 shadow-soft">
-              <div className="mb-4 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/20 text-orange-600">
-                  <RefreshCcw size={20} />
-                </div>
-                <div>
-                  <p className="text-xl sm:text-2xl font-bold text-gray-900">
-                    {statistics.totalRequests.toLocaleString()}
-                  </p>
-                  <p className="text-sm font-medium text-gray-600">Total Exchange Requests</p>
-                </div>
-              </div>
-              <div className="mt-3 flex items-center gap-2 text-xs sm:text-sm text-gray-500">
-                <Clock3 size={14} />
-                <span>{statistics.pendingRequests} pending approval</span>
+              <div className="mt-6 flex flex-wrap items-center gap-3">
+                <button
+                  onClick={() => document.getElementById('items-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                  className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition hover:bg-primary-dark hover:shadow-primary/30"
+                >
+                  ดูรายการสินค้า
+                  <ArrowRight size={16} strokeWidth={2.5} />
+                </button>
+                <span className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm">
+                  <Zap size={16} className="text-primary" />
+                  <span>Zero waste campus</span>
+                </span>
               </div>
             </div>
-
-            <div className="rounded-2xl border border-white/60 bg-gradient-to-br from-teal-50 to-teal-100/50 p-6 shadow-soft">
-              <div className="mb-4 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-500/20 text-teal-600">
-                  <Zap size={20} />
-                </div>
-                <div>
-                  <p className="text-xl sm:text-2xl font-bold text-gray-900">
-                    {statistics.totalExchanges > 0 
-                      ? ((statistics.totalExchanges / statistics.totalUsers) * 100).toFixed(1)
-                      : '0'}%
-                  </p>
-                  <p className="text-sm font-medium text-gray-600">Exchange Rate</p>
-                </div>
-              </div>
-              <div className="mt-3 flex items-center gap-2 text-xs sm:text-sm text-gray-500">
-                <Users size={14} />
-                <span>Average exchanges per user</span>
-              </div>
-            </div>
-          </div>
-          </div>
-        </section>
-      ) : null}
-
-      {/* LEADERBOARD WIDGET */}
-      {topLeaders.length > 0 && (
-        <section className="mb-16">
-          <div className="mb-6">
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-white px-4 py-1 text-xs font-semibold uppercase tracking-wide text-primary shadow-sm">
-              <Trophy size={14} />
-              Leaderboard
-            </div>
-            <h2 className="text-3xl font-bold text-gray-900">Top Contributors</h2>
-            <p className="mt-2 text-lg text-gray-600">Leading the way in sustainable sharing</p>
-          </div>
-
-          <div className="overflow-hidden rounded-2xl border border-white/60 bg-white shadow-soft">
-            <div className="divide-y divide-gray-50">
-              {topLeaders.map((leader, index) => {
-                const initials = leader.name
-                  ? leader.name.split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase()
-                  : '??'
-                return (
-                  <div
-                    key={leader.id}
-                    className={`flex items-center gap-4 px-5 py-4 transition hover:bg-gray-50 ${
-                      index === 0 ? 'bg-gradient-to-r from-yellow-50/60 to-transparent' : ''
-                    }`}
-                  >
-                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center">
-                      {leader.rank === 1 ? (
-                        <Crown size={22} className="text-yellow-500" />
-                      ) : leader.rank === 2 ? (
-                        <Medal size={22} className="text-gray-400" />
-                      ) : leader.rank === 3 ? (
-                        <Medal size={22} className="text-orange-400" />
-                      ) : (
-                        <span className="text-sm font-bold text-gray-400">#{leader.rank}</span>
-                      )}
-                    </div>
-                    <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold text-white ${
-                      leader.rank === 1
-                        ? 'bg-yellow-500'
-                        : leader.rank === 2
-                        ? 'bg-gray-400'
-                        : leader.rank === 3
-                        ? 'bg-orange-400'
-                        : 'bg-primary'
-                    }`}>
-                      {initials}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-900 truncate">{leader.name}</p>
-                      {leader.faculty && (
-                        <p className="text-xs text-gray-500 truncate">{leader.faculty}</p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Star size={14} className="text-yellow-500" />
-                      <span className="text-sm font-bold text-primary">{parseInt(leader.value).toLocaleString()} pts</span>
-                    </div>
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:max-w-sm">
+              {benefitCards.map((benefit) => (
+                <div
+                  key={benefit.title}
+                  className={`flex items-center gap-3 rounded-xl border p-4 shadow-sm backdrop-blur-sm transition hover:shadow-md ${benefitToneClasses[benefit.tone]}`}
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/80 shadow-sm [color:inherit]">
+                    <benefit.icon size={20} strokeWidth={2} />
                   </div>
-                )
-              })}
-            </div>
-            <div className="border-t border-gray-100 px-5 py-3">
-              <button
-                onClick={() => navigate('/leaderboard')}
-                className="flex w-full items-center justify-center gap-2 rounded-full bg-primary/10 px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary/20"
-              >
-                <Trophy size={16} />
-                View Full Leaderboard
-                <ArrowRight size={16} />
-              </button>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">{benefit.title}</p>
+                    <p className="benefit-desc text-xs">{benefit.description}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </section>
-      )}
 
-      {/* ITEMS */}
-      <section id="items-section">
-        <div className="mb-8">
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-white px-4 py-1 text-xs font-semibold uppercase tracking-wide text-primary shadow-sm">
-            <RefreshCcw size={14} />
-            Browse Items
+        {/* COMMUNITY IMPACT */}
+        {loadingStats ? (
+          <section className="mb-6">
+            <div className="rounded-2xl border border-gray-200 bg-white px-6 py-8 text-center">
+              <p className="text-sm text-gray-500">Loading statistics...</p>
+            </div>
+          </section>
+        ) : statistics ? (
+          <section className="mb-6 sm:mb-8">
+            <div className="mb-4">
+              <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">Community impact</h2>
+            </div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
+              <div className="rounded-xl border border-blue-200/60 bg-gradient-to-br from-blue-50/80 to-white p-4 shadow-sm transition hover:shadow-md">
+                <div className="flex items-center justify-between"><span className="text-xs font-medium text-gray-500">Users</span><Users size={18} className="text-blue-500" /></div>
+                <p className="mt-2 text-xl font-bold tabular-nums text-blue-600">{statistics.totalUsers.toLocaleString()}</p>
+                <p className="mt-0.5 text-xs text-gray-500">สมาชิก</p>
+              </div>
+              <div className="rounded-xl border border-green-200/60 bg-gradient-to-br from-green-50/80 to-white p-4 shadow-sm transition hover:shadow-md">
+                <div className="flex items-center justify-between"><span className="text-xs font-medium text-gray-500">รายการสินค้า</span><Package size={18} className="text-green-500" /></div>
+                <p className="mt-2 text-xl font-bold tabular-nums text-green-600">{statistics.totalItems.toLocaleString()}</p>
+                <p className="mt-0.5 text-xs text-gray-500">{statistics.activeItems} พร้อมแลก</p>
+              </div>
+              <div className="rounded-xl border border-purple-200/60 bg-gradient-to-br from-purple-50/80 to-white p-4 shadow-sm transition hover:shadow-md">
+                <div className="flex items-center justify-between"><span className="text-xs font-medium text-gray-500">การแลกเปลี่ยน</span><CheckCircle size={18} className="text-purple-500" /></div>
+                <p className="mt-2 text-xl font-bold tabular-nums text-purple-600">{statistics.totalExchanges.toLocaleString()}</p>
+                <p className="mt-0.5 text-xs text-gray-500">สำเร็จ</p>
+              </div>
+              <div className="rounded-xl border border-emerald-200/60 bg-gradient-to-br from-emerald-50/80 to-white p-4 shadow-sm transition hover:shadow-md">
+                <div className="flex items-center justify-between"><span className="text-xs font-medium text-gray-500">CO₂ ลดได้</span><Leaf size={18} className="text-emerald-500" /></div>
+                <p className="mt-2 text-xl font-bold tabular-nums text-emerald-600">{statistics.totalCO2Reduced.toLocaleString()} kg</p>
+                <p className="mt-0.5 text-xs text-gray-500">ลดได้</p>
+              </div>
+              <div className="rounded-xl border border-orange-200/60 bg-gradient-to-br from-orange-50/80 to-white p-4 shadow-sm transition hover:shadow-md">
+                <div className="flex items-center justify-between"><span className="text-xs font-medium text-gray-500">คำขอ</span><RefreshCcw size={18} className="text-orange-500" /></div>
+                <p className="mt-2 text-xl font-bold tabular-nums text-orange-600">{statistics.totalRequests.toLocaleString()}</p>
+                <p className="mt-0.5 text-xs text-gray-500">{statistics.pendingRequests} รอ</p>
+              </div>
+              <div className="rounded-xl border border-teal-200/60 bg-gradient-to-br from-teal-50/80 to-white p-4 shadow-sm transition hover:shadow-md">
+                <div className="flex items-center justify-between"><span className="text-xs font-medium text-gray-500">อัตราแลกเปลี่ยน</span><Zap size={18} className="text-teal-500" /></div>
+                <p className="mt-2 text-xl font-bold tabular-nums text-teal-600">{statistics.totalExchanges > 0 ? ((statistics.totalExchanges / statistics.totalUsers) * 100).toFixed(1) : '0'}%</p>
+                <p className="mt-0.5 text-xs text-gray-500">อัตราแลกเปลี่ยน</p>
+              </div>
+            </div>
+          </section>
+        ) : null}
+
+        {/* ITEMS */}
+        <section id="items-section" className="mb-8">
+          <div className="mb-4">
+            <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">รายการสินค้า</h2>
           </div>
-          <h2 className="text-4xl font-bold text-gray-900">Available for Exchange</h2>
-          <p className="mt-2 text-lg text-gray-600">Discover items posted by fellow CMU students</p>
-        </div>
 
-        <div className="mb-10 flex flex-col gap-4 rounded-2xl sm:rounded-[32px] bg-white/80 p-4 sm:p-5 shadow-soft lg:flex-row lg:items-center lg:p-6">
-          <div className="flex-1">
-            <label className="sr-only" htmlFor="search-items">
-              Search items
-            </label>
-            <div className="relative">
-              <Search size={20} className="absolute left-4 sm:left-5 top-1/2 -translate-y-1/2 text-gray-400" />
+          <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-4">
+            <label className="sr-only" htmlFor="search-items">ค้นหาสินค้า</label>
+            <div className="relative flex-1">
+              <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
                 id="search-items"
                 type="text"
-                placeholder="Search items..."
+                placeholder="ค้นหาสินค้า..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-full border border-primary/10 bg-surface px-4 sm:px-5 py-3 pl-11 sm:pl-12 text-sm font-medium text-gray-800 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/30"
+                className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pl-10 pr-4 text-sm text-gray-900 placeholder:text-gray-400 focus:border-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
             </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3">
-            <div className="grid grid-cols-2 sm:flex gap-3">
-              <div className="relative">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              <div className="relative flex-1 sm:flex-none sm:w-[180px]">
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full appearance-none rounded-full border border-primary/15 bg-white px-4 sm:px-5 py-3 pr-10 sm:pr-12 text-xs sm:text-sm font-semibold text-gray-800 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  className="w-full appearance-none rounded-xl border border-gray-200 bg-gray-50 py-2.5 pl-4 pr-9 text-sm font-medium text-gray-800 focus:border-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20"
                 >
                   {categoryOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
                   ))}
                 </select>
-                <ChevronDown className="pointer-events-none absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
               </div>
-
-              <div className="relative">
+              <div className="relative flex-1 sm:flex-none sm:w-[140px]">
                 <select
                   value={selectedCondition}
                   onChange={(e) => setSelectedCondition(e.target.value)}
-                  className="w-full appearance-none rounded-full border border-primary/15 bg-white px-4 sm:px-5 py-3 pr-10 sm:pr-12 text-xs sm:text-sm font-semibold text-gray-800 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  className="w-full appearance-none rounded-xl border border-gray-200 bg-gray-50 py-2.5 pl-4 pr-9 text-sm font-medium text-gray-800 focus:border-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20"
                 >
                   {conditionOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
                   ))}
                 </select>
-                <ChevronDown className="pointer-events-none absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
               </div>
+              <button
+                onClick={onPostItem}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-primary-dark sm:w-auto"
+              >
+                <Plus size={18} strokeWidth={2.5} />
+                โพสต์สินค้า
+              </button>
             </div>
+          </div>
 
-            <button
-              onClick={onPostItem}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base font-semibold text-white shadow-card transition hover:bg-primary-dark"
-            >
-              <Plus size={20} />
-              Post Item
-            </button>
-          </div>
-        </div>
+          {loading && (
+            <div className="rounded-2xl border border-gray-200 bg-white py-16 text-center">
+              <p className="text-sm font-medium text-gray-600">กำลังโหลดรายการ...</p>
+              <p className="mt-1 text-xs text-gray-400">ถ้านานเกิน 15 วินาที อาจเป็นเพราะ backend (port 4000) ยังไม่รัน</p>
+            </div>
+          )}
+          {!loading && loadError && (
+            <div className="rounded-2xl border border-gray-200 bg-white py-16 text-center">
+              <p className="text-base font-medium text-gray-700">โหลดรายการไม่สำเร็จ</p>
+              <p className="mt-1 text-sm text-gray-500">ตรวจสอบว่า backend รันที่ port 4000 หรือลองรีเฟรช</p>
+              <button
+                type="button"
+                onClick={() => fetchItems({ setItems, setLoading, setLoadError })}
+                className="mt-5 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-dark"
+              >
+                ลองโหลดใหม่
+              </button>
+            </div>
+          )}
+          {!loading && !loadError && filteredItems.length === 0 && (
+            <div className="rounded-2xl border border-gray-200 bg-white py-16 text-center">
+              <p className="text-base font-medium text-gray-700">ยังไม่มีสินค้าในตอนนี้</p>
+              <p className="mt-1 text-sm text-gray-500">เริ่มต้นโดยการโพสต์สินค้าชิ้นแรก</p>
+            </div>
+          )}
 
-        {loading && (
-          <div className="rounded-2xl bg-white p-12 text-center shadow-md">
-            <p className="text-sm text-gray-600">Loading items...</p>
-            <p className="mt-2 text-xs text-gray-400">ถ้านานเกิน 15 วินาที อาจเป็นเพราะ backend (port 4000) ยังไม่รัน</p>
-          </div>
-        )}
-        {!loading && loadError && (
-          <div className="rounded-2xl bg-white p-12 text-center shadow-md">
-            <p className="text-lg font-medium text-gray-600">โหลดรายการไม่สำเร็จ</p>
-            <p className="mt-2 text-sm text-gray-500">ตรวจสอบว่า backend รันที่ port 4000 หรือลองรีเฟรช</p>
-            <button
-              type="button"
-              onClick={() => fetchItems({ setItems, setLoading, setLoadError })}
-              className="mt-4 rounded-full bg-primary px-5 py-2 text-sm font-medium text-white hover:bg-primary-dark"
-            >
-              ลองโหลดใหม่
-            </button>
-          </div>
-        )}
-        {!loading && !loadError && filteredItems.length === 0 && (
-          <div className="rounded-2xl bg-white p-12 text-center shadow-md">
-            <p className="text-lg font-medium text-gray-600">No items available right now.</p>
-            <p className="mt-2 text-sm text-gray-500">Be the first to post an item!</p>
-          </div>
-        )}
-
-        <div className="grid grid-cols-2 gap-6">
+          {!loading && !loadError && filteredItems.length > 0 && (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4">
           {filteredItems.map((item) => {
             const isInProgress = item.status === 'in_progress'
             const isDonated = item.status === 'donated'
+            let daysLabel = null
+            if (item.available_until) {
+              const today = new Date(); today.setHours(0, 0, 0, 0)
+              const expiry = new Date(item.available_until); expiry.setHours(0, 0, 0, 0)
+              const diffDays = Math.ceil((expiry - today) / 864e5)
+              if (diffDays < 0) daysLabel = { text: 'หมดอายุ', style: 'bg-red-100 text-red-700' }
+              else if (diffDays === 0) daysLabel = { text: 'หมดอายุวันนี้', style: 'bg-amber-100 text-amber-800' }
+              else if (diffDays <= 7) daysLabel = { text: `เหลือ ${diffDays} วัน`, style: 'bg-amber-100 text-amber-800' }
+            }
             return (
             <article
               key={item.id}
-              className={`flex flex-col overflow-hidden rounded-2xl border border-white/60 bg-white shadow-soft transition ${
-                isInProgress 
-                  ? 'opacity-60 grayscale-[30%] cursor-not-allowed' 
-                  : 'hover:-translate-y-1 hover:shadow-card'
+              className={`group flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition ${
+                isInProgress ? 'opacity-70 cursor-not-allowed' : 'hover:border-gray-300 hover:shadow-md'
               }`}
             >
-              <div className="relative aspect-[4/3] w-full overflow-hidden">
+              <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-100">
                 <img
-                  src={
-                    item.image_url ||
-                    'https://images.unsplash.com/photo-1503602642458-232111445657?auto=format&fit=crop&w=800&q=80'
-                  }
+                  src={item.image_url || 'https://images.unsplash.com/photo-1503602642458-232111445657?auto=format&fit=crop&w=800&q=80'}
                   alt={item.title}
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-cover transition group-hover:scale-[1.02]"
                 />
-                {/* Top badges: days remaining + listing type */}
-                <div className="absolute inset-x-3 top-3 flex items-start justify-between gap-2 text-xs sm:text-sm">
-                  <div className="max-w-[65%]">
-                    {(() => {
-                      if (!item.available_until) {
-                        return null
-                      }
-                      // ใช้การเปรียบเทียบวันที่ (ไม่สนใจเวลา) เพื่อให้สอดคล้องกับ backend
-                      const today = new Date()
-                      today.setHours(0, 0, 0, 0)
-                      const expiryDate = new Date(item.available_until)
-                      expiryDate.setHours(0, 0, 0, 0)
-                      const diffTime = expiryDate - today
-                      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-                      
-                      // เมื่อ diffDays = 0 หมายถึง 0 days remaining (วันนี้เป็นวันสุดท้าย)
-                      // ซึ่ง backend จะถือว่า expired และไม่แสดงใน feed
-                      if (diffDays < 0) {
-                        return (
-                          <span className="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-2.5 py-1 text-xs sm:text-sm font-semibold text-red-700">
-                            <Clock3 size={14} />
-                            Expired
-                          </span>
-                        )
-                      } else if (diffDays === 0) {
-                        // 0 days remaining - จะถูกย้ายไป expired tab
-                        return (
-                          <span className="inline-flex items-center gap-1.5 rounded-full bg-yellow-100 px-2.5 py-1 text-xs sm:text-sm font-semibold text-yellow-700">
-                            <Clock3 size={14} />
-                            <span className="sm:hidden">0 D</span>
-                            <span className="hidden sm:inline">0 days remaining</span>
-                          </span>
-                        )
-                      } else if (diffDays <= 7) {
-                        return (
-                          <span className="inline-flex items-center gap-1.5 rounded-full bg-yellow-100 px-2.5 py-1 text-xs sm:text-sm font-semibold text-yellow-700">
-                            <Clock3 size={14} />
-                            <span className="sm:hidden">{diffDays} D</span>
-                            <span className="hidden sm:inline">
-                              {diffDays} days remaining
-                            </span>
-                          </span>
-                        )
-                      }
-                      return null
-                    })()}
-                  </div>
-
-                  <div className="shrink-0">
-                    {isInProgress ? (
-                      <span className="inline-flex rounded-full bg-yellow-500 px-3 py-1 text-xs sm:text-sm font-semibold text-white shadow-md">
-                        In progress
-                      </span>
-                    ) : item.listing_type === 'donation' ? (
-                      <span className="inline-flex rounded-full bg-red-500 px-3 py-1 text-xs sm:text-sm font-semibold text-white shadow-md">
-                        Donation
-                      </span>
-                    ) : (
-                      <span className="inline-flex rounded-full bg-primary px-3 py-1 text-xs sm:text-sm font-semibold text-white shadow-md">
-                        Exchange
-                      </span>
-                    )}
-                  </div>
+                <div className="absolute inset-x-0 top-0 flex items-start justify-between p-2.5">
+                  {daysLabel && (
+                    <span className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium ${daysLabel.style}`}>
+                      <Clock3 size={12} />
+                      {daysLabel.text}
+                    </span>
+                  )}
+                  <span className={`rounded-md px-2 py-1 text-xs font-semibold text-white ${
+                    isInProgress ? 'bg-amber-500' : item.listing_type === 'donation' ? 'bg-rose-500' : 'bg-primary'
+                  }`}>
+                    {isInProgress ? 'กำลังดำเนินการ' : item.listing_type === 'donation' ? 'บริจาค' : 'แลกเปลี่ยน'}
+                  </span>
                 </div>
               </div>
-              <div className="flex flex-1 flex-col space-y-3 p-4 sm:p-5">
-                {/* Category Badge */}
-                <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-semibold text-primary">
-                  <Zap size={14} />
-                  {item.category}
-                </div>
-                
-                {/* Title - Clickable to view details */}
-                <h3 
+              <div className="flex flex-1 flex-col p-4">
+                <span className="text-xs font-medium text-primary">{item.category}</span>
+                <h3
                   onClick={() => navigate(`/items/${item.id}`)}
-                  className="cursor-pointer text-lg font-semibold text-gray-900 line-clamp-2 transition hover:text-primary"
+                  className="mt-1 cursor-pointer text-base font-semibold text-gray-900 line-clamp-2 transition hover:text-primary"
                 >
                   {item.title}
                 </h3>
-                
-                {/* Details: Condition, Location, Seller */}
-                <div className="flex-1 space-y-2 text-sm sm:text-base text-gray-600">
-                  {/* Compact meta row on mobile */}
-                  <div className="flex items-center justify-between text-xs text-gray-500 sm:hidden">
-                    <span>{item.item_condition}</span>
-                    {item.pickup_location && (
-                      <span className="ml-2 flex-1 truncate text-right">
-                        {item.pickup_location}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Full details on tablet/desktop */}
-                  <div className="hidden items-center gap-2 sm:flex">
-                    <span className="font-medium">Condition:</span>
-                    <span>{item.item_condition}</span>
-                  </div>
+                <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500">
+                  <span>{item.item_condition}</span>
                   {item.pickup_location && (
-                    <div className="hidden items-center gap-2 sm:flex">
-                      <MapPin size={18} className="text-gray-400" />
-                      <span className="truncate">{item.pickup_location}</span>
-                    </div>
+                    <span className="flex items-center gap-1 truncate">
+                      <MapPin size={12} />
+                      {item.pickup_location}
+                    </span>
                   )}
-                  <div className="hidden items-center gap-2 sm:flex">
-                    <UserIcon size={18} className="text-gray-400" />
-                    <span className="truncate">{item.owner_name || 'CMU Student'}</span>
-                  </div>
+                  <span className="flex items-center gap-1 truncate">
+                    <UserIcon size={12} />
+                    {item.owner_name || 'CMU Student'}
+                  </span>
                 </div>
-                
-                {/* Action Buttons */}
-                <div className="mt-auto flex flex-col gap-2 sm:flex-row">
+                <div className="mt-4 flex gap-2">
                   <button
                     onClick={() => navigate(`/items/${item.id}`)}
-                    className="w-full flex-1 rounded-lg border-2 border-primary bg-white px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary/10"
+                    className="flex-1 rounded-xl border border-gray-200 bg-white py-2.5 text-sm font-semibold text-gray-700 transition hover:border-primary hover:bg-primary/5 hover:text-primary"
                   >
-                    <Eye size={16} className="mx-auto" />
-                    <span className="mt-1 block text-xs">View Details</span>
+                    ดู
                   </button>
                   {isInProgress ? (
-                    <button
-                      disabled
-                      className="w-full flex-1 rounded-lg bg-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-500 shadow-md cursor-not-allowed"
-                    >
-                      <RefreshCcw size={16} className="mx-auto" />
-                      <span className="mt-1 block text-xs">In progress</span>
-                    </button>
+                    <button disabled className="flex-1 rounded-xl bg-gray-100 py-2.5 text-sm font-semibold text-gray-400 cursor-not-allowed">กำลังดำเนินการ</button>
                   ) : isDonated ? (
+                    <button disabled className="flex-1 rounded-xl bg-emerald-100 py-2.5 text-sm font-semibold text-emerald-700 cursor-not-allowed">บริจาคแล้ว</button>
+                  ) : item.status === 'active' && item.listing_type === 'donation' ? (
                     <button
-                      disabled
-                      className="w-full flex-1 rounded-lg bg-green-300 px-4 py-2.5 text-sm font-semibold text-green-700 shadow-md cursor-not-allowed"
+                      onClick={() => onDonationItem(item.id)}
+                      className="flex-1 rounded-xl bg-rose-500 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-600"
                     >
-                      <Heart size={16} className="mx-auto" />
-                      <span className="mt-1 block text-xs">Donated</span>
+                      ขอรับบริจาค
                     </button>
                   ) : item.status === 'active' && item.listing_type !== 'donation' ? (
                     <button
                       onClick={() => onExchangeItem(item.id)}
-                      className="w-full flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-primary-dark"
+                      className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-semibold text-white transition hover:bg-primary-dark"
                     >
-                      <RefreshCcw size={16} className="mx-auto" />
-                      <span className="mt-1 block text-xs">Exchange</span>
+                      ขอแลก
                     </button>
                   ) : null}
                 </div>
@@ -720,9 +443,11 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
             </article>
             )
           })}
-        </div>
-      </section>
+          </div>
+          )}
 
+        </section>
+      </div>
     </div>
   )
 }

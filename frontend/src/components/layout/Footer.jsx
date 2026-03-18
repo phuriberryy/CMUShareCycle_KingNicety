@@ -2,7 +2,7 @@ import { Leaf } from 'lucide-react'
 
 function Footer() {
   return (
-    <footer className="mt-12 sm:mt-16 lg:mt-20 border-t border-gray-200 bg-white overflow-x-hidden">
+    <footer className="mt-12 border-t border-gray-200 bg-white/80 backdrop-blur-sm overflow-x-hidden">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-12">
         {/* CMU ShareCycle Info */}
         <div className="mx-auto max-w-md text-center">

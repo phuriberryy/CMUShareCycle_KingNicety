@@ -1,4 +1,4 @@
-export default function ConfirmDialog({ open, title, description, confirmLabel = 'Confirm', cancelLabel = 'Cancel', onConfirm, onCancel, loading }) {
+export default function ConfirmDialog({ open, title, description, confirmLabel = 'ยืนยัน', cancelLabel = 'ยกเลิก', onConfirm, onCancel, loading }) {
   if (!open) return null
 
   return (
@@ -23,7 +23,7 @@ export default function ConfirmDialog({ open, title, description, confirmLabel =
             disabled={loading}
             className="inline-flex w-full justify-center rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-700 disabled:opacity-60 sm:w-auto"
           >
-            {loading ? 'Working...' : confirmLabel}
+            {loading ? 'กำลังดำเนินการ...' : confirmLabel}
           </button>
         </div>
       </div>

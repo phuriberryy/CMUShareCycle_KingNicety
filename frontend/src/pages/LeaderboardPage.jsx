@@ -25,15 +25,15 @@ const TABS = [
 
 const PERIODS = [
   { key: 'week', label: 'This Week' },
-  { key: 'month', label: 'This Month' },
-  { key: 'all', label: 'All Time' },
+  { key: 'month', label: 'เดือนนี้' },
+  { key: 'all', label: 'ทั้งหมด' },
 ]
 
 const REASON_LABELS = {
-  exchange_completed: 'Exchange completed',
-  donation_completed_donor: 'Donation (donor)',
-  donation_completed_recipient: 'Donation (recipient)',
-  post_item: 'Posted item',
+  exchange_completed: 'แลกเปลี่ยนสำเร็จ',
+  donation_completed_donor: 'บริจาค (ผู้ให้)',
+  donation_completed_recipient: 'บริจาค (ผู้รับ)',
+  post_item: 'โพสต์สินค้า',
 }
 
 function getRankStyle(rank) {
@@ -41,6 +41,13 @@ function getRankStyle(rank) {
   if (rank === 2) return { bg: 'bg-gradient-to-br from-gray-100 to-slate-50', border: 'border-gray-300', text: 'text-gray-600' }
   if (rank === 3) return { bg: 'bg-gradient-to-br from-orange-50 to-amber-50', border: 'border-orange-300', text: 'text-orange-700' }
   return { bg: 'bg-white', border: 'border-transparent', text: 'text-gray-500' }
+}
+
+function getMyRankBadgeStyle(rank) {
+  if (rank === 1) return 'from-amber-400 via-yellow-500 to-amber-600 shadow-amber-200/50 ring-2 ring-amber-300/50'
+  if (rank === 2) return 'from-slate-300 via-gray-400 to-slate-500 shadow-slate-300/50 ring-2 ring-slate-300/50'
+  if (rank === 3) return 'from-amber-600 via-orange-500 to-amber-700 shadow-orange-300/50 ring-2 ring-amber-400/50'
+  return 'from-primary to-emerald-600 shadow-primary/30 ring-2 ring-primary/20'
 }
 
 function RankBadge({ rank }) {
@@ -62,7 +69,7 @@ function getInitials(name) {
 }
 
 export default function LeaderboardPage() {
-  const { token } = useAuth()
+  const { token, user: authUser } = useAuth()
   const [activeTab, setActiveTab] = useState('points')
   const [period, setPeriod] = useState('all')
   const [leaders, setLeaders] = useState([])
@@ -105,7 +112,8 @@ export default function LeaderboardPage() {
   }, [token, activeTab])
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-6 sm:py-10 sm:px-6 lg:px-0">
+    <div className="min-h-screen bg-[#FAFBF9]">
+      <div className="mx-auto max-w-5xl px-4 py-6 sm:py-10 sm:px-6 lg:px-8">
       {/* Header */}
       <section className="mb-8">
         <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-white px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-primary shadow-sm">
@@ -119,19 +127,31 @@ export default function LeaderboardPage() {
       {/* My Rank Card */}
       {myRank && activeTab !== 'faculty' && (
         <section className="mb-8">
-          <div className="overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/5 via-white to-primary/5 p-5 shadow-soft sm:p-6">
+          <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-4">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-xl font-bold text-white shadow-md">
-                  #{myRank.rank}
+                <div className="relative h-16 w-16 shrink-0">
+                  {myRank.avatarUrl ? (
+                    <img
+                      src={myRank.avatarUrl}
+                      alt=""
+                      className="h-16 w-16 rounded-2xl object-cover shadow-lg ring-2 ring-white/40"
+                    />
+                  ) : (
+                    <div className={`flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br text-2xl font-bold text-white shadow-lg ring-2 ring-white/40 ${getMyRankBadgeStyle(myRank.rank)}`}>
+                      {getInitials(authUser?.name)}
+                    </div>
+                  )}
+                  <span className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-white shadow ring-2 ring-white">
+                    {myRank.rank}
+                  </span>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Your Rank</p>
+                  <p className="text-sm font-medium text-gray-500">อันดับของคุณ</p>
                   <p className="text-xl font-bold text-gray-900">
                     {myRank.rank === 1 ? '🏆 ' : myRank.rank <= 3 ? '🏅 ' : ''}
-                    #{myRank.rank} of {myRank.totalUsers}
+                    อันดับ {myRank.rank}
                   </p>
-                  <p className="text-sm text-gray-500">Better than {myRank.percentile}% of users</p>
                 </div>
               </div>
               <div className="flex flex-wrap gap-3">
@@ -177,7 +197,7 @@ export default function LeaderboardPage() {
 
       {/* Tabs */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex overflow-x-auto gap-1 rounded-full bg-white p-1.5 shadow-soft scrollbar-hide">
+        <div className="flex overflow-x-auto gap-1 rounded-full border border-gray-200 bg-white p-1.5 shadow-sm scrollbar-hide">
           {TABS.map((tab) => (
             <button
               key={tab.key}
@@ -212,7 +232,7 @@ export default function LeaderboardPage() {
 
       {/* Loading */}
       {loading && (
-        <div className="rounded-2xl bg-white p-12 text-center shadow-soft">
+        <div className="rounded-2xl border border-gray-200 bg-white p-12 text-center shadow-sm">
           <p className="text-sm text-gray-500">Loading leaderboard...</p>
         </div>
       )}
@@ -221,10 +241,10 @@ export default function LeaderboardPage() {
       {!loading && activeTab !== 'faculty' && (
         <div className="space-y-3">
           {leaders.length === 0 ? (
-            <div className="rounded-2xl bg-white p-12 text-center shadow-soft">
+            <div className="rounded-2xl border border-gray-200 bg-white p-12 text-center shadow-sm">
               <Trophy size={48} className="mx-auto mb-4 text-gray-300" />
-              <p className="text-lg font-semibold text-gray-600">No data yet</p>
-              <p className="mt-1 text-sm text-gray-500">Start exchanging to appear on the leaderboard!</p>
+              <p className="text-lg font-semibold text-gray-700">ยังไม่มีข้อมูล</p>
+              <p className="mt-1 text-sm text-gray-500">เริ่มแลก/บริจาคเพื่อขึ้นอันดับได้เลย</p>
             </div>
           ) : (
             <>
@@ -237,7 +257,7 @@ export default function LeaderboardPage() {
                     return (
                       <div
                         key={leader.id}
-                        className={`relative flex flex-col items-center rounded-2xl border-2 p-4 shadow-soft transition hover:shadow-card sm:p-6 ${
+                        className={`relative flex flex-col items-center rounded-2xl border-2 border-gray-200 bg-white p-4 shadow-sm transition hover:shadow-md sm:p-6 ${
                           isFirst
                             ? 'border-yellow-300 bg-gradient-to-b from-yellow-50 to-white -mt-4'
                             : rank === 2
@@ -307,7 +327,7 @@ export default function LeaderboardPage() {
       {!loading && activeTab === 'faculty' && (
         <div className="space-y-3">
           {faculties.length === 0 ? (
-            <div className="rounded-2xl bg-white p-12 text-center shadow-soft">
+            <div className="rounded-2xl border border-gray-200 bg-white p-12 text-center shadow-sm">
               <Users size={48} className="mx-auto mb-4 text-gray-300" />
               <p className="text-lg font-semibold text-gray-600">No faculty data yet</p>
               <p className="mt-1 text-sm text-gray-500">Faculty rankings will appear when students start exchanging</p>
@@ -355,7 +375,7 @@ export default function LeaderboardPage() {
 
       {/* Points Guide */}
       <section className="mt-12">
-        <div className="rounded-2xl border border-primary/10 bg-gradient-to-br from-primary/5 to-white p-6 shadow-soft sm:p-8">
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
           <div className="mb-6 flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
               <Sparkles size={22} />
@@ -371,8 +391,8 @@ export default function LeaderboardPage() {
                 <ArrowRightLeft size={18} className="text-purple-600" />
               </div>
               <div className="flex-1">
-                <p className="text-sm font-semibold text-gray-900">Exchange Completed</p>
-                <p className="text-xs text-gray-500">Both parties get points</p>
+                <p className="text-sm font-semibold text-gray-900">แลกเปลี่ยนสำเร็จ</p>
+                <p className="text-xs text-gray-500">ทั้งสองฝ่ายได้คะแนน</p>
               </div>
               <span className="rounded-full bg-purple-100 px-3 py-1 text-sm font-bold text-purple-700">+15</span>
             </div>
@@ -381,8 +401,8 @@ export default function LeaderboardPage() {
                 <Heart size={18} className="text-red-600" />
               </div>
               <div className="flex-1">
-                <p className="text-sm font-semibold text-gray-900">Donation (Donor)</p>
-                <p className="text-xs text-gray-500">Thank you for giving!</p>
+                <p className="text-sm font-semibold text-gray-900">บริจาค (ผู้ให้)</p>
+                <p className="text-xs text-gray-500">ขอบคุณที่แบ่งปัน</p>
               </div>
               <span className="rounded-full bg-red-100 px-3 py-1 text-sm font-bold text-red-700">+20</span>
             </div>
@@ -391,8 +411,8 @@ export default function LeaderboardPage() {
                 <Heart size={18} className="text-pink-600" />
               </div>
               <div className="flex-1">
-                <p className="text-sm font-semibold text-gray-900">Donation (Recipient)</p>
-                <p className="text-xs text-gray-500">Items find new homes</p>
+                <p className="text-sm font-semibold text-gray-900">บริจาค (ผู้รับ)</p>
+                <p className="text-xs text-gray-500">ของได้บ้านใหม่</p>
               </div>
               <span className="rounded-full bg-pink-100 px-3 py-1 text-sm font-bold text-pink-700">+5</span>
             </div>
@@ -401,14 +421,15 @@ export default function LeaderboardPage() {
                 <TrendingUp size={18} className="text-blue-600" />
               </div>
               <div className="flex-1">
-                <p className="text-sm font-semibold text-gray-900">Post New Item</p>
-                <p className="text-xs text-gray-500">Share with the community</p>
+                <p className="text-sm font-semibold text-gray-900">โพสต์สินค้าใหม่</p>
+                <p className="text-xs text-gray-500">แบ่งปันกับชุมชน</p>
               </div>
               <span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-bold text-blue-700">+5</span>
             </div>
           </div>
         </div>
       </section>
+      </div>
     </div>
   )
 }

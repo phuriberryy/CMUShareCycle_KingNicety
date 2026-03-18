@@ -39,28 +39,28 @@ export default function LoginPage() {
       await login(email, password)
       navigate('/')
     } catch (err) {
-      setError(err.message || 'Failed to log in')
+      setError(err.message || 'เข้าสู่ระบบไม่สำเร็จ')
     } finally {
       setSubmitting(false)
     }
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#F5F6F0] px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+    <div className="flex min-h-screen items-center justify-center bg-[#FAFBF9] px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
       <div className="w-full max-w-md">
-        <div className="rounded-2xl bg-white p-6 shadow-lg sm:p-8">
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
           <h1 className="mb-2 text-center text-2xl font-bold text-gray-900">
-            Log In
+            เข้าสู่ระบบ
           </h1>
           <p className="mb-6 text-center text-sm text-gray-700">
-            Enter your email and password to log in
+            ใช้อีเมล @cmu.ac.th และรหัสผ่านเพื่อเข้าสู่ระบบ
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email Input */}
             <div>
               <label className="mb-2 block text-sm font-semibold text-gray-900">
-                CMU Account
+                อีเมล CMU
               </label>
               <div className="relative">
                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
@@ -70,7 +70,7 @@ export default function LoginPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter CMU email"
+                  placeholder="example@cmu.ac.th"
                   className="w-full rounded-xl border-0 bg-[#E8F4EA] px-4 py-3 pl-10 text-gray-900 placeholder:text-gray-500 focus:ring-2 focus:ring-primary focus:ring-offset-0"
                   required
                 />
@@ -80,7 +80,7 @@ export default function LoginPage() {
             {/* Password Input */}
             <div>
               <label className="mb-2 block text-sm font-semibold text-gray-900">
-                Password
+                รหัสผ่าน
               </label>
               <div className="relative">
                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
@@ -113,7 +113,7 @@ export default function LoginPage() {
                   onChange={(e) => setRememberMe(e.target.checked)}
                   className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                 />
-                <span>Remember me</span>
+                <span>จำฉันไว้</span>
               </label>
             </div>
 
@@ -123,7 +123,7 @@ export default function LoginPage() {
               disabled={submitting}
               className="w-full rounded-xl bg-primary px-6 py-3 text-base font-semibold text-white shadow-md transition hover:bg-primary-dark disabled:opacity-60"
             >
-              {submitting ? 'Logging in...' : 'Log In'}
+              {submitting ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
             </button>
           </form>
           {successMessage && (
@@ -136,18 +136,18 @@ export default function LoginPage() {
           {/* Separator */}
           <div className="my-6 flex items-center gap-4">
             <div className="h-px flex-1 bg-gray-200" />
-            <span className="text-sm text-gray-500">or</span>
+            <span className="text-sm text-gray-500">หรือ</span>
             <div className="h-px flex-1 bg-gray-200" />
           </div>
 
           {/* Registration Link */}
           <p className="text-center text-sm text-gray-700">
-            Don't have an account?{' '}
+            ยังไม่มีบัญชีใช่ไหม?{' '}
             <Link
               to="/register"
               className="font-semibold text-primary hover:underline"
             >
-              Sign up
+              สมัครสมาชิก
             </Link>
           </p>
         </div>

@@ -6,7 +6,7 @@
 
 :root {
   font-family: 'Poppins', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background-color: #F5F6F0;
+  background-color: #FAFBF9;
   color: #142b1f;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -15,7 +15,7 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background-color: #F5F6F0;
+  background-color: #FAFBF9;
   font-family: 'Poppins', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
@@ -85,35 +85,6 @@ select {
   overflow: hidden;
 }
 
-/* Floating Message Button */
-.floating-message-button {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  z-index: 50;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #2D7D3F 0%, #1F5A2D 100%);
-  box-shadow: 0 8px 24px rgba(45, 125, 63, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: none;
-  color: white;
-}
-
-.floating-message-button:hover {
-  transform: scale(1.1);
-  box-shadow: 0 12px 32px rgba(45, 125, 63, 0.5);
-}
-
-.floating-message-button:active {
-  transform: scale(0.95);
-}
-
 /* Toast Animation */
 @keyframes slide-in {
   from {
@@ -130,16 +101,6 @@ select {
   animation: slide-in 0.3s ease-out;
 }
 
-/* Mobile Responsive Fixes */
-@media (max-width: 640px) {
-  .floating-message-button {
-    bottom: 16px;
-    right: 16px;
-    width: 52px;
-    height: 52px;
-  }
-}
-
 /* Hide scrollbar for horizontal scroll */
 .scrollbar-hide {
   -ms-overflow-style: none;
@@ -152,4 +113,62 @@ select {
 /* Safe area padding for mobile */
 .pb-safe {
   padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+@layer components {
+  .sc-page {
+    @apply min-h-screen bg-[#FAFBF9];
+  }
+
+  .sc-container {
+    @apply mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8;
+  }
+
+  .sc-header {
+    @apply mb-6;
+  }
+
+  .sc-badge {
+    @apply inline-flex items-center gap-2 rounded-full border border-primary/15 bg-white px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-primary shadow-sm;
+  }
+
+  .sc-title {
+    @apply text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl;
+  }
+
+  .sc-subtitle {
+    @apply mt-1 text-sm text-gray-500;
+  }
+
+  .sc-card {
+    @apply rounded-2xl border border-gray-200 bg-white shadow-sm;
+  }
+
+  .sc-card-pad {
+    @apply p-4 sm:p-6;
+  }
+
+  .sc-input {
+    @apply w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20;
+  }
+
+  .sc-select {
+    @apply w-full appearance-none rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-800 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20;
+  }
+
+  .sc-btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition;
+  }
+
+  .sc-btn-primary {
+    @apply sc-btn bg-primary text-white shadow-md hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .sc-btn-secondary {
+    @apply sc-btn border border-gray-200 bg-white text-gray-700 hover:bg-gray-50;
+  }
+
+  .sc-empty {
+    @apply rounded-2xl border border-gray-200 bg-white py-16 text-center text-sm text-gray-500;
+  }
 }

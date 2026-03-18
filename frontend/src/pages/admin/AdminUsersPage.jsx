@@ -96,7 +96,7 @@ export default function AdminUsersPage() {
         </form>
       </div>
 
-      <div className="overflow-hidden rounded-2xl bg-white shadow-soft">
+      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
         {loading && (
           <div className="p-4 text-sm text-gray-500">Loading users...</div>
         )}
@@ -164,7 +164,7 @@ export default function AdminUsersPage() {
                           }
                           className="rounded-full border border-primary/20 px-3 py-1 text-xs font-semibold text-primary hover:bg-primary/5"
                         >
-                          {user.role === 'admin' ? 'Make user' : 'Make admin'}
+                          {user.role === 'admin' ? 'ตั้งเป็นผู้ใช้' : 'ตั้งเป็นแอดมิน'}
                         </button>
                         <button
                           type="button"
@@ -176,7 +176,7 @@ export default function AdminUsersPage() {
                           }
                           className="rounded-full border border-yellow-200 px-3 py-1 text-xs font-semibold text-yellow-700 hover:bg-yellow-50"
                         >
-                          {user.is_suspended ? 'Unsuspend' : 'Suspend'}
+                          {user.is_suspended ? 'ยกเลิกระงับ' : 'ระงับ'}
                         </button>
                         <button
                           type="button"
@@ -235,34 +235,22 @@ export default function AdminUsersPage() {
         open={Boolean(confirmState)}
         title={
           confirmState?.type === 'delete'
-            ? 'Delete user'
+            ? 'ลบผู้ใช้'
             : confirmState?.type === 'suspend'
-            ? 'Suspend user'
+            ? 'ระงับผู้ใช้'
             : confirmState?.type === 'unsuspend'
-            ? 'Unsuspend user'
+            ? 'ยกเลิกการระงับ'
             : confirmState?.type === 'make-admin'
-            ? 'Make admin'
+            ? 'ตั้งเป็นแอดมิน'
             : confirmState?.type === 'make-user'
-            ? 'Make regular user'
+            ? 'ตั้งเป็นผู้ใช้ทั่วไป'
             : ''
         }
         description={
           confirmState?.user
-            ? `Are you sure you want to ${
-                confirmState.type === 'delete'
-                  ? 'delete'
-                  : confirmState.type === 'suspend'
-                  ? 'suspend'
-                  : confirmState.type === 'unsuspend'
-                  ? 'unsuspend'
-                  : confirmState.type === 'make-admin'
-                  ? 'promote to admin'
-                  : 'change role for'
-              } ${confirmState.user.email}?`
+            ? `ยืนยันการดำเนินการกับ ${confirmState.user.email} ?`
             : ''
         }
-        confirmLabel="Confirm"
-        cancelLabel="Cancel"
         loading={confirmState?.loading}
         onConfirm={handleConfirm}
         onCancel={closeConfirm}

@@ -11,11 +11,19 @@ initChatServer(server)
 
 // 💡 ตรวจสอบการเชื่อมต่อ Database
 console.log('🔍 กำลังตรวจสอบการเชื่อมต่อ Database...')
-const isDbConnected = await verifyDatabaseConnection()
-if (!isDbConnected) {
+const dbCheck = await verifyDatabaseConnection()
+if (!dbCheck.ok) {
     console.error('❌ Database connection failed. Shutting down server.')
-    console.log('🚨 กรุณาตรวจสอบว่า PostgreSQL Server ทำงานอยู่, ชื่อ Database และ Password ใน .env ถูกต้อง')
-    process.exit(1) // ปิดเซิร์ฟเวอร์ทันทีหาก DB ใช้ไม่ได้
+    console.error('   ข้อความ:', dbCheck.error?.message || dbCheck.error)
+    if (dbCheck.error?.message?.includes('password authentication failed')) {
+        console.log('💡 แก้ไข: ตรวจสอบรหัสผ่านใน DATABASE_URL (Supabase → Settings → Database → Connection string)')
+    } else if (dbCheck.error?.message?.includes('ECONNREFUSED') || dbCheck.error?.code === 'ECONNREFUSED') {
+        console.log('💡 แก้ไข: ต่อเน็ตไม่ได้หรือ firewall บล็อก port 6543 (Supabase)')
+    } else if (dbCheck.error?.message?.includes('timeout') || dbCheck.error?.code === 'ETIMEDOUT') {
+        console.log('💡 แก้ไข: การเชื่อมต่อ timeout — ตรวจสอบเน็ตหรือลองใหม่')
+    }
+    console.log('🚨 ตรวจสอบ PostgreSQL / Supabase และค่าใน .env ให้ถูกต้อง')
+    process.exit(1)
 }
 console.log('✅ Database connected successfully!')
 

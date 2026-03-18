@@ -166,31 +166,31 @@ export default function ExchangeRequestDetailPage() {
   }
 
   const formatTimeAgo = (date) => {
-    if (!date) return 'Unknown time'
+    if (!date) return 'ไม่ทราบเวลา'
     const now = new Date()
     const dateObj = new Date(date)
-    if (isNaN(dateObj.getTime())) return 'Unknown time'
+    if (isNaN(dateObj.getTime())) return 'ไม่ทราบเวลา'
     const diff = now - dateObj
-    if (isNaN(diff)) return 'Unknown time'
+    if (isNaN(diff)) return 'ไม่ทราบเวลา'
     const minutes = Math.floor(diff / 60000)
     const hours = Math.floor(diff / 3600000)
     const days = Math.floor(diff / 86400000)
 
-    if (minutes < 1) return 'Just now'
-    if (minutes < 60) return `${minutes} minutes ago`
-    if (hours < 24) return `${hours} hours ago`
-    return `${days} days ago`
+    if (minutes < 1) return 'เมื่อสักครู่'
+    if (minutes < 60) return `${minutes} นาทีที่แล้ว`
+    if (hours < 24) return `${hours} ชั่วโมงที่แล้ว`
+    return `${days} วันที่แล้ว`
   }
 
   const getStatusLabel = () => {
     if (!exchangeRequest) return 'Waiting for response'
-    if (exchangeRequest.status === 'completed') return 'Exchange completed'
-    if (exchangeRequest.status === 'in_progress') return 'In progress'
-    if (exchangeRequest.status === 'chatting') return 'Ready to chat'
-    if (exchangeRequest.status === 'rejected') return 'Rejected'
-    if (exchangeRequest.owner_accepted && exchangeRequest.requester_accepted) return 'Ready to chat'
-    if (exchangeRequest.owner_accepted || exchangeRequest.requester_accepted) return 'Waiting for response'
-    return 'Waiting for response'
+    if (exchangeRequest.status === 'completed') return 'เสร็จสิ้น'
+    if (exchangeRequest.status === 'in_progress') return 'กำลังดำเนินการ'
+    if (exchangeRequest.status === 'chatting') return 'พร้อมแชท'
+    if (exchangeRequest.status === 'rejected') return 'ถูกปฏิเสธ'
+    if (exchangeRequest.owner_accepted && exchangeRequest.requester_accepted) return 'พร้อมแชท'
+    if (exchangeRequest.owner_accepted || exchangeRequest.requester_accepted) return 'รอการตอบรับ'
+    return 'รอการตอบรับ'
   }
 
   const getStatusColor = () => {
@@ -205,22 +205,30 @@ export default function ExchangeRequestDetailPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-16 text-center">
-        <p className="text-lg text-gray-600">Loading...</p>
+      <div className="min-h-screen bg-[#FAFBF9]">
+        <div className="mx-auto max-w-4xl px-4 py-16 text-center">
+          <div className="rounded-2xl border border-gray-200 bg-white p-12 shadow-sm">
+            <p className="text-lg text-gray-600">กำลังโหลด...</p>
+          </div>
+        </div>
       </div>
     )
   }
 
   if (error || !exchangeRequest) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-16 text-center">
-        <p className="text-lg text-red-600">{error || 'Exchange request not found'}</p>
-        <button
-          onClick={() => navigate('/')}
-          className="mt-4 rounded-full bg-primary px-6 py-3 text-white"
-        >
-          Back to Home
-        </button>
+      <div className="min-h-screen bg-[#FAFBF9]">
+        <div className="mx-auto max-w-4xl px-4 py-16 text-center">
+          <div className="rounded-2xl border border-gray-200 bg-white p-12 shadow-sm">
+            <p className="text-lg text-red-600">{error || 'ไม่พบคำขอแลกเปลี่ยน'}</p>
+            <button
+              onClick={() => navigate('/')}
+              className="mt-4 rounded-full bg-primary px-6 py-3 text-white"
+            >
+              กลับหน้าแรก
+            </button>
+          </div>
+        </div>
       </div>
     )
   }
@@ -256,7 +264,8 @@ export default function ExchangeRequestDetailPage() {
   const co2Data = calculateCO2()
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8 overflow-x-hidden">
+    <div className="min-h-screen bg-[#FAFBF9]">
+      <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8 overflow-x-hidden">
       {/* Back Button */}
       <button
         onClick={() => navigate(-1)}
@@ -292,11 +301,11 @@ export default function ExchangeRequestDetailPage() {
       </div>
 
       {/* Exchange Request Card */}
-      <div className="mb-6 rounded-[24px] bg-green-50 p-6 shadow-soft">
+      <div className="mb-6 rounded-2xl border border-green-200 bg-green-50 p-6 shadow-sm">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <RefreshCw size={20} className="text-primary" />
-            <span className="text-lg font-semibold text-gray-900">Exchange Request</span>
+            <span className="text-lg font-semibold text-gray-900">คำขอแลกเปลี่ยน</span>
           </div>
           <span className="rounded-full bg-white px-3 py-1 text-sm font-semibold text-gray-700">
             ID: {exchangeRequest.id ? exchangeRequest.id.slice(0, 8) : 'N/A'}
@@ -336,7 +345,7 @@ export default function ExchangeRequestDetailPage() {
                   <div className="text-center">
                     <Package size={48} className="mx-auto mb-2" />
                     <p className="text-xs">
-                      {exchangeRequest.item_image_url ? 'Failed to load image' : 'No image'}
+                      {exchangeRequest.item_image_url ? 'โหลดรูปไม่สำเร็จ' : 'ไม่มีรูป'}
                     </p>
                   </div>
                 </div>
@@ -345,7 +354,7 @@ export default function ExchangeRequestDetailPage() {
             <div className="mb-2">
               <div className="flex items-start justify-between gap-2">
                 <h3 className="font-semibold text-gray-900">
-                  {exchangeRequest.item_title || 'No item name'}
+                  {exchangeRequest.item_title || 'ไม่มีชื่อสินค้า'}
                 </h3>
                 {exchangeRequest.item_pickup_location && (
                   <div className="flex items-center gap-1 text-xs text-gray-600 whitespace-nowrap">
@@ -390,7 +399,7 @@ export default function ExchangeRequestDetailPage() {
                       ? exchangeRequest.requester_item_image_url 
                       : `${exchangeRequest.requester_item_image_url}?t=${Date.now()}`
                   }
-                  alt={exchangeRequest.requester_item_name || 'Requester item'}
+                  alt={exchangeRequest.requester_item_name || 'สินค้าของผู้ขอ'}
                   className="h-full w-full object-cover"
                   onError={(e) => {
                     console.error('[REQUESTER ITEM] Failed to load image:', {
@@ -410,14 +419,14 @@ export default function ExchangeRequestDetailPage() {
                   <div className="text-center">
                     <Package size={48} className="mx-auto mb-2" />
                     <p className="text-xs">
-                      {exchangeRequest.requester_item_image_url ? 'Failed to load image' : 'No image'}
+                      {exchangeRequest.requester_item_image_url ? 'โหลดรูปไม่สำเร็จ' : 'ไม่มีรูป'}
                     </p>
                   </div>
                 </div>
               )}
             </div>
             <h3 className="mb-2 font-semibold text-gray-900">
-              {exchangeRequest.requester_item_name || 'Your Item'}
+              {exchangeRequest.requester_item_name || 'สินค้าของคุณ'}
             </h3>
             <div className="flex flex-wrap gap-2">
               {exchangeRequest.requester_item_category && (
@@ -477,7 +486,7 @@ export default function ExchangeRequestDetailPage() {
 
       {/* Status and Action Section */}
       {showChatButton ? (
-        <div className="rounded-[24px] bg-green-50 p-6 shadow-soft">
+        <div className="rounded-2xl border border-green-200 bg-green-50 p-6 shadow-sm">
           <div className="mb-4 flex items-center gap-2">
             <CheckCircle size={24} className="text-green-500" />
             <p className="text-lg font-semibold text-gray-900">
@@ -512,7 +521,7 @@ export default function ExchangeRequestDetailPage() {
           </button>
         </div>
       ) : showWaitingMessage ? (
-        <div className="rounded-[24px] bg-yellow-50 p-6 shadow-soft">
+        <div className="rounded-2xl border border-yellow-200 bg-yellow-50 p-6 shadow-sm">
           <div className="mb-4 flex items-center gap-2">
             <Clock size={24} className="text-yellow-600" />
             <p className="text-lg font-semibold text-gray-900">
@@ -528,7 +537,7 @@ export default function ExchangeRequestDetailPage() {
           </div>
         </div>
       ) : (
-        <div className="rounded-[24px] bg-yellow-50 p-6 shadow-soft">
+        <div className="rounded-2xl border border-yellow-200 bg-yellow-50 p-6 shadow-sm">
           <div className="mb-4 flex items-center gap-2">
             <Clock size={24} className="text-yellow-600" />
             <p className="text-lg font-semibold text-gray-900">
@@ -563,6 +572,7 @@ export default function ExchangeRequestDetailPage() {
           )}
         </div>
       )}
+      </div>
     </div>
   )
 }
