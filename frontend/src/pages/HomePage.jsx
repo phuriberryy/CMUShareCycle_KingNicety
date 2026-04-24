@@ -17,6 +17,8 @@ import {
   User as UserIcon,
   Package,
   CheckCircle,
+  Eye,
+  Heart,
 } from 'lucide-react'
 import { itemsApi, statisticsApi, API_BASE } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
