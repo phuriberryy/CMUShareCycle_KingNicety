@@ -355,6 +355,8 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
           {filteredItems.map((item) => {
             const isInProgress = item.status === 'in_progress'
             const isDonated = item.status === 'donated'
+            const hasSecondaryAction =
+              isInProgress || isDonated || (item.status === 'active' && item.listing_type !== 'donation')
             let daysLabel = null
             if (item.available_until) {
               const today = new Date(); today.setHours(0, 0, 0, 0)
@@ -412,30 +414,85 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
                     {item.owner_name || 'CMU Student'}
                   </span>
                 </div>
-                <div className="mt-4 flex gap-2">
+                
+                {/* Action Buttons */}
+                <div
+                  className={
+                    hasSecondaryAction
+                      ? 'mt-auto grid grid-cols-2 gap-2'
+                      : 'mt-auto flex justify-center'
+                  }
+                >
                   <button
                     onClick={() => navigate(`/items/${item.id}`)}
-                    className="flex-1 rounded-xl border border-gray-200 bg-white py-2.5 text-sm font-semibold text-gray-700 transition hover:border-primary hover:bg-primary/5 hover:text-primary"
+                    className={`flex h-14 flex-col items-center justify-center rounded-lg border-2 border-primary bg-white px-3 text-xs sm:text-sm font-semibold text-primary transition hover:bg-primary/10 ${
+                      hasSecondaryAction ? 'w-full' : 'w-40'
+                    }`}
                   >
-                    ดู
+                    <Eye size={16} className="mx-auto" />
+                    <span
+                      className={`mt-1 text-xs ${
+                        hasSecondaryAction ? 'hidden sm:block' : 'block'
+                      }`}
+                    >
+                      View Details
+                    </span>
                   </button>
                   {isInProgress ? (
-                    <button disabled className="flex-1 rounded-xl bg-gray-100 py-2.5 text-sm font-semibold text-gray-400 cursor-not-allowed">กำลังดำเนินการ</button>
+                    <button
+                      disabled
+                      className="flex h-14 flex-col items-center justify-center rounded-lg bg-gray-300 px-3 text-xs sm:text-sm font-semibold text-gray-500 shadow-md cursor-not-allowed"
+                    >
+                      <RefreshCcw size={16} className="mx-auto" />
+                      <span
+                        className={`mt-1 text-xs ${
+                          hasSecondaryAction ? 'hidden sm:block' : 'block'
+                        }`}
+                      >
+                        In progress
+                      </span>
+                    </button>
                   ) : isDonated ? (
-                    <button disabled className="flex-1 rounded-xl bg-emerald-100 py-2.5 text-sm font-semibold text-emerald-700 cursor-not-allowed">บริจาคแล้ว</button>
+                    <button
+                      disabled
+                      className="flex h-14 flex-col items-center justify-center rounded-lg bg-green-300 px-3 text-xs sm:text-sm font-semibold text-green-700 shadow-md cursor-not-allowed"
+                    >
+                      <Heart size={16} className="mx-auto" />
+                      <span
+                        className={`mt-1 text-xs ${
+                          hasSecondaryAction ? 'hidden sm:block' : 'block'
+                        }`}
+                      >
+                        Donated
+                      </span>
+                    </button>
                   ) : item.status === 'active' && item.listing_type === 'donation' ? (
                     <button
                       onClick={() => onDonationItem(item.id)}
-                      className="flex-1 rounded-xl bg-rose-500 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-600"
+                      className="flex h-14 flex-col items-center justify-center rounded-lg bg-rose-500 px-3 text-xs sm:text-sm font-semibold text-white shadow-md transition hover:bg-rose-600"
                     >
-                      ขอรับบริจาค
+                      <Heart size={16} className="mx-auto" />
+                      <span
+                        className={`mt-1 text-xs ${
+                          hasSecondaryAction ? 'hidden sm:block' : 'block'
+                        }`}
+                      >
+                        Request Donation
+                      </span>
                     </button>
                   ) : item.status === 'active' && item.listing_type !== 'donation' ? (
                     <button
                       onClick={() => onExchangeItem(item.id)}
-                      className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-semibold text-white transition hover:bg-primary-dark"
+                      className="flex h-14 flex-col items-center justify-center rounded-lg bg-primary px-3 text-xs sm:text-sm font-semibold text-white shadow-md transition hover:bg-primary-dark"
                     >
-                      ขอแลก
+                      <RefreshCcw size={16} className="mx-auto" />
+                      <span
+                        className={`mt-1 text-xs ${
+                          hasSecondaryAction ? 'hidden sm:block' : 'block'
+                        }`}
+                      >
+                        Exchange
+                      </span>
                     </button>
                   ) : null}
                 </div>
