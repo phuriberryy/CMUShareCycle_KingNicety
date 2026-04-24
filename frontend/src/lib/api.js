@@ -12,13 +12,11 @@ if (!envApiBase) {
   )
 }
 
-const API_BASE_URL = envApiBase ? `${envApiBase}/api` : '/api'
-
-export const API_BASE = API_BASE_URL
+export const API_BASE = envApiBase ? `${envApiBase}/api` : '/api'
 
 // Log API base URL for debugging at runtime
 // eslint-disable-next-line no-console
-console.log('[CMUShareCycle] API_BASE =', API_BASE_URL)
+console.log('[CMUShareCycle] API_BASE =', API_BASE)
 // eslint-disable-next-line no-console
 console.log('[CMUShareCycle] NEXT_PUBLIC_API_URL =', process.env.NEXT_PUBLIC_API_URL)
 const AUTH_STORAGE_KEY = 'sharecycle_auth'
