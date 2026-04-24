@@ -3,12 +3,14 @@ const normalizeApiBase = (value) => {
   return value.replace(/\/+$/, '').replace(/\/api$/, '')
 }
 
-const envApiBase = normalizeApiBase(process.env.NEXT_PUBLIC_API_URL)
+const envApiBase = normalizeApiBase(
+  process.env.REACT_APP_API_URL || process.env.NEXT_PUBLIC_API_URL
+)
 
 if (!envApiBase) {
   // eslint-disable-next-line no-console
   console.error(
-    '[CMUShareCycle] Missing NEXT_PUBLIC_API_URL. Set it to https://app2.turnpro.dev/api before building.'
+    '[CMUShareCycle] Missing API URL. Set REACT_APP_API_URL or NEXT_PUBLIC_API_URL to https://app2.turnpro.dev/api before building.'
   )
 }
 
@@ -18,7 +20,12 @@ export const API_BASE = envApiBase ? `${envApiBase}/api` : '/api'
 // eslint-disable-next-line no-console
 console.log('[CMUShareCycle] API_BASE =', API_BASE)
 // eslint-disable-next-line no-console
-console.log('[CMUShareCycle] NEXT_PUBLIC_API_URL =', process.env.NEXT_PUBLIC_API_URL)
+console.log(
+  '[CMUShareCycle] REACT_APP_API_URL =',
+  process.env.REACT_APP_API_URL,
+  'NEXT_PUBLIC_API_URL =',
+  process.env.NEXT_PUBLIC_API_URL
+)
 const AUTH_STORAGE_KEY = 'sharecycle_auth'
 
 const handleUnauthorized = () => {
