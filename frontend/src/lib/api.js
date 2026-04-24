@@ -1,55 +1,24 @@
-// Determine API base URL
-// - In CRA/Vercel, configure REACT_APP_API_BASE_URL (recommended) or REACT_APP_API_URL / REACT_APP_API_BASE
-// - Runtime detection: If on Vercel (vercel.app domain), ALWAYS use Render backend
-// - Defaults to http://localhost:4000/api for local development
-
-// First check: Are we running on production? (runtime check, works even if env vars not set)
-const isProduction = typeof window !== 'undefined' && 
-  (window.location.hostname.includes('vercel.app') || 
-   window.location.hostname.includes('github.io') ||
-   window.location.hostname.includes('cmu-cycle-test'))
-
-// Determine base URL with priority:
-// 1. Runtime production detection (always wins if on Vercel/GitHub Pages)
-// 2. Build-time env vars
-// 3. Default to localhost
-let rawApiBase = isProduction
-  ? 'https://cmusharecycle-kingnicety-mg0w.onrender.com'
-  : (process.env.REACT_APP_API_BASE_URL ||
-     process.env.REACT_APP_API_URL ||
-     process.env.REACT_APP_API_BASE ||
-     'http://localhost:4000')
-
-// Remove trailing slash and any existing /api suffix to avoid double /api/api
-rawApiBase = rawApiBase.replace(/\/+$/, '').replace(/\/api$/, '')
-
-export const API_BASE = `${rawApiBase}/api`
-
-// Log API base URL for debugging (works in all environments)
-const envSource = isProduction
-  ? `runtime-detection (Production: ${typeof window !== 'undefined' ? window.location.hostname : 'unknown'})`
-  : process.env.REACT_APP_API_BASE_URL 
-  ? 'REACT_APP_API_BASE_URL' 
-  : process.env.REACT_APP_API_URL 
-  ? 'REACT_APP_API_URL' 
-  : process.env.REACT_APP_API_BASE 
-  ? 'REACT_APP_API_BASE'
-  : 'default (localhost)'
-
-// eslint-disable-next-line no-console
-console.log('[CMUShareCycle] 🔍 API Configuration:')
-// eslint-disable-next-line no-console
-console.log('  API_BASE =', API_BASE)
-// eslint-disable-next-line no-console
-console.log('  Source =', envSource)
-// eslint-disable-next-line no-console
-console.log('  Hostname =', typeof window !== 'undefined' ? window.location.hostname : 'server-side')
-
-// Warn if in production but still using localhost
-if (process.env.NODE_ENV === 'production' && API_BASE.includes('localhost')) {
-  // eslint-disable-next-line no-console
-  console.error('[CMUShareCycle] ⚠️ CRITICAL: Using localhost API in production! This will fail. Set REACT_APP_API_BASE_URL in Vercel environment variables.')
+const normalizeApiBase = (value) => {
+  if (!value) return ''
+  return value.replace(/\/+$/, '').replace(/\/api$/, '')
 }
+
+const envApiBase = normalizeApiBase(process.env.NEXT_PUBLIC_API_URL)
+
+if (!envApiBase) {
+  // eslint-disable-next-line no-console
+  console.error(
+    '[CMUShareCycle] Missing NEXT_PUBLIC_API_URL. Set it to https://app2.turnpro.dev/api before building.'
+  )
+}
+
+export const API_BASE = envApiBase ? `${envApiBase}/api` : '/api'
+
+// Log API base URL for debugging at runtime
+// eslint-disable-next-line no-console
+console.log('[CMUShareCycle] API_BASE =', API_BASE)
+// eslint-disable-next-line no-console
+console.log('[CMUShareCycle] NEXT_PUBLIC_API_URL =', process.env.NEXT_PUBLIC_API_URL)
 const AUTH_STORAGE_KEY = 'sharecycle_auth'
 
 const handleUnauthorized = () => {
