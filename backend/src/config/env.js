@@ -1,13 +1,14 @@
 import path from 'path'
 import url from 'url'
-import dotenv from 'dotenv'
+import { createRequire } from 'module'
 import { z } from 'zod'
 
+const require = createRequire(import.meta.url)
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
 const envPath = path.resolve(__dirname, '../../.env')
 
 // Load .env file
-const result = dotenv.config({ path: envPath })
+const result = require('dotenv').config({ path: envPath })
 if (result.error) {
   console.warn('⚠️  Warning: Could not load .env file:', result.error.message)
   console.warn('   Expected path:', envPath)

@@ -1,9 +1,9 @@
-const API_BASE = process.env.REACT_APP_API_URL || '/api'
+const API_BASE = process.env.REACT_APP_API_URL;
 
 // Debug log
-console.log('[API_BASE]', API_BASE)
+console.log('[API_BASE]', API_BASE);
 
-export { API_BASE }
+export { API_BASE };
 
 const AUTH_STORAGE_KEY = 'sharecycle_auth'
 

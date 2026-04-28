@@ -20,24 +20,9 @@ import leaderboardRoutes from './routes/leaderboard.routes.js'
 import adminRoutes from './routes/admin.routes.js'
 
 const app = express()
-
+const allowedOrigins = process.env.CLIENT_ORIGINS.split(',').map((origin) => origin.trim())
 const corsOptions = {
-  origin: (origin, callback) => {
-    // Allow non-browser clients (no Origin header)
-    if (!origin) return callback(null, true)
-
-    // Explicit allow-list from env (production/deploy origins)
-    if (Array.isArray(env.allowedOrigins) && env.allowedOrigins.includes(origin)) {
-      return callback(null, origin)
-    }
-
-    // Dev: allow localhost / 127.0.0.1 on any port (e.g. 3000, 3001)
-    if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
-      return callback(null, origin)
-    }
-
-    return callback(new Error(`CORS blocked for origin: ${origin}`))
-  },
+  origin: allowedOrigins,
   credentials: true,
 }
 
