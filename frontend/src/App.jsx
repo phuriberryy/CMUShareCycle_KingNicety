@@ -23,7 +23,7 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import { ToastProvider } from './context/ToastContext'
 import { API_BASE, notificationApi } from './lib/api'
 
-const SOCKET_URL = API_BASE.replace(/\/api$/, '')
+const SOCKET_URL = (API_BASE || '').replace(/\/api$/, '')
 
 function AppContent() {
   const location = useLocation()
