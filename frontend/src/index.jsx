@@ -12,7 +12,7 @@ root.render(
   //     <App />
   //   </BrowserRouter>
   // </React.StrictMode>
-    <BrowserRouter basename={typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? '' : (process.env.PUBLIC_URL || '')}>
+    <BrowserRouter>
       <App />
     </BrowserRouter>
 )
