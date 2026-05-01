@@ -667,10 +667,12 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
   // หลังจากยืนยัน QR แล้วไม่สามารถส่งข้อความได้อีก
   const chatDisabled = chatDeclined || !activeChat?.canSendMessages || qrConfirmed 
 
+  const isMobileView = typeof window !== 'undefined' ? window.matchMedia('(max-width: 639px)').matches : false
+
   // Handle selecting a chat on mobile
   const handleSelectChat = (chatId) => {
     setActiveChatId(chatId)
-    setShowChatList(false) // Hide chat list on mobile
+    setShowChatList(false)
   }
 
   // Handle going back to chat list on mobile
@@ -708,7 +710,7 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
   ) : (
     <div className="flex flex-col md:flex-row md:min-h-[480px]">
           {/* รายการแชท */}
-          <div className={`${!showChatList && activeChatId ? 'hidden md:flex' : 'flex'} w-full md:w-80 shrink-0 flex-col border-b md:border-b-0 md:border-r border-gray-100 bg-gray-50/50`}>
+          <div className={`${(!showChatList && activeChatId) ? 'hidden md:flex' : 'flex'} w-full md:w-80 shrink-0 flex-col border-b md:border-b-0 md:border-r border-gray-100 bg-gray-50/50`}>
             <div className="shrink-0 p-4">
               <label className="block text-xs font-semibold uppercase tracking-wide text-gray-600">เริ่มแชทใหม่</label>
               <div className="mt-3 flex gap-2">
@@ -798,18 +800,18 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
           </div>
 
           {/* หน้าต่างแชท */}
-          <div className={`${showChatList && !activeChatId ? 'hidden md:flex' : 'flex'} flex-1 min-w-0 flex-col bg-white`}>
+          <div className={`${showChatList && !activeChatId ? 'hidden md:flex' : isMobileView && showChatList ? 'hidden' : 'flex'} flex-1 min-w-0 flex-col bg-white`}>
             {activeChat ? (
               <div className="flex min-h-[420px] flex-1 flex-col sm:min-h-[480px]">
                 {/* หัวแชท + สถานะเชื่อมต่อ */}
-                <div className="flex shrink-0 items-center gap-3 border-b border-gray-100 px-4 py-4 sm:px-5">
+                <div className="flex shrink-0 items-center gap-3 border-b border-gray-100 px-4 py-3 sm:px-5">
                   <button
                     type="button"
                     onClick={handleBackToList}
                     className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 md:hidden"
                     aria-label="กลับไปรายการแชท"
                   >
-                    <X size={18} />
+                    <ArrowLeft size={18} />
                   </button>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-base font-semibold text-gray-900">{activeChat?.participant_name || 'นักศึกษา CMU'}</p>
@@ -1106,7 +1108,7 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
                   </div>
                   )}
 
-                <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-4 px-4 py-4 sm:px-5">
+                <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-4 px-4 py-4 pb-28 sm:px-5">
                   {Array.isArray(messages) && messages.length > 0 ? (
                     messages.map((msg) => {
                       if (!msg || !msg.id) return null
@@ -1172,8 +1174,8 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
                 </div>
 
                 {/* แถบพิมพ์ */}
-                <div className="shrink-0 border-t border-gray-100 px-4 py-3 sm:px-5">
-                <div className="flex items-end gap-3">
+                <div className="sticky bottom-0 z-10 shrink-0 border-t border-gray-100 bg-white px-4 py-3 shadow-[0_-8px_24px_rgba(0,0,0,0.04)] sm:px-5">
+                <div className="flex items-end gap-2 sm:gap-3">
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -1193,7 +1195,7 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
                   />
 
                   {/* ปุ่มกล้อง + แนบรูป */}
-                  <div className="flex shrink-0 items-center gap-1">
+                  <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
                     <button
                       type="button"
                       onClick={() => {
@@ -1223,7 +1225,7 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
                   </div>
 
                   {/* ช่องพิมพ์ */}
-                  <div className="min-w-0 flex-1 rounded-xl border border-gray-200 bg-gray-50 py-2.5 pl-4 pr-3 focus-within:border-primary focus-within:bg-white focus-within:ring-2 focus-within:ring-primary/10">
+                  <div className="min-w-0 flex-1 rounded-xl border border-gray-200 bg-gray-50 py-2 pl-4 pr-3 focus-within:border-primary focus-within:bg-white focus-within:ring-2 focus-within:ring-primary/10">
                     <input
                       type="text"
                       value={newMessage}

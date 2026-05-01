@@ -20,6 +20,7 @@ import {
   Eye,
   Heart,
   SlidersHorizontal,
+  X,
 } from 'lucide-react'
 import { itemsApi, statisticsApi, API_BASE } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
@@ -63,14 +64,6 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
     { value: 'Hobbies & Entertainment', label: '🎮 งานอดิเรก ความบันเทิง' },
     { value: 'Sports Gear', label: '🏀 กีฬา' },
     { value: 'Others', label: '✨ อื่นๆ' },
-  ]
-
-  const quickFilterOptions = [
-    { value: 'All Categories', label: 'ทั้งหมด' },
-    { value: 'Clothes & Fashion', label: 'เสื้อผ้า' },
-    { value: 'Dorm Essentials', label: 'หอ' },
-    { value: 'Books & Study', label: 'หนังสือ' },
-    { value: 'Kitchen & Appliances', label: 'ครัว' },
   ]
 
   const conditionOptions = [
@@ -303,18 +296,6 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
                   className="sc-input bg-gray-50 py-3 pl-10 pr-4"
                 />
               </div>
-              <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 scrollbar-hide sm:hidden">
-                {quickFilterOptions.map((opt) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => setSelectedCategory(opt.value)}
-                    className={`min-h-10 shrink-0 rounded-full px-4 text-sm font-semibold transition ${selectedCategory === opt.value ? 'bg-primary text-white shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
               <div className="flex items-center gap-2 sm:hidden">
                 <button
                   type="button"
@@ -323,19 +304,11 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
                   aria-expanded={filtersOpen}
                 >
                   <SlidersHorizontal size={16} />
-                  Filters
+                  Filter
                   {activeFilterCount > 0 && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">{activeFilterCount}</span>}
                 </button>
-                <button
-                  type="button"
-                  onClick={onPostItem}
-                  className="sc-btn-primary min-h-11 flex-1 px-4"
-                >
-                  <Plus size={18} strokeWidth={2.5} />
-                  Post
-                </button>
               </div>
-              <div className={`${filtersOpen ? 'block' : 'hidden'} space-y-3 sm:block`}>
+              <div className="hidden sm:block">
                 <div className="grid gap-3 sm:grid-cols-[1.4fr_1fr_auto] sm:items-center">
                   <div className="relative">
                     <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="sc-select pr-9">
@@ -355,6 +328,38 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
                   </button>
                 </div>
               </div>
+              {filtersOpen && (
+                <div className="fixed inset-0 z-50 flex items-end bg-black/30 sm:hidden" onClick={() => setFiltersOpen(false)}>
+                  <div className="w-full rounded-t-3xl bg-white p-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                    <div className="mb-4 flex items-center justify-between">
+                      <div>
+                        <p className="text-base font-semibold text-gray-900">Filters</p>
+                        <p className="text-sm text-gray-500">Refine your search</p>
+                      </div>
+                      <button type="button" onClick={() => setFiltersOpen(false)} className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-600">
+                        <X size={18} />
+                      </button>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="relative">
+                        <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="sc-select pr-9">
+                          {categoryOptions.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
+                        </select>
+                        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                      </div>
+                      <div className="relative">
+                        <select value={selectedCondition} onChange={(e) => setSelectedCondition(e.target.value)} className="sc-select pr-9">
+                          {conditionOptions.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
+                        </select>
+                        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                      </div>
+                      <button onClick={() => setFiltersOpen(false)} className="sc-btn-primary min-h-11 w-full">
+                        Apply filters
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -399,6 +404,7 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
                   else if (diffDays <= 7) daysLabel = { text: `เหลือ ${diffDays} วัน`, style: 'bg-amber-100 text-amber-800' }
                 }
                 const primaryActionLabel = isInProgress ? 'กำลังดำเนินการ' : isDonated ? 'บริจาคแล้ว' : item.listing_type === 'donation' ? 'ขอรับบริจาค' : 'ขอแลกเปลี่ยน'
+                const mobileActionLabel = item.status === 'active' && item.listing_type === 'donation' ? 'ขอรับบริจาค' : item.status === 'active' && item.listing_type !== 'donation' ? 'ขอแลกเปลี่ยน' : 'ดูรายละเอียด'
 
                 return (
                   <article key={item.id} className={`group overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition ${isInProgress ? 'opacity-70 cursor-not-allowed' : 'hover:border-gray-300 hover:shadow-md'}`}>
@@ -419,9 +425,9 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
                         </div>
                         <h3 onClick={() => navigate(`/items/${item.id}`)} className="cursor-pointer text-base font-semibold leading-snug text-gray-900 line-clamp-2 transition hover:text-primary">{item.title}</h3>
                       </div>
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500 sm:hidden">
-                        <span className="rounded-full bg-gray-100 px-2 py-1">{item.item_condition}</span>
-                        {item.pickup_location && <span className="rounded-full bg-gray-100 px-2 py-1">{item.pickup_location}</span>}
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500 sm:hidden">
+                        <span className="rounded-full bg-gray-100 px-2 py-1 font-medium text-gray-700">{item.item_condition}</span>
+                        {daysLabel && <span className={`rounded-full px-2 py-1 font-medium ${daysLabel.style}`}>{daysLabel.text}</span>}
                       </div>
                       <div className="hidden flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500 sm:flex">
                         <span>{item.item_condition}</span>
@@ -431,7 +437,7 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
                       <div className="grid grid-cols-1 gap-2">
                         <button onClick={() => navigate(`/items/${item.id}`)} className="sc-btn-primary min-h-11 w-full px-3 text-xs sm:hidden">
                           {item.status === 'active' && item.listing_type === 'donation' ? <Heart size={16} /> : item.status === 'active' && item.listing_type !== 'donation' ? <RefreshCcw size={16} /> : <Eye size={16} />}
-                          {item.status === 'active' && item.listing_type === 'donation' ? 'ขอรับบริจาค' : item.status === 'active' && item.listing_type !== 'donation' ? 'ขอแลกเปลี่ยน' : 'ดูรายละเอียด'}
+                          {mobileActionLabel}
                         </button>
                         <button onClick={() => navigate(`/items/${item.id}`)} className="sc-btn-secondary hidden min-h-11 w-full px-3 text-xs sm:flex sm:text-sm"><Eye size={16} />View details</button>
                         {item.status === 'active' && item.listing_type === 'donation' ? (
@@ -450,6 +456,15 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
           )}
         </section>
       </div>
+
+      <button
+        type="button"
+        onClick={onPostItem}
+        className="fixed bottom-5 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg transition-transform active:scale-95 sm:hidden"
+        aria-label="Post Item"
+      >
+        <Plus size={24} strokeWidth={2.5} />
+      </button>
     </div>
   )
 }

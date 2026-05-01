@@ -29,15 +29,15 @@ function Header({ unread, onNotificationsClick }) {
   }, [location.pathname])
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-gray-200 bg-white/95 backdrop-blur-sm shadow-sm">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 sm:py-4 lg:px-8">
-        <Link to="/" className="flex min-h-11 items-center gap-2.5 sm:gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary text-white shadow-md sm:h-12 sm:w-12">
-            <Leaf size={20} className="sm:hidden" />
+    <header className="sticky top-0 z-40 w-full border-b border-gray-200 bg-white/95 shadow-sm backdrop-blur-sm">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2.5 sm:px-6 sm:py-4 lg:px-8">
+        <Link to="/" className="flex min-h-11 items-center gap-2 sm:gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-primary text-white shadow-md sm:h-12 sm:w-12">
+            <Leaf size={18} className="sm:hidden" />
             <Leaf size={24} className="hidden sm:block" />
           </div>
           <div className="leading-tight">
-            <p className="text-base font-bold text-primary sm:text-lg">CMU ShareCycle</p>
+            <p className="text-sm font-bold text-primary sm:text-lg">CMU ShareCycle</p>
             <p className="hidden text-xs text-gray-600 sm:block">Green Campus</p>
           </div>
         </Link>
@@ -114,10 +114,10 @@ function Header({ unread, onNotificationsClick }) {
           )}
         </div>
 
-        <div className="flex items-center gap-1.5 sm:hidden">
+        <div className="flex items-center gap-2 sm:hidden">
           <Link
             to="/chat"
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 active:scale-95"
             aria-label="แชท"
           >
             <MessageCircle size={18} />
@@ -125,7 +125,7 @@ function Header({ unread, onNotificationsClick }) {
           <button
             type="button"
             onClick={onNotificationsClick}
-            className="relative flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white"
+            className="relative flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 active:scale-95"
             aria-label="การแจ้งเตือน"
           >
             <Bell size={18} />
@@ -137,7 +137,7 @@ function Header({ unread, onNotificationsClick }) {
           </button>
           <button
             type="button"
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 active:scale-95"
             onClick={() => setOpen((prev) => !prev)}
             aria-label="toggle menu"
             aria-expanded={open}
