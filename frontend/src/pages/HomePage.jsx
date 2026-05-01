@@ -418,15 +418,18 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
                         <span className="flex items-center gap-1 truncate"><UserIcon size={12} />{item.owner_name || 'CMU Student'}</span>
                       </div>
                       <div className="grid grid-cols-1 gap-2">
-                        <button onClick={() => navigate(`/items/${item.id}`)} className="sc-btn-primary min-h-11 w-full px-3 text-xs sm:hidden">
+                        <button
+                          onClick={() => navigate(`/items/${item.id}`)}
+                          className="sc-btn-primary min-h-11 w-11 rounded-full px-0 text-xs transition-transform active:scale-95 hover:opacity-95 sm:w-full sm:rounded-xl sm:px-3 sm:text-sm"
+                        >
                           {item.status === 'active' && item.listing_type === 'donation' ? <Heart size={16} /> : item.status === 'active' && item.listing_type !== 'donation' ? <RefreshCcw size={16} /> : <Eye size={16} />}
-                          {mobileActionLabel}
+                          <span className="hidden sm:inline">{mobileActionLabel}</span>
                         </button>
-                        <button onClick={() => navigate(`/items/${item.id}`)} className="sc-btn-secondary hidden min-h-11 w-full px-3 text-xs sm:flex sm:text-sm"><Eye size={16} />View details</button>
+                        <button onClick={() => navigate(`/items/${item.id}`)} className="sc-btn-secondary hidden min-h-11 w-full px-3 text-xs sm:flex sm:text-sm"><Eye size={16} /><span className="hidden sm:inline">View details</span></button>
                         {item.status === 'active' && item.listing_type === 'donation' ? (
-                          <button onClick={() => onDonationItem(item.id)} className="hidden sc-btn-primary min-h-11 w-full bg-rose-500 px-3 text-xs sm:flex sm:text-sm hover:bg-rose-600"><Heart size={16} />ขอรับบริจาค</button>
+                          <button onClick={() => onDonationItem(item.id)} className="hidden sc-btn-primary min-h-11 w-full bg-rose-500 px-3 text-xs sm:flex sm:text-sm hover:bg-rose-600"><Heart size={16} /><span className="hidden sm:inline">ขอรับบริจาค</span></button>
                         ) : item.status === 'active' && item.listing_type !== 'donation' ? (
-                          <button onClick={() => onExchangeItem(item.id)} className="hidden sc-btn-primary min-h-11 w-full px-3 text-xs sm:flex sm:text-sm"><RefreshCcw size={16} />ขอแลกเปลี่ยน</button>
+                          <button onClick={() => onExchangeItem(item.id)} className="hidden sc-btn-primary min-h-11 w-full px-3 text-xs sm:flex sm:text-sm"><RefreshCcw size={16} /><span className="hidden sm:inline">ขอแลกเปลี่ยน</span></button>
                         ) : (
                           <div className="hidden sc-btn-secondary min-h-11 w-full cursor-default px-3 text-xs text-gray-500 sm:flex sm:text-sm">{primaryActionLabel}</div>
                         )}
