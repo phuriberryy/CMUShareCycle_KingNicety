@@ -65,6 +65,14 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
     { value: 'Others', label: '✨ อื่นๆ' },
   ]
 
+  const quickFilterOptions = [
+    { value: 'All Categories', label: 'ทั้งหมด' },
+    { value: 'Clothes & Fashion', label: 'เสื้อผ้า' },
+    { value: 'Dorm Essentials', label: 'หอ' },
+    { value: 'Books & Study', label: 'หนังสือ' },
+    { value: 'Kitchen & Appliances', label: 'ครัว' },
+  ]
+
   const conditionOptions = [
     { value: 'All Conditions', label: 'ทุกสภาพ' },
     { value: 'Like New', label: 'เหมือนใหม่' },
@@ -177,27 +185,37 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
     <div className="sc-page overflow-x-hidden">
       <div className="sc-container space-y-6 sm:space-y-8">
         <section className="sc-card overflow-hidden border-primary/15 bg-gradient-to-br from-primary/8 via-white to-primary/5 shadow-sm">
-          <div className="flex flex-col gap-5 px-4 py-6 sm:px-6 sm:py-8 lg:flex-row lg:items-center lg:justify-between lg:gap-14 lg:px-10 lg:py-10">
-            <div className="max-w-xl space-y-4">
+          <div className="flex flex-col gap-3 px-4 py-4 sm:px-6 sm:py-8 lg:flex-row lg:items-center lg:justify-between lg:gap-14 lg:px-10 lg:py-10">
+            <div className="max-w-xl space-y-2 sm:space-y-4">
               <p className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-white/90 px-3 py-1.5 text-xs font-semibold tracking-wide text-primary shadow-sm backdrop-blur-sm">
                 <Leaf size={14} strokeWidth={2.5} />
-                CMU ShareCycle · Green Campus
+                CMU ShareCycle
               </p>
-              <div className="space-y-2">
-                <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl lg:text-[2.75rem] lg:leading-[1.15]">
+              <div className="space-y-1 sm:space-y-2">
+                <h1 className="text-xl font-extrabold tracking-tight text-gray-900 sm:text-4xl lg:text-[2.75rem] lg:leading-[1.15]">
                   Swap what you have. Get what you need.
                 </h1>
                 <p className="max-w-lg text-sm text-gray-600 sm:text-base lg:text-lg">
-                  Free exchange & donation. No money, less waste, real community.
+                  Free exchange & donation.
                 </p>
               </div>
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                 <button
                   onClick={() => document.getElementById('items-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
                   className="sc-btn-primary min-h-11 px-5 py-3"
                 >
-                  ดูรายการสินค้า
+                  Browse
                   <ArrowRight size={16} strokeWidth={2.5} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFiltersOpen((prev) => !prev)}
+                  className="sc-btn-secondary min-h-11 px-4 sm:hidden"
+                  aria-expanded={filtersOpen}
+                >
+                  <SlidersHorizontal size={16} />
+                  Filters
+                  {activeFilterCount > 0 && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">{activeFilterCount}</span>}
                 </button>
                 <span className="hidden min-h-11 items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm sm:inline-flex">
                   <Zap size={16} className="text-primary" />
@@ -205,15 +223,10 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
                 </span>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:max-w-sm">
+            <div className="hidden grid-cols-2 gap-3 sm:grid lg:max-w-sm">
               {benefitCards.map((benefit) => (
-                <div
-                  key={benefit.title}
-                  className={`flex items-center gap-3 rounded-xl border p-3 shadow-sm backdrop-blur-sm transition hover:shadow-md sm:p-4 ${benefitToneClasses[benefit.tone]}`}
-                >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/80 shadow-sm [color:inherit]">
-                    <benefit.icon size={20} strokeWidth={2} />
-                  </div>
+                <div key={benefit.title} className={`flex items-center gap-3 rounded-xl border p-3 shadow-sm backdrop-blur-sm transition hover:shadow-md sm:p-4 ${benefitToneClasses[benefit.tone]}`}>
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/80 shadow-sm [color:inherit]"><benefit.icon size={20} strokeWidth={2} /></div>
                   <div>
                     <p className="text-sm font-semibold text-gray-900">{benefit.title}</p>
                     <p className="benefit-desc text-xs">{benefit.description}</p>
@@ -284,59 +297,59 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
                 <input
                   id="search-items"
                   type="text"
-                  placeholder="ค้นหาสินค้า..."
+                  placeholder="Search items"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="sc-input bg-gray-50 py-3 pl-10 pr-4"
                 />
               </div>
-              <button
-                type="button"
-                onClick={() => setFiltersOpen((prev) => !prev)}
-                className="flex min-h-11 w-full items-center justify-between rounded-xl border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-700 sm:hidden"
-                aria-expanded={filtersOpen}
-              >
-                <span className="flex items-center gap-2">
-                  <SlidersHorizontal size={16} className="text-primary" />
-                  ตัวกรอง
-                  {activeFilterCount > 0 && (
-                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
-                      {activeFilterCount}
-                    </span>
-                  )}
-                </span>
-                <ChevronDown size={16} className={`transition ${filtersOpen ? 'rotate-180' : ''}`} />
-              </button>
+              <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 scrollbar-hide sm:hidden">
+                {quickFilterOptions.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setSelectedCategory(opt.value)}
+                    className={`min-h-10 shrink-0 rounded-full px-4 text-sm font-semibold transition ${selectedCategory === opt.value ? 'bg-primary text-white shadow-sm' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center gap-2 sm:hidden">
+                <button
+                  type="button"
+                  onClick={() => setFiltersOpen((prev) => !prev)}
+                  className="sc-btn-secondary min-h-11 flex-1 px-4"
+                  aria-expanded={filtersOpen}
+                >
+                  <SlidersHorizontal size={16} />
+                  Filters
+                  {activeFilterCount > 0 && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">{activeFilterCount}</span>}
+                </button>
+                <button
+                  type="button"
+                  onClick={onPostItem}
+                  className="sc-btn-primary min-h-11 flex-1 px-4"
+                >
+                  <Plus size={18} strokeWidth={2.5} />
+                  Post
+                </button>
+              </div>
               <div className={`${filtersOpen ? 'block' : 'hidden'} space-y-3 sm:block`}>
                 <div className="grid gap-3 sm:grid-cols-[1.4fr_1fr_auto] sm:items-center">
                   <div className="relative">
-                    <select
-                      value={selectedCategory}
-                      onChange={(e) => setSelectedCategory(e.target.value)}
-                      className="sc-select pr-9"
-                    >
-                      {categoryOptions.map((opt) => (
-                        <option key={opt.value} value={opt.value}>{opt.label}</option>
-                      ))}
+                    <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="sc-select pr-9">
+                      {categoryOptions.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
                     </select>
                     <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                   </div>
                   <div className="relative">
-                    <select
-                      value={selectedCondition}
-                      onChange={(e) => setSelectedCondition(e.target.value)}
-                      className="sc-select pr-9"
-                    >
-                      {conditionOptions.map((opt) => (
-                        <option key={opt.value} value={opt.value}>{opt.label}</option>
-                      ))}
+                    <select value={selectedCondition} onChange={(e) => setSelectedCondition(e.target.value)} className="sc-select pr-9">
+                      {conditionOptions.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
                     </select>
                     <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                   </div>
-                  <button
-                    onClick={onPostItem}
-                    className="sc-btn-primary min-h-11 w-full sm:w-auto"
-                  >
+                  <button onClick={onPostItem} className="sc-btn-primary min-h-11 w-full sm:w-auto">
                     <Plus size={18} strokeWidth={2.5} />
                     โพสต์สินค้า
                   </button>
@@ -372,7 +385,7 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
           )}
 
           {!loading && !loadError && filteredItems.length > 0 && (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
               {filteredItems.map((item) => {
                 const isInProgress = item.status === 'in_progress'
                 const isDonated = item.status === 'donated'
@@ -385,92 +398,48 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
                   else if (diffDays === 0) daysLabel = { text: 'หมดอายุวันนี้', style: 'bg-amber-100 text-amber-800' }
                   else if (diffDays <= 7) daysLabel = { text: `เหลือ ${diffDays} วัน`, style: 'bg-amber-100 text-amber-800' }
                 }
-                const primaryActionLabel = isInProgress
-                  ? 'กำลังดำเนินการ'
-                  : isDonated
-                    ? 'บริจาคแล้ว'
-                    : item.listing_type === 'donation'
-                      ? 'ขอรับบริจาค'
-                      : 'ขอแลก'
+                const primaryActionLabel = isInProgress ? 'กำลังดำเนินการ' : isDonated ? 'บริจาคแล้ว' : item.listing_type === 'donation' ? 'ขอรับบริจาค' : 'ขอแลกเปลี่ยน'
 
                 return (
-                  <article
-                    key={item.id}
-                    className={`group overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition ${
-                      isInProgress ? 'opacity-70 cursor-not-allowed' : 'hover:border-gray-300 hover:shadow-md'
-                    }`}
-                  >
-                    <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-100">
-                      <img
-                        src={item.image_url || 'https://images.unsplash.com/photo-1503602642458-232111445657?auto=format&fit=crop&w=800&q=80'}
-                        alt={item.title}
-                        className="h-full w-full object-cover transition group-hover:scale-[1.02]"
-                      />
+                  <article key={item.id} className={`group overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition ${isInProgress ? 'opacity-70 cursor-not-allowed' : 'hover:border-gray-300 hover:shadow-md'}`}>
+                    <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-100 sm:aspect-[5/4]">
+                      <img src={item.image_url || 'https://images.unsplash.com/photo-1503602642458-232111445657?auto=format&fit=crop&w=800&q=80'} alt={item.title} className="h-full w-full object-cover transition group-hover:scale-[1.02]" />
                       <div className="absolute inset-x-0 top-0 flex items-start justify-between p-2.5">
-                        {daysLabel && (
-                          <span className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium ${daysLabel.style}`}>
-                            <Clock3 size={12} />
-                            {daysLabel.text}
-                          </span>
-                        )}
-                        <span className={`rounded-md px-2 py-1 text-xs font-semibold text-white ${
-                          isInProgress ? 'bg-amber-500' : item.listing_type === 'donation' ? 'bg-rose-500' : 'bg-primary'
-                        }`}>
-                          {isInProgress ? 'กำลังดำเนินการ' : item.listing_type === 'donation' ? 'บริจาค' : 'แลกเปลี่ยน'}
-                        </span>
+                        {daysLabel && <span className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium ${daysLabel.style}`}><Clock3 size={12} />{daysLabel.text}</span>}
+                        <span className={`rounded-md px-2 py-1 text-xs font-semibold text-white ${isInProgress ? 'bg-amber-500' : item.listing_type === 'donation' ? 'bg-rose-500' : 'bg-primary'}`}>{isInProgress ? 'กำลังดำเนินการ' : item.listing_type === 'donation' ? 'บริจาค' : 'แลกเปลี่ยน'}</span>
                       </div>
                     </div>
-                    <div className="space-y-3 p-4">
+                    <div className="space-y-2.5 p-4">
                       <div className="space-y-1">
-                        <span className="text-xs font-medium text-primary">{item.category}</span>
-                        <h3
-                          onClick={() => navigate(`/items/${item.id}`)}
-                          className="cursor-pointer text-base font-semibold text-gray-900 line-clamp-2 transition hover:text-primary"
-                        >
-                          {item.title}
-                        </h3>
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="truncate text-xs font-medium text-primary">{item.category}</span>
+                          <button type="button" className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-600 sm:hidden" onClick={() => navigate(`/items/${item.id}`)} aria-label="Open item details">
+                            <Eye size={15} />
+                          </button>
+                        </div>
+                        <h3 onClick={() => navigate(`/items/${item.id}`)} className="cursor-pointer text-base font-semibold leading-snug text-gray-900 line-clamp-2 transition hover:text-primary">{item.title}</h3>
                       </div>
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500">
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500 sm:hidden">
+                        <span className="rounded-full bg-gray-100 px-2 py-1">{item.item_condition}</span>
+                        {item.pickup_location && <span className="rounded-full bg-gray-100 px-2 py-1">{item.pickup_location}</span>}
+                      </div>
+                      <div className="hidden flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500 sm:flex">
                         <span>{item.item_condition}</span>
-                        {item.pickup_location && (
-                          <span className="flex items-center gap-1 truncate">
-                            <MapPin size={12} />
-                            {item.pickup_location}
-                          </span>
-                        )}
-                        <span className="flex items-center gap-1 truncate">
-                          <UserIcon size={12} />
-                          {item.owner_name || 'CMU Student'}
-                        </span>
+                        {item.pickup_location && (<span className="flex items-center gap-1 truncate"><MapPin size={12} />{item.pickup_location}</span>)}
+                        <span className="flex items-center gap-1 truncate"><UserIcon size={12} />{item.owner_name || 'CMU Student'}</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => navigate(`/items/${item.id}`)}
-                          className="sc-btn-secondary min-h-11 flex-1 px-3 text-xs sm:text-sm"
-                        >
-                          <Eye size={16} />
-                          View
+                      <div className="grid grid-cols-1 gap-2">
+                        <button onClick={() => navigate(`/items/${item.id}`)} className="sc-btn-primary min-h-11 w-full px-3 text-xs sm:hidden">
+                          {item.status === 'active' && item.listing_type === 'donation' ? <Heart size={16} /> : item.status === 'active' && item.listing_type !== 'donation' ? <RefreshCcw size={16} /> : <Eye size={16} />}
+                          {item.status === 'active' && item.listing_type === 'donation' ? 'ขอรับบริจาค' : item.status === 'active' && item.listing_type !== 'donation' ? 'ขอแลกเปลี่ยน' : 'ดูรายละเอียด'}
                         </button>
+                        <button onClick={() => navigate(`/items/${item.id}`)} className="sc-btn-secondary hidden min-h-11 w-full px-3 text-xs sm:flex sm:text-sm"><Eye size={16} />View details</button>
                         {item.status === 'active' && item.listing_type === 'donation' ? (
-                          <button
-                            onClick={() => onDonationItem(item.id)}
-                            className="sc-btn-primary min-h-11 flex-1 bg-rose-500 px-3 text-xs sm:text-sm hover:bg-rose-600"
-                          >
-                            <Heart size={16} />
-                            {primaryActionLabel}
-                          </button>
+                          <button onClick={() => onDonationItem(item.id)} className="hidden sc-btn-primary min-h-11 w-full bg-rose-500 px-3 text-xs sm:flex sm:text-sm hover:bg-rose-600"><Heart size={16} />ขอรับบริจาค</button>
                         ) : item.status === 'active' && item.listing_type !== 'donation' ? (
-                          <button
-                            onClick={() => onExchangeItem(item.id)}
-                            className="sc-btn-primary min-h-11 flex-1 px-3 text-xs sm:text-sm"
-                          >
-                            <RefreshCcw size={16} />
-                            {primaryActionLabel}
-                          </button>
+                          <button onClick={() => onExchangeItem(item.id)} className="hidden sc-btn-primary min-h-11 w-full px-3 text-xs sm:flex sm:text-sm"><RefreshCcw size={16} />ขอแลกเปลี่ยน</button>
                         ) : (
-                          <div className="sc-btn-secondary min-h-11 flex-1 cursor-default px-3 text-xs sm:text-sm text-gray-500">
-                            {primaryActionLabel}
-                          </div>
+                          <div className="hidden sc-btn-secondary min-h-11 w-full cursor-default px-3 text-xs text-gray-500 sm:flex sm:text-sm">{primaryActionLabel}</div>
                         )}
                       </div>
                     </div>
