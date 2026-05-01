@@ -97,111 +97,61 @@ export default function AdminUsersPage() {
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-        {loading && (
-          <div className="p-4 text-sm text-gray-500">Loading users...</div>
-        )}
-        {error && !loading && (
-          <div className="p-4 text-sm text-red-600">{error}</div>
-        )}
+        {loading && <div className="p-4 text-sm text-gray-500">Loading users...</div>}
+        {error && !loading && <div className="p-4 text-sm text-red-600">{error}</div>}
         {!loading && !error && (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-100 text-left text-sm">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 font-semibold text-gray-600">User</th>
-                  <th className="px-4 py-3 font-semibold text-gray-600">Role</th>
-                  <th className="px-4 py-3 font-semibold text-gray-600">Status</th>
-                  <th className="px-4 py-3 font-semibold text-gray-600">Created</th>
-                  <th className="px-4 py-3 text-right font-semibold text-gray-600">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {users.map((user) => (
-                  <tr key={user.id} className="align-top">
-                    <td className="px-4 py-3">
-                      <div className="flex flex-col">
-                        <span className="font-semibold text-gray-900">
-                          {user.name || 'Unknown'}
-                        </span>
-                        <span className="text-xs text-gray-500">{user.email}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="inline-flex items-center gap-1 rounded-full bg-primary/5 px-2.5 py-1 text-xs font-semibold text-primary">
-                        <Shield size={12} />
-                        {user.role || 'user'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      {user.is_suspended ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700">
-                          <Ban size={12} />
-                          Suspended
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
-                          <CheckCircle size={12} />
-                          Active
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-xs text-gray-500">
-                      {user.created_at
-                        ? new Date(user.created_at).toLocaleDateString()
-                        : '-'}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex justify-end gap-2">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            openConfirm(
-                              user.role === 'admin' ? 'make-user' : 'make-admin',
-                              user
-                            )
-                          }
-                          className="rounded-full border border-primary/20 px-3 py-1 text-xs font-semibold text-primary hover:bg-primary/5"
-                        >
-                          {user.role === 'admin' ? 'ตั้งเป็นผู้ใช้' : 'ตั้งเป็นแอดมิน'}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            openConfirm(
-                              user.is_suspended ? 'unsuspend' : 'suspend',
-                              user
-                            )
-                          }
-                          className="rounded-full border border-yellow-200 px-3 py-1 text-xs font-semibold text-yellow-700 hover:bg-yellow-50"
-                        >
-                          {user.is_suspended ? 'ยกเลิกระงับ' : 'ระงับ'}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => openConfirm('delete', user)}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-red-50 text-red-600 hover:bg-red-100"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                {users.length === 0 && (
+          <>
+            <div className="space-y-3 p-3 md:hidden">
+              {users.map((user) => (
+                <div key={user.id} className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold text-gray-900">{user.name || 'Unknown'}</p>
+                      <p className="truncate text-xs text-gray-500">{user.email}</p>
+                    </div>
+                    <button type="button" onClick={() => openConfirm('delete', user)} className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-red-50 text-red-600" aria-label="Delete user">
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-primary/5 px-2.5 py-1 text-primary"><Shield size={12} />{user.role || 'user'}</span>
+                    {user.is_suspended ? <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-1 text-red-700"><Ban size={12} />Suspended</span> : <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-700"><CheckCircle size={12} />Active</span>}
+                    <span className="rounded-full bg-gray-100 px-2.5 py-1 text-gray-600">{user.created_at ? new Date(user.created_at).toLocaleDateString() : '-'}</span>
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <button type="button" onClick={() => openConfirm(user.role === 'admin' ? 'make-user' : 'make-admin', user)} className="min-h-11 rounded-full border border-primary/20 px-3 py-2 text-xs font-semibold text-primary">{user.role === 'admin' ? 'ตั้งเป็นผู้ใช้' : 'ตั้งเป็นแอดมิน'}</button>
+                    <button type="button" onClick={() => openConfirm(user.is_suspended ? 'unsuspend' : 'suspend', user)} className="min-h-11 rounded-full border border-yellow-200 px-3 py-2 text-xs font-semibold text-yellow-700">{user.is_suspended ? 'ยกเลิกระงับ' : 'ระงับ'}</button>
+                  </div>
+                </div>
+              ))}
+              {users.length === 0 && <p className="px-2 py-6 text-center text-sm text-gray-500">No users found.</p>}
+            </div>
+            <div className="hidden overflow-x-auto md:block">
+              <table className="min-w-full divide-y divide-gray-100 text-left text-sm">
+                <thead className="bg-gray-50">
                   <tr>
-                    <td
-                      colSpan={5}
-                      className="px-4 py-6 text-center text-sm text-gray-500"
-                    >
-                      No users found.
-                    </td>
+                    <th className="px-4 py-3 font-semibold text-gray-600">User</th>
+                    <th className="px-4 py-3 font-semibold text-gray-600">Role</th>
+                    <th className="px-4 py-3 font-semibold text-gray-600">Status</th>
+                    <th className="px-4 py-3 font-semibold text-gray-600">Created</th>
+                    <th className="px-4 py-3 text-right font-semibold text-gray-600">Actions</th>
                   </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {users.map((user) => (
+                    <tr key={user.id} className="align-top">
+                      <td className="px-4 py-3"><div className="flex flex-col"><span className="font-semibold text-gray-900">{user.name || 'Unknown'}</span><span className="text-xs text-gray-500">{user.email}</span></div></td>
+                      <td className="px-4 py-3"><span className="inline-flex items-center gap-1 rounded-full bg-primary/5 px-2.5 py-1 text-xs font-semibold text-primary"><Shield size={12} />{user.role || 'user'}</span></td>
+                      <td className="px-4 py-3">{user.is_suspended ? <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700"><Ban size={12} />Suspended</span> : <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700"><CheckCircle size={12} />Active</span>}</td>
+                      <td className="px-4 py-3 text-xs text-gray-500">{user.created_at ? new Date(user.created_at).toLocaleDateString() : '-'}</td>
+                      <td className="px-4 py-3"><div className="flex justify-end gap-2"><button type="button" onClick={() => openConfirm(user.role === 'admin' ? 'make-user' : 'make-admin', user)} className="rounded-full border border-primary/20 px-3 py-1 text-xs font-semibold text-primary hover:bg-primary/5">{user.role === 'admin' ? 'ตั้งเป็นผู้ใช้' : 'ตั้งเป็นแอดมิน'}</button><button type="button" onClick={() => openConfirm(user.is_suspended ? 'unsuspend' : 'suspend', user)} className="rounded-full border border-yellow-200 px-3 py-1 text-xs font-semibold text-yellow-700 hover:bg-yellow-50">{user.is_suspended ? 'ยกเลิกระงับ' : 'ระงับ'}</button><button type="button" onClick={() => openConfirm('delete', user)} className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-red-50 text-red-600 hover:bg-red-100"><Trash2 size={14} /></button></div></td>
+                    </tr>
+                  ))}
+                  {users.length === 0 && <tr><td colSpan={5} className="px-4 py-6 text-center text-sm text-gray-500">No users found.</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 

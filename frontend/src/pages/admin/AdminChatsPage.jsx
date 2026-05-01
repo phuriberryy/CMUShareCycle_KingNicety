@@ -88,123 +88,34 @@ export default function AdminChatsPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-[minmax(0,0.45fr)_minmax(0,0.55fr)]">
-        {/* Chat list */}
         <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-          {loading && (
-            <div className="p-4 text-sm text-gray-500">Loading chats...</div>
-          )}
-          {error && !loading && (
-            <div className="p-4 text-sm text-red-600">{error}</div>
-          )}
+          {loading && <div className="p-4 text-sm text-gray-500">Loading chats...</div>}
+          {error && !loading && <div className="p-4 text-sm text-red-600">{error}</div>}
           {!loading && !error && (
-            <div className="max-h-[480px] space-y-1 overflow-y-auto p-3">
-              {chats.map((chat) => (
-                <button
-                  key={chat.id}
-                  type="button"
-                  onClick={() => handleSelectChat(chat)}
-                  className={`flex w-full items-start gap-3 rounded-2xl px-3 py-2.5 text-left text-sm hover:bg-gray-50 ${
-                    selectedChat?.id === chat.id ? 'bg-gray-50' : ''
-                  }`}
-                >
-                  <span className="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
-                    <MessageCircle size={16} />
-                  </span>
-                  <div className="flex-1">
-                    <p className="font-semibold text-gray-900">
-                      {chat.creator_email} ↔ {chat.participant_email}
-                    </p>
-                    <p className="mt-0.5 text-xs text-gray-500">
-                      Status: {chat.status || 'pending'}
-                    </p>
-                    <p className="mt-0.5 text-[11px] text-gray-400">
-                      Created {new Date(chat.created_at).toLocaleString()}
-                    </p>
-                  </div>
-                </button>
-              ))}
-              {chats.length === 0 && (
-                <p className="p-3 text-sm text-gray-500">No chats found.</p>
-              )}
-            </div>
-          )}
-
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between border-t border-gray-100 px-3 py-2 text-xs text-gray-500">
-              <span>
-                Page {page} of {totalPages}
-              </span>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setPage((p) => Math.max(p - 1, 1))}
-                  disabled={page === 1}
-                  className="rounded-full border border-gray-200 px-3 py-1 font-semibold text-gray-700 disabled:opacity-50"
-                >
-                  Previous
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-                  disabled={page === totalPages}
-                  className="rounded-full border border-gray-200 px-3 py-1 font-semibold text-gray-700 disabled:opacity-50"
-                >
-                  Next
-                </button>
+            <>
+              <div className="space-y-2 p-3 md:hidden">
+                {chats.map((chat) => (
+                  <button key={chat.id} type="button" onClick={() => handleSelectChat(chat)} className={`w-full rounded-2xl border px-4 py-3 text-left shadow-sm ${selectedChat?.id === chat.id ? 'border-primary bg-primary/5' : 'border-gray-200 bg-white'}`}>
+                    <p className="truncate text-sm font-semibold text-gray-900">{chat.creator_email} ↔ {chat.participant_email}</p>
+                    <p className="mt-1 text-xs text-gray-500">Status: {chat.status || 'pending'} · {new Date(chat.created_at).toLocaleString()}</p>
+                  </button>
+                ))}
+                {chats.length === 0 && <p className="p-3 text-sm text-gray-500">No chats found.</p>}
               </div>
-            </div>
+              <div className="hidden max-h-[480px] space-y-1 overflow-y-auto p-3 md:block">
+                {chats.map((chat) => (<button key={chat.id} type="button" onClick={() => handleSelectChat(chat)} className={`flex w-full items-start gap-3 rounded-2xl px-3 py-2.5 text-left text-sm hover:bg-gray-50 ${selectedChat?.id === chat.id ? 'bg-gray-50' : ''}`}><span className="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary"><MessageCircle size={16} /></span><div className="flex-1"><p className="font-semibold text-gray-900">{chat.creator_email} ↔ {chat.participant_email}</p><p className="mt-0.5 text-xs text-gray-500">Status: {chat.status || 'pending'}</p><p className="mt-0.5 text-[11px] text-gray-400">Created {new Date(chat.created_at).toLocaleString()}</p></div></button>))}
+                {chats.length === 0 && <p className="p-3 text-sm text-gray-500">No chats found.</p>}
+              </div>
+            </>
+          )}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between border-t border-gray-100 px-3 py-2 text-xs text-gray-500"><span>Page {page} of {totalPages}</span><div className="flex gap-2"><button type="button" onClick={() => setPage((p) => Math.max(p - 1, 1))} disabled={page === 1} className="rounded-full border border-gray-200 px-3 py-1 font-semibold text-gray-700 disabled:opacity-50">Previous</button><button type="button" onClick={() => setPage((p) => Math.min(p + 1, totalPages))} disabled={page === totalPages} className="rounded-full border border-gray-200 px-3 py-1 font-semibold text-gray-700 disabled:opacity-50">Next</button></div></div>
           )}
         </div>
 
-        {/* Messages */}
         <div className="flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-          <div className="border-b border-gray-100 px-4 py-3">
-            {selectedChat ? (
-              <div className="flex flex-col">
-                <span className="text-sm font-semibold text-gray-900">
-                  {selectedChat.creator_email} ↔ {selectedChat.participant_email}
-                </span>
-                <span className="text-xs text-gray-500">
-                  Chat ID: {selectedChat.id}
-                </span>
-              </div>
-            ) : (
-              <p className="text-sm text-gray-500">Select a chat to view messages.</p>
-            )}
-          </div>
-          <div className="flex-1 overflow-y-auto px-4 py-3">
-            {selectedChat && loadingMessages && (
-              <p className="text-sm text-gray-500">Loading messages...</p>
-            )}
-            {selectedChat && !loadingMessages && messages.length === 0 && (
-              <p className="text-sm text-gray-500">No messages yet.</p>
-            )}
-            {selectedChat &&
-              !loadingMessages &&
-              messages.map((message) => (
-                <div
-                  key={message.id}
-                  className="mb-3 flex items-start gap-2 rounded-xl bg-gray-50 px-3 py-2 text-xs text-gray-800"
-                >
-                  <div className="flex-1">
-                    <p className="font-semibold text-gray-900">
-                      {message.sender_email || message.sender_name || 'Unknown'}
-                    </p>
-                    <p className="mt-1 text-gray-700">{message.body}</p>
-                    <p className="mt-1 text-[10px] text-gray-400">
-                      {new Date(message.created_at).toLocaleString()}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => openConfirm(message)}
-                    className="inline-flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600 hover:bg-red-100"
-                  >
-                    <Trash2 size={12} />
-                  </button>
-                </div>
-              ))}
-          </div>
+          <div className="border-b border-gray-100 px-4 py-3">{selectedChat ? (<div className="flex flex-col"><span className="text-sm font-semibold text-gray-900">{selectedChat.creator_email} ↔ {selectedChat.participant_email}</span><span className="text-xs text-gray-500">Chat ID: {selectedChat.id}</span></div>) : (<p className="text-sm text-gray-500">Select a chat to view messages.</p>)}</div>
+          <div className="flex-1 overflow-y-auto px-4 py-3">{selectedChat && loadingMessages && (<p className="text-sm text-gray-500">Loading messages...</p>)}{selectedChat && !loadingMessages && messages.length === 0 && (<p className="text-sm text-gray-500">No messages yet.</p>)}{selectedChat && !loadingMessages && messages.map((message) => (<div key={message.id} className="mb-3 flex items-start gap-2 rounded-xl bg-gray-50 px-3 py-2 text-xs text-gray-800"><div className="flex-1"><p className="font-semibold text-gray-900">{message.sender_email || message.sender_name || 'Unknown'}</p><p className="mt-1 text-gray-700">{message.body}</p><p className="mt-1 text-[10px] text-gray-400">{new Date(message.created_at).toLocaleString()}</p></div><button type="button" onClick={() => openConfirm(message)} className="inline-flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600 hover:bg-red-100"><Trash2 size={12} /></button></div>))}</div>
         </div>
       </div>
 

@@ -87,83 +87,41 @@ export default function AdminItemsPage() {
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-        {loading && (
-          <div className="p-4 text-sm text-gray-500">Loading items...</div>
-        )}
-        {error && !loading && (
-          <div className="p-4 text-sm text-red-600">{error}</div>
-        )}
+        {loading && <div className="p-4 text-sm text-gray-500">Loading items...</div>}
+        {error && !loading && <div className="p-4 text-sm text-red-600">{error}</div>}
         {!loading && !error && (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-100 text-left text-sm">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 font-semibold text-gray-600">Item</th>
-                  <th className="px-4 py-3 font-semibold text-gray-600">Owner</th>
-                  <th className="px-4 py-3 font-semibold text-gray-600">Status</th>
-                  <th className="px-4 py-3 font-semibold text-gray-600">Created</th>
-                  <th className="px-4 py-3 text-right font-semibold text-gray-600">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {items.map((item) => (
-                  <tr key={item.id} className="align-top">
-                    <td className="px-4 py-3">
-                      <div className="flex flex-col">
-                        <span className="font-semibold text-gray-900">
-                          {item.title}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          {item.category} · {item.item_condition}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-col">
-                        <span className="text-sm text-gray-900">
-                          {item.owner_name || 'Unknown'}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          {item.owner_email}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-xs text-gray-600">
-                      {item.status || 'unknown'}
-                    </td>
-                    <td className="px-4 py-3 text-xs text-gray-500">
-                      {item.created_at
-                        ? new Date(item.created_at).toLocaleDateString()
-                        : '-'}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex justify-end gap-2">
-                        <button
-                          type="button"
-                          onClick={() => openConfirm(item)}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-red-50 text-red-600 hover:bg-red-100"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                {items.length === 0 && (
-                  <tr>
-                    <td
-                      colSpan={5}
-                      className="px-4 py-6 text-center text-sm text-gray-500"
-                    >
-                      ไม่พบรายการสินค้า
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+          <>
+            <div className="space-y-3 p-3 md:hidden">
+              {items.map((item) => (
+                <div key={item.id} className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold text-gray-900">{item.title}</p>
+                      <p className="truncate text-xs text-gray-500">{item.category} · {item.item_condition}</p>
+                    </div>
+                    <button type="button" onClick={() => openConfirm(item)} className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-red-50 text-red-600" aria-label="Delete item"><Trash2 size={14} /></button>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold text-gray-600">
+                    <span className="rounded-full bg-gray-100 px-2.5 py-1">{item.owner_name || 'Unknown'}</span>
+                    <span className="rounded-full bg-primary/5 px-2.5 py-1 text-primary">{item.status || 'unknown'}</span>
+                    <span className="rounded-full bg-gray-100 px-2.5 py-1">{item.created_at ? new Date(item.created_at).toLocaleDateString() : '-'}</span>
+                  </div>
+                </div>
+              ))}
+              {items.length === 0 && <p className="px-2 py-6 text-center text-sm text-gray-500">ไม่พบรายการสินค้า</p>}
+            </div>
+            <div className="hidden overflow-x-auto md:block">
+              <table className="min-w-full divide-y divide-gray-100 text-left text-sm">
+                <thead className="bg-gray-50"><tr><th className="px-4 py-3 font-semibold text-gray-600">Item</th><th className="px-4 py-3 font-semibold text-gray-600">Owner</th><th className="px-4 py-3 font-semibold text-gray-600">Status</th><th className="px-4 py-3 font-semibold text-gray-600">Created</th><th className="px-4 py-3 text-right font-semibold text-gray-600">Actions</th></tr></thead>
+                <tbody className="divide-y divide-gray-100">
+                  {items.map((item) => (
+                    <tr key={item.id} className="align-top"><td className="px-4 py-3"><div className="flex flex-col"><span className="font-semibold text-gray-900">{item.title}</span><span className="text-xs text-gray-500">{item.category} · {item.item_condition}</span></div></td><td className="px-4 py-3"><div className="flex flex-col"><span className="text-sm text-gray-900">{item.owner_name || 'Unknown'}</span><span className="text-xs text-gray-500">{item.owner_email}</span></div></td><td className="px-4 py-3 text-xs text-gray-600">{item.status || 'unknown'}</td><td className="px-4 py-3 text-xs text-gray-500">{item.created_at ? new Date(item.created_at).toLocaleDateString() : '-'}</td><td className="px-4 py-3"><div className="flex justify-end gap-2"><button type="button" onClick={() => openConfirm(item)} className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-red-50 text-red-600 hover:bg-red-100"><Trash2 size={14} /></button></div></td></tr>
+                  ))}
+                  {items.length === 0 && <tr><td colSpan={5} className="px-4 py-6 text-center text-sm text-gray-500">ไม่พบรายการสินค้า</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 
