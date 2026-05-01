@@ -1,5 +1,5 @@
-import { Bell, Menu, X, Leaf, Trophy, MessageCircle } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { Bell, Menu, X, Leaf, Trophy, MessageCircle, ChevronRight } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 
@@ -24,21 +24,24 @@ function Header({ unread, onNotificationsClick }) {
       .toUpperCase()
   }, [user])
 
+  useEffect(() => {
+    setOpen(false)
+  }, [location.pathname])
+
   return (
     <header className="sticky top-0 z-40 w-full border-b border-gray-200 bg-white/95 backdrop-blur-sm shadow-sm">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-        {/* Logo */}
-        <Link to="/" className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-white shadow-md">
-            <Leaf size={24} />
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 sm:py-4 lg:px-8">
+        <Link to="/" className="flex min-h-11 items-center gap-2.5 sm:gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary text-white shadow-md sm:h-12 sm:w-12">
+            <Leaf size={20} className="sm:hidden" />
+            <Leaf size={24} className="hidden sm:block" />
           </div>
           <div className="leading-tight">
-            <p className="text-lg font-bold text-primary">CMU ShareCycle</p>
-            <p className="text-xs text-gray-600">Green Campus</p>
+            <p className="text-base font-bold text-primary sm:text-lg">CMU ShareCycle</p>
+            <p className="hidden text-xs text-gray-600 sm:block">Green Campus</p>
           </div>
         </Link>
 
-        {/* Right Actions */}
         <div className="hidden items-center gap-3 sm:flex">
           <nav className="flex items-center gap-2 text-sm font-semibold">
             {navLinks.map((link) => (
@@ -59,7 +62,7 @@ function Header({ unread, onNotificationsClick }) {
           </nav>
           <Link
             to="/chat"
-            className="flex items-center justify-center rounded-full border border-gray-200 bg-white p-2.5 text-gray-700 transition hover:bg-gray-50"
+            className="flex min-h-11 min-w-11 items-center justify-center rounded-full border border-gray-200 bg-white p-2.5 text-gray-700 transition hover:bg-gray-50"
             aria-label="แชท"
           >
             <MessageCircle size={20} />
@@ -67,7 +70,7 @@ function Header({ unread, onNotificationsClick }) {
           <button
             type="button"
             onClick={onNotificationsClick}
-            className="relative flex items-center justify-center rounded-full border border-gray-200 bg-white p-2.5 text-gray-700 transition hover:bg-gray-50"
+            className="relative flex min-h-11 min-w-11 items-center justify-center rounded-full border border-gray-200 bg-white p-2.5 text-gray-700 transition hover:bg-gray-50"
             aria-label="การแจ้งเตือน"
           >
             <Bell size={20} />
@@ -81,7 +84,7 @@ function Header({ unread, onNotificationsClick }) {
             <>
               <Link
                 to="/profile"
-                className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 hover:border-gray-300"
+                className="flex min-h-11 items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 hover:border-gray-300"
               >
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white">
                   {initials}
@@ -91,7 +94,7 @@ function Header({ unread, onNotificationsClick }) {
               <button
                 type="button"
                 onClick={logout}
-                className="rounded-full border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                className="min-h-11 rounded-full border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
               >
                 ออกจากระบบ
               </button>
@@ -100,7 +103,7 @@ function Header({ unread, onNotificationsClick }) {
             <button
               type="button"
               onClick={onLogin}
-              className={`rounded-full px-5 py-2.5 text-sm font-semibold transition ${
+              className={`min-h-11 rounded-full px-5 py-2.5 text-sm font-semibold transition ${
                 location.pathname === '/login'
                   ? 'bg-primary text-white shadow-md'
                   : 'border border-gray-200 text-gray-700 hover:bg-gray-50'
@@ -111,11 +114,10 @@ function Header({ unread, onNotificationsClick }) {
           )}
         </div>
 
-        {/* Mobile Actions */}
-        <div className="flex items-center gap-2 sm:hidden">
+        <div className="flex items-center gap-1.5 sm:hidden">
           <Link
             to="/chat"
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white"
             aria-label="แชท"
           >
             <MessageCircle size={18} />
@@ -123,7 +125,7 @@ function Header({ unread, onNotificationsClick }) {
           <button
             type="button"
             onClick={onNotificationsClick}
-            className="relative flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white"
+            className="relative flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white"
             aria-label="การแจ้งเตือน"
           >
             <Bell size={18} />
@@ -134,68 +136,112 @@ function Header({ unread, onNotificationsClick }) {
             )}
           </button>
           <button
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white"
+            type="button"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white"
             onClick={() => setOpen((prev) => !prev)}
             aria-label="toggle menu"
+            aria-expanded={open}
           >
             {open ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
       </div>
 
-      {/* Mobile Menu */}
       {open && (
-        <div className="border-t border-gray-200 bg-white px-6 py-4 shadow-lg sm:hidden">
-          <div className="mb-4 flex flex-col gap-2">
-            <Link to="/chat" onClick={() => setOpen(false)} className="rounded-xl px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-100 flex items-center gap-2">
-              <MessageCircle size={18} />
-              แชท
-            </Link>
-            <Link to="/notifications" onClick={() => setOpen(false)} className="rounded-xl px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-100 flex items-center gap-2">
-              <Bell size={18} />
-              การแจ้งเตือน
-            </Link>
-            {navLinks.map((link) => (
-              <NavLink
-                key={link.to}
-                to={link.to}
+        <>
+          <button
+            type="button"
+            aria-label="Close navigation menu"
+            className="fixed inset-0 z-30 cursor-default bg-black/20 sm:hidden"
+            onClick={() => setOpen(false)}
+          />
+          <div className="absolute left-0 right-0 top-full z-40 border-t border-gray-200 bg-white px-4 py-4 shadow-xl sm:hidden">
+            <div className="space-y-2">
+              <Link
+                to="/chat"
                 onClick={() => setOpen(false)}
-                className={({ isActive }) =>
-                  `rounded-xl px-4 py-3 text-sm font-semibold transition ${
-                    isActive ? 'bg-primary text-white' : 'text-gray-700 hover:bg-gray-100'
-                  }`
-                }
+                className="flex min-h-11 items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50"
               >
-                {link.label}
-              </NavLink>
-            ))}
-          </div>
-          <div className="flex flex-col gap-3">
-            {user ? (
+                <span className="flex items-center gap-2">
+                  <MessageCircle size={18} />
+                  แชท
+                </span>
+                <ChevronRight size={16} className="text-gray-400" />
+              </Link>
               <button
                 type="button"
                 onClick={() => {
-                  logout()
                   setOpen(false)
+                  onNotificationsClick()
                 }}
-                className="rounded-xl border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-700"
+                className="flex min-h-11 w-full items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50"
               >
-                ออกจากระบบ
+                <span className="flex items-center gap-2">
+                  <Bell size={18} />
+                  การแจ้งเตือน
+                </span>
+                <span className="flex items-center gap-2 text-gray-400">
+                  {unread > 0 && (
+                    <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-bold text-white">
+                      {unread}
+                    </span>
+                  )}
+                  <ChevronRight size={16} />
+                </span>
               </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => {
-                  onLogin()
-                  setOpen(false)
-                }}
-                className="rounded-xl border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-700"
-              >
-                เข้าสู่ระบบ
-              </button>
-            )}
+              {navLinks.map((link) => (
+                <NavLink
+                  key={link.to}
+                  to={link.to}
+                  onClick={() => setOpen(false)}
+                  className={({ isActive }) =>
+                    `flex min-h-11 items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold transition ${
+                      isActive ? 'bg-primary text-white' : 'text-gray-700 hover:bg-gray-50'
+                    }`
+                  }
+                >
+                  <span>{link.label}</span>
+                  <ChevronRight size={16} className="opacity-70" />
+                </NavLink>
+              ))}
+            </div>
+            <div className="mt-4 border-t border-gray-100 pt-4">
+              {user ? (
+                <div className="space-y-2">
+                  <Link
+                    to="/profile"
+                    onClick={() => setOpen(false)}
+                    className="flex min-h-11 items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                  >
+                    <span>โปรไฟล์ของฉัน</span>
+                    <ChevronRight size={16} className="text-gray-400" />
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      logout()
+                      setOpen(false)
+                    }}
+                    className="flex min-h-11 w-full items-center justify-center rounded-2xl border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-700"
+                  >
+                    ออกจากระบบ
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onLogin()
+                    setOpen(false)
+                  }}
+                  className="flex min-h-11 w-full items-center justify-center rounded-2xl border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-700"
+                >
+                  เข้าสู่ระบบ
+                </button>
+              )}
+            </div>
           </div>
-        </div>
+        </>
       )}
     </header>
   )
