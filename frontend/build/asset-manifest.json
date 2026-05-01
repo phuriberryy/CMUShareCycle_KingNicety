@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/CMUShareCycle_KingNicety/static/css/main.5cf8bfd8.css",
-    "main.js": "/CMUShareCycle_KingNicety/static/js/main.e2924f18.js",
+    "main.css": "/CMUShareCycle_KingNicety/static/css/main.6bf27627.css",
+    "main.js": "/CMUShareCycle_KingNicety/static/js/main.4a33c06c.js",
     "index.html": "/CMUShareCycle_KingNicety/index.html",
-    "main.5cf8bfd8.css.map": "/CMUShareCycle_KingNicety/static/css/main.5cf8bfd8.css.map",
-    "main.e2924f18.js.map": "/CMUShareCycle_KingNicety/static/js/main.e2924f18.js.map"
+    "main.6bf27627.css.map": "/CMUShareCycle_KingNicety/static/css/main.6bf27627.css.map",
+    "main.4a33c06c.js.map": "/CMUShareCycle_KingNicety/static/js/main.4a33c06c.js.map"
   },
   "entrypoints": [
-    "static/css/main.5cf8bfd8.css",
-    "static/js/main.e2924f18.js"
+    "static/css/main.6bf27627.css",
+    "static/js/main.4a33c06c.js"
   ]
 }
