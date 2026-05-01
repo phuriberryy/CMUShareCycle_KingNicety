@@ -53,7 +53,6 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
   const [loading, setLoading] = useState(false)
   const [loadError, setLoadError] = useState(false)
   const [statistics, setStatistics] = useState(null)
-  const [loadingStats, setLoadingStats] = useState(false)
   const categoryOptions = [
     { value: 'All Categories', label: 'ทุกหมวดหมู่' },
     { value: 'Clothes & Fashion', label: '👕 เสื้อผ้า แฟชั่น' },
@@ -141,18 +140,6 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
     }
   }, [token])
 
-  useEffect(() => {
-    setLoadingStats(true)
-    statisticsApi
-      .getStatistics()
-      .then((data) => {
-        setStatistics(data)
-      })
-      .catch((err) => {
-        console.error('Failed to load statistics:', err)
-      })
-      .finally(() => setLoadingStats(false))
-  }, [])
 
   const filteredItems = useMemo(() => {
     return items.filter((item) => {
@@ -230,12 +217,8 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
           </div>
         </section>
 
-        {loadingStats ? (
-          <section>
-            <div className="sc-card sc-card-pad text-center text-sm text-gray-500">Loading statistics...</div>
-          </section>
-        ) : statistics ? (
-          <section>
+        {statistics ? (
+          <section className="hidden sm:block">
             <div className="mb-4">
               <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">Community impact</h2>
             </div>
