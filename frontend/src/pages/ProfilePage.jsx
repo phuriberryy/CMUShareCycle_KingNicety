@@ -11,6 +11,9 @@ import {
   Heart,
   Trash2,
   Star,
+  Box,
+  History,
+  TimerReset,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
@@ -263,6 +266,13 @@ export default function ProfilePage() {
       .toUpperCase()
   }, [user])
 
+  const tabItems = [
+    { id: 'posts', label: 'Posts', shortLabel: 'Post', icon: Box },
+    { id: 'expired', label: 'Expired', shortLabel: 'Exp', icon: TimerReset },
+    { id: 'history', label: 'History', shortLabel: 'Hist', icon: History },
+    { id: 'donations', label: 'Donations', shortLabel: 'Donate', icon: Heart },
+  ]
+
   if (!user) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-16 text-center">
@@ -281,6 +291,13 @@ export default function ProfilePage() {
 
   const displayUser = profile?.user || user
   const stats = profile?.stats || { itemsShared: 0, co2Reduced: '0.00' }
+  const statCards = [
+    { key: 'points', label: 'Points', value: (stats.totalPoints || 0).toLocaleString(), icon: Star, tone: 'primary' },
+    { key: 'shared', label: 'Items Shared', value: stats.itemsShared || 0, icon: Package, tone: 'green' },
+    { key: 'co2', label: 'CO₂ Reduced', value: `${stats.co2Reduced || '0.00'}kg`, icon: CheckCircle, tone: 'emerald' },
+    { key: 'exchanges', label: 'Exchanges', value: stats.totalExchanges || 0, icon: ArrowRightLeft, tone: 'purple' },
+    { key: 'donations', label: 'Donations', value: stats.totalDonations || 0, icon: Heart, tone: 'rose' },
+  ]
 
   return (
     <div className="min-h-screen bg-[#FAFBF9]">
@@ -320,79 +337,44 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="mt-8 flex flex-col gap-4 border-t border-gray-100 pt-6 sm:flex-row sm:justify-center sm:gap-8">
-            <div className="text-center">
-              <div className="mb-1 flex items-center justify-center gap-1.5">
-                <Star size={18} className="text-yellow-500" />
-                <p className="text-3xl font-bold text-primary sm:text-4xl">{(stats.totalPoints || 0).toLocaleString()}</p>
+          <div className="mt-6 grid grid-cols-2 gap-3 border-t border-gray-100 pt-6 sm:mt-8 sm:grid-cols-5 sm:gap-4 sm:pt-6">
+            {statCards.map((stat) => (
+              <div key={stat.key} className="flex h-full flex-col items-start justify-between rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition hover:shadow-md">
+                <div className={`mb-3 flex h-10 w-10 items-center justify-center rounded-full ${stat.tone === 'primary' ? 'bg-primary/10 text-primary' : stat.tone === 'green' ? 'bg-green-100 text-green-600' : stat.tone === 'emerald' ? 'bg-emerald-100 text-emerald-600' : stat.tone === 'purple' ? 'bg-purple-100 text-purple-600' : 'bg-red-100 text-red-600'}`}>
+                  <stat.icon size={18} />
+                </div>
+                <div>
+                  <p className="text-xl font-bold tracking-tight text-gray-900 sm:text-2xl">{stat.value}</p>
+                  <p className="mt-1 text-xs font-medium text-gray-500 sm:text-sm">{stat.label}</p>
+                </div>
               </div>
-              <p className="text-sm text-gray-500">Points</p>
-            </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-primary sm:text-4xl">{stats.itemsShared || 0}</p>
-              <p className="text-sm text-gray-500">Items Shared</p>
-            </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-emerald-600 sm:text-4xl">{stats.co2Reduced || '0.00'}kg</p>
-              <p className="text-sm text-gray-500">CO₂ Reduced</p>
-            </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-purple-600 sm:text-4xl">{stats.totalExchanges || 0}</p>
-              <p className="text-sm text-gray-500">Exchanges</p>
-            </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-red-500 sm:text-4xl">{stats.totalDonations || 0}</p>
-              <p className="text-sm text-gray-500">Donations</p>
-            </div>
+            ))}
           </div>
         </div>
 
-        <div className="border-t border-gray-100 px-4 sm:px-8 py-4">
-          <div className="flex overflow-x-auto gap-2 sm:gap-3 rounded-full bg-[#F0F7F1] p-2 scrollbar-hide">
-          <button
-            onClick={() => setActiveTab('posts')}
-              className={`flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap rounded-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition ${
-              activeTab === 'posts'
-                  ? 'bg-gray-200 text-gray-800'
-                  : 'bg-transparent text-gray-700'
-            }`}
-          >
-            <Package size={14} className="sm:w-4 sm:h-4" />
-            <span className="hidden xs:inline">My</span> Posts
-          </button>
-          <button
-            onClick={() => setActiveTab('expired')}
-              className={`flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap rounded-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition ${
-              activeTab === 'expired'
-                  ? 'bg-gray-200 text-gray-800'
-                  : 'bg-transparent text-gray-700'
-            }`}
-          >
-            <Clock3 size={14} className="sm:w-4 sm:h-4" />
-            หมดอายุ ({expiredItems.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('history')}
-              className={`flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap rounded-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition ${
-              activeTab === 'history'
-                  ? 'bg-gray-200 text-gray-800'
-                  : 'bg-transparent text-gray-700'
-            }`}
-          >
-            <ArrowRightLeft size={14} className="sm:w-4 sm:h-4" />
-            <span className="hidden xs:inline">Exchange</span> History
-          </button>
-          <button
-            onClick={() => setActiveTab('donations')}
-              className={`flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap rounded-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition ${
-              activeTab === 'donations'
-                  ? 'bg-gray-200 text-gray-800'
-                  : 'bg-transparent text-gray-700'
-            }`}
-          >
-            <Heart size={14} className="sm:w-4 sm:h-4" />
-            Donations ({donationHistory.length})
-          </button>
+        <div className="border-t border-gray-100 px-4 py-4 sm:px-8 sm:py-4">
+          <div className="relative">
+            <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-8 bg-gradient-to-r from-[#F0F7F1] to-transparent sm:hidden" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-gradient-to-l from-[#F0F7F1] to-transparent sm:hidden" />
+            <div className="flex overflow-x-auto gap-2 rounded-full bg-[#F0F7F1] p-2 scrollbar-hide scroll-smooth sm:gap-3">
+            {tabItems.map((tab) => {
+              const Icon = tab.icon
+              const isActive = activeTab === tab.id
+              const badge = tab.id === 'expired' ? expiredItems.length : tab.id === 'donations' ? donationHistory.length : null
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3 py-2 text-xs font-semibold transition active:scale-95 ${isActive ? 'bg-gray-900 text-white shadow-md' : 'bg-transparent text-gray-700 hover:bg-white/80'} sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm`}
+                >
+                  <Icon size={14} className="sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline">{tab.label}</span>
+                  <span className="sm:hidden text-[10px] font-semibold">{tab.shortLabel.slice(0, 3)}</span>
+                  {badge !== null && <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${isActive ? 'bg-white/20 text-white' : 'bg-white text-gray-700'}`}>{badge}</span>}
+                </button>
+              )
+            })}
+            </div>
           </div>
         </div>
       </section>
