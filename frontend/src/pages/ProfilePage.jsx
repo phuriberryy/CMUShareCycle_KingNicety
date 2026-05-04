@@ -357,23 +357,23 @@ export default function ProfilePage() {
             <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-8 bg-gradient-to-r from-[#F0F7F1] to-transparent sm:hidden" />
             <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-gradient-to-l from-[#F0F7F1] to-transparent sm:hidden" />
             <div className="flex overflow-x-auto gap-2 rounded-full bg-[#F0F7F1] p-2 scrollbar-hide scroll-smooth sm:gap-3">
-            {tabItems.map((tab) => {
-              const Icon = tab.icon
-              const isActive = activeTab === tab.id
-              const badge = tab.id === 'expired' ? expiredItems.length : tab.id === 'donations' ? donationHistory.length : null
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3 py-2 text-xs font-semibold transition active:scale-95 ${isActive ? 'bg-gray-900 text-white shadow-md' : 'bg-transparent text-gray-700 hover:bg-white/80'} sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm`}
-                >
-                  <Icon size={14} className="sm:w-4 sm:h-4" />
-                  <span className="hidden sm:inline">{tab.label}</span>
-                  <span className="sm:hidden text-[10px] font-semibold">{tab.shortLabel.slice(0, 3)}</span>
-                  {badge !== null && <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${isActive ? 'bg-white/20 text-white' : 'bg-white text-gray-700'}`}>{badge}</span>}
-                </button>
-              )
-            })}
+              {tabItems.map((tab) => {
+                const Icon = tab.icon
+                const isActive = activeTab === tab.id
+                const badge = tab.id === 'expired' ? expiredItems.length : tab.id === 'donations' ? donationHistory.length : null
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex min-w-[4.5rem] items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3 py-2 text-xs font-semibold transition active:scale-95 ${isActive ? 'bg-gray-900 text-white shadow-md' : 'bg-transparent text-gray-700 hover:bg-white/80'} sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm`}
+                  >
+                    <Icon size={14} className="sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">{tab.label}</span>
+                    <span className="sm:hidden text-[10px] font-semibold">{tab.shortLabel}</span>
+                    {badge !== null && <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${isActive ? 'bg-white/20 text-white' : 'bg-white text-gray-700'}`}>{badge}</span>}
+                  </button>
+                )
+              })}
             </div>
           </div>
         </div>
