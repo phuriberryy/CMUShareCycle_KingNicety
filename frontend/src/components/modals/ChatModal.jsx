@@ -57,10 +57,10 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
   const handleDeleteChat = async (chatId) => { if (!token || !chatId) return; if (!window.confirm('ลบแชทนี้หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้')) return; setDeletingChatId(chatId); try { await chatApi.delete(token, chatId); setChats((prev) => prev.filter((chat) => chat.id !== chatId)); if (activeChatId === chatId) { setActiveChatId(null) } toast.success('ลบแชทแล้ว') } catch (err) { toast.error(err.message || 'Failed to delete chat') } finally { setDeletingChatId(null) } }
 
   const chatContent = (
-    <div className="flex h-[100dvh] flex-col overflow-hidden bg-[#F4F7F5] md:h-[min(92vh,920px)] md:max-h-[92vh] md:rounded-3xl">
+    <div className="flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-[#F4F7F5] md:h-[min(92dvh,920px)] md:max-h-[92dvh] md:rounded-3xl">
       <div className="flex min-h-0 flex-1 overflow-hidden md:rounded-3xl md:border md:border-gray-200 md:bg-white md:shadow-2xl">
         <aside className={`flex min-h-0 w-full flex-col border-gray-200 bg-white md:w-[360px] md:border-r ${showChatList && !activeChatId ? 'flex' : 'hidden md:flex'}`}>
-          <div className="sticky top-0 z-20 border-b border-gray-100 bg-white/95 px-4 py-4 backdrop-blur-sm md:px-5 md:py-5">
+          <div className="flex shrink-0 flex-col border-b border-gray-100 bg-white/95 px-4 py-4 backdrop-blur-sm md:px-5 md:py-5">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-lg font-bold text-gray-900">Messages</p>
@@ -103,39 +103,41 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
           </div>
         </aside>
 
-        <main className={`${showChatList && !activeChatId ? 'hidden md:flex' : 'flex'} min-h-0 flex-1 flex-col bg-[#FBFCFB]`}>
-          {activeChat ? (
-            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-              <div className="sticky top-0 z-20 border-b border-gray-200 bg-white/95 px-4 py-3 backdrop-blur-sm sm:px-5 sm:py-4">
-                <div className="flex items-center gap-3">
-                  <button type="button" onClick={handleBackToList} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition hover:bg-gray-200 md:hidden" aria-label="กลับไปรายการแชท"><ArrowLeft size={18} /></button>
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white shadow-sm">{(activeChat?.participant_name || 'CMU').split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase()}</div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2"><p className="truncate text-base font-semibold text-gray-900 sm:text-lg">{activeChat?.participant_name || 'นักศึกษา CMU'}</p><span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${socketConnected ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>{socketConnected ? 'Online' : 'Connecting'}</span></div>
-                    <p className="truncate text-xs text-gray-500">{activeChat?.participant_email || ''}</p>
+        <main className={`${showChatList && !activeChatId ? 'hidden md:flex' : 'flex'} min-h-0 flex-1 flex-col overflow-hidden bg-[#FBFCFB]`}>
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            {activeChat ? (
+              <>
+                <div className="shrink-0 border-b border-gray-200 bg-white/95 px-4 py-3 backdrop-blur-sm sm:px-5 sm:py-4">
+                  <div className="flex items-center gap-3">
+                    <button type="button" onClick={handleBackToList} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition hover:bg-gray-200 md:hidden" aria-label="กลับไปรายการแชท"><ArrowLeft size={18} /></button>
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white shadow-sm">{(activeChat?.participant_name || 'CMU').split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase()}</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2"><p className="truncate text-base font-semibold text-gray-900 sm:text-lg">{activeChat?.participant_name || 'นักศึกษา CMU'}</p><span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${socketConnected ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>{socketConnected ? 'Online' : 'Connecting'}</span></div>
+                      <p className="truncate text-xs text-gray-500">{activeChat?.participant_email || ''}</p>
+                    </div>
+                    <button type="button" onClick={onClose} className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition hover:bg-gray-200 md:flex" aria-label="ปิด"><X size={18} /></button>
                   </div>
-                  <button type="button" onClick={onClose} className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition hover:bg-gray-200 md:flex" aria-label="ปิด"><X size={18} /></button>
                 </div>
-              </div>
-              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-5 sm:py-5">
-                <div className="flex h-full items-center justify-center text-gray-400">Chat area</div>
-                <div ref={bottomRef} />
-              </div>
-              <div className="sticky bottom-0 z-10 shrink-0 border-t border-gray-100 bg-white px-4 py-3 shadow-[0_-8px_24px_rgba(0,0,0,0.04)] sm:px-5">
-                <div className="flex items-end gap-2 sm:gap-3">
-                  <button type="button" className="h-10 w-10 rounded-xl bg-gray-100" aria-label="ถ่ายรูป"><Camera size={18} /></button>
-                  <div className="min-w-0 flex-1 rounded-xl border border-gray-200 bg-gray-50 py-2 pl-4 pr-3"><input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="พิมพ์ข้อความ..." className="w-full bg-transparent text-sm focus:outline-none" /></div>
-                  <button type="button" className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-white"><Send size={20} /></button>
+                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-5 sm:py-5">
+                  <div className="flex h-full items-center justify-center text-gray-400">Chat area</div>
+                  <div ref={bottomRef} />
                 </div>
+                <div className="shrink-0 border-t border-gray-100 bg-white px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] shadow-[0_-8px_24px_rgba(0,0,0,0.04)] sm:px-5">
+                  <div className="flex items-end gap-2 sm:gap-3">
+                    <button type="button" className="h-10 w-10 rounded-xl bg-gray-100" aria-label="ถ่ายรูป"><Camera size={18} /></button>
+                    <div className="min-w-0 flex-1 rounded-xl border border-gray-200 bg-gray-50 py-2 pl-4 pr-3"><input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="พิมพ์ข้อความ..." className="w-full bg-transparent text-sm focus:outline-none" /></div>
+                    <button type="button" className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-white"><Send size={20} /></button>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="flex min-h-full flex-1 flex-col items-center justify-center gap-4 px-6 py-12 text-center">
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gray-100"><MessageCircle className="text-gray-400" size={40} /></div>
+                <p className="text-base font-medium text-gray-700">เลือกแชทหรือเริ่มแชทใหม่</p>
+                <p className="max-w-xs text-sm text-gray-500">เลือกจากรายการด้านซ้าย หรือกรอกอีเมล @cmu.ac.th แล้วกด เริ่มแชท</p>
               </div>
-            </div>
-          ) : (
-            <div className="flex min-h-[360px] flex-1 flex-col items-center justify-center gap-4 px-6 py-12 text-center">
-              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gray-100"><MessageCircle className="text-gray-400" size={40} /></div>
-              <p className="text-base font-medium text-gray-700">เลือกแชทหรือเริ่มแชทใหม่</p>
-              <p className="max-w-xs text-sm text-gray-500">เลือกจากรายการด้านซ้าย หรือกรอกอีเมล @cmu.ac.th แล้วกด เริ่มแชท</p>
-            </div>
-          )}
+            )}
+          </div>
         </main>
       </div>
     </div>
