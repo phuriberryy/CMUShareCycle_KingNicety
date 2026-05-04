@@ -595,7 +595,7 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
   )
 
   const chatContent = (
-    <div className="flex h-[100dvh] min-h-0 overflow-hidden bg-[#F4F7F5] md:h-[min(92dvh,920px)] md:max-h-[92dvh] md:rounded-3xl">
+    <div className="h-[100vh] min-h-0 overflow-hidden bg-[#F4F7F5] md:h-[min(92dvh,920px)] md:max-h-[92dvh] md:rounded-3xl">
       {mobileList}
       {mobileDetail}
       {desktopLayout}
