@@ -166,27 +166,18 @@ export default function LeaderboardPage() {
 
       {/* Tabs */}
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative -mx-4 sm:mx-0">
-          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-[#FAFBF9] to-transparent sm:hidden" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-[#FAFBF9] to-transparent sm:hidden" />
-          <div className="flex gap-2 overflow-x-auto px-4 pb-1 scrollbar-hide scroll-smooth sm:px-0 sm:overflow-visible">
-            {TABS.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={`flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-2 text-xs font-semibold transition active:scale-95 sm:px-4 sm:py-2.5 sm:text-sm ${activeTab === tab.key ? 'border-primary bg-primary text-white shadow-md' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
-              >
-                <tab.icon size={16} />
-                <span className="hidden sm:inline">{tab.label}</span>
-                <span className="sm:hidden">{tab.shortLabel}</span>
-              </button>
-            ))}
-          </div>
+        <div className="flex gap-1 overflow-x-auto rounded-full border border-gray-200 bg-white p-1.5 shadow-sm scrollbar-hide">
+          {TABS.map((tab) => (
+            <button key={tab.key} onClick={() => setActiveTab(tab.key)} className={`flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition ${activeTab === tab.key ? 'bg-primary text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>
+              <tab.icon size={16} />
+              {tab.label}
+            </button>
+          ))}
         </div>
 
         {activeTab !== 'faculty' && (
           <div className="relative w-full sm:w-auto">
-            <select value={period} onChange={(e) => setPeriod(e.target.value)} className="w-full appearance-none rounded-full border border-primary/15 bg-white px-4 py-2.5 pr-10 text-sm font-semibold text-gray-700 shadow-sm focus:border-primary focus:ring-2 focus:ring-primary/20 sm:w-auto">
+            <select value={period} onChange={(e) => setPeriod(e.target.value)} className="w-full appearance-none rounded-full border border-primary/15 bg-white px-5 py-2.5 pr-10 text-sm font-semibold text-gray-700 shadow-sm focus:border-primary focus:ring-2 focus:ring-primary/20 sm:w-auto">
               {PERIODS.map((p) => (<option key={p.key} value={p.key}>{p.label}</option>))}
             </select>
             <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
@@ -214,7 +205,7 @@ export default function LeaderboardPage() {
             <>
               {/* Top 3 Podium */}
               {leaders.length >= 3 && (
-                <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div className="mb-6 grid gap-3 sm:grid-cols-3">
                   {[leaders[1], leaders[0], leaders[2]].map((leader, i) => {
                     const rank = [2, 1, 3][i]
                     const isFirst = rank === 1
