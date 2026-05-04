@@ -42,7 +42,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#FAFBF9] px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+    <div className="flex min-h-screen items-center justify-center bg-surface px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
       <div className="w-full max-w-md">
         <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
           <h1 className="mb-2 text-center text-2xl font-bold text-gray-900">Sign Up</h1>

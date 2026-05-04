@@ -29,7 +29,7 @@ if (!hasResend && !hasSmtp) {
 }
 
 // Import after loading env and checks
-const emailUtils = await import('../src/utils/email.js')
+const emailUtils = await import('../src/shared/utils/email.js')
 const { sendTestEmail, verifyEmailConnection } = emailUtils
 
 // อ่าน email จาก command line arguments

@@ -1,9 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Image as ImageIcon } from 'lucide-react'
+import { Image as ImageIcon, X } from 'lucide-react'
 import Modal from '../ui/Modal'
 import { itemsApi } from '../../lib/api'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
+import { MAX_ITEM_GALLERY } from '../../utils/itemImages'
+
+const readFileAsDataUrl = (file) =>
+  new Promise((resolve, reject) => {
+    const r = new FileReader()
+    r.onloadend = () => resolve(r.result)
+    r.onerror = reject
+    r.readAsDataURL(file)
+  })
 
 export default function PostItemModal({ open, onClose, onSuccess }) {
   const toast = useToast()
@@ -26,7 +35,7 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
     description: '',
     listingType: 'exchange', // 'exchange' or 'donation'
   })
-  const [imagePreview, setImagePreview] = useState(null)
+  const [imagePreviews, setImagePreviews] = useState([])
   const [submitting, setSubmitting] = useState(false)
   const { token } = useAuth()
 
@@ -43,7 +52,7 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
       description: '',
       listingType: 'exchange',
     })
-    setImagePreview(null)
+    setImagePreviews([])
     setSubmitting(false)
     if (fileInputRef.current) fileInputRef.current.value = ''
   }, [open])
@@ -61,20 +70,40 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleImageChange = (e) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        toast.warning('ไฟล์ใหญ่เกิน 5MB กรุณาเลือกไฟล์ใหม่', 'รูปภาพใหญ่เกินไป')
-        if (fileInputRef.current) fileInputRef.current.value = ''
-        return
+  const handleImageChange = async (e) => {
+    const files = Array.from(e.target.files || [])
+    if (fileInputRef.current) fileInputRef.current.value = ''
+    if (!files.length) return
+
+    setImagePreviews((prev) => {
+      const room = MAX_ITEM_GALLERY - prev.length
+      if (room <= 0) {
+        toast.warning('เพิ่มได้ไม่เกิน 3 รูป', 'เกินจำนวน')
+        return prev
       }
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setImagePreview(reader.result)
-      }
-      reader.readAsDataURL(file)
-    }
+      void (async () => {
+        let next = [...prev]
+        for (const file of files) {
+          if (next.length >= MAX_ITEM_GALLERY) break
+          if (file.size > 5 * 1024 * 1024) {
+            toast.warning('ไฟล์ใหญ่เกิน 5MB กรุณาเลือกไฟล์เล็กลง', 'รูปภาพใหญ่เกินไป')
+            continue
+          }
+          try {
+            const dataUrl = await readFileAsDataUrl(file)
+            next = [...next, dataUrl].slice(0, MAX_ITEM_GALLERY)
+          } catch {
+            toast.error('อ่านไฟล์ไม่สำเร็จ', 'เกิดข้อผิดพลาด')
+          }
+        }
+        setImagePreviews(next)
+      })()
+      return prev
+    })
+  }
+
+  const removeImageAt = (index) => {
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index))
   }
 
   const normalized = useMemo(() => {
@@ -89,7 +118,7 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
   const canSubmit = useMemo(() => {
     if (submitting) return false
     if (!token) return false
-    if (!imagePreview) return false
+    if (imagePreviews.length === 0) return false
     if (normalized.itemName.length < 3) return false
     if (!formData.category) return false
     if (!formData.condition) return false
@@ -98,7 +127,7 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
     if (!normalized.availableUntil) return false
     if (formData.listingType === 'exchange' && !normalized.lookingFor) return false
     return true
-  }, [submitting, token, imagePreview, normalized, formData.category, formData.condition, formData.listingType])
+  }, [submitting, token, imagePreviews, normalized, formData.category, formData.condition, formData.listingType])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -107,8 +136,8 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
       return
     }
     // Validate required fields
-    if (!imagePreview) {
-      toast.warning('กรุณาอัปโหลดรูปภาพ', 'ข้อมูลไม่ครบ')
+    if (imagePreviews.length === 0) {
+      toast.warning('กรุณาอัปโหลดรูปภาพอย่างน้อย 1 รูป', 'ข้อมูลไม่ครบ')
       return
     }
     if (!normalized.itemName || !formData.category || !formData.condition) {
@@ -137,8 +166,10 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
         description: normalized.description,
         availableUntil: normalized.availableUntil,
         available_until: normalized.availableUntil,
-        imageUrl: imagePreview,
-        image_url: imagePreview,
+        imageUrl: imagePreviews[0],
+        image_url: imagePreviews[0],
+        imageUrls: imagePreviews,
+        image_urls: imagePreviews,
         pickupLocation: normalized.pickupLocation,
         pickup_location: normalized.pickupLocation,
         listingType: formData.listingType,
@@ -227,40 +258,55 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
               : 'แลกเปลี่ยน: กรุณาระบุสิ่งที่ต้องการแลก'}
           </p>
         </div>
-        {/* Image Upload */}
+        {/* Image Upload — สูงสุด 3 รูป */}
         <div>
           <label className="mb-2 block text-sm font-bold text-gray-900">
             รูปสินค้า <span className="text-red-500">*</span>
+            <span className="ml-1 font-normal text-gray-500">(อย่างน้อย 1 รูป สูงสุด {MAX_ITEM_GALLERY} รูป)</span>
           </label>
           <input
             type="file"
             accept="image/*"
+            multiple
             onChange={handleImageChange}
             className="hidden"
             id="image-upload"
             name="image"
             ref={fileInputRef}
           />
-          <label
-            htmlFor="image-upload"
-            className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 p-6 text-center transition hover:border-primary hover:bg-primary/5 sm:p-12"
-          >
-            {imagePreview ? (
-              <img
-                src={imagePreview}
-                alt="Preview"
-                className="h-32 w-full rounded-lg object-cover sm:h-48"
-              />
-            ) : (
-              <>
-                <ImageIcon className="mb-2 text-gray-400" size={40} />
-                <p className="mb-1 text-xs font-medium text-gray-700 sm:text-sm">
-                  คลิกเพื่ออัปโหลดรูป
-                </p>
-                <p className="text-[11px] text-gray-500 sm:text-xs">PNG/JPG ขนาดไม่เกิน 5MB</p>
-              </>
-            )}
-          </label>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            {imagePreviews.map((src, idx) => (
+              <div
+                key={`${idx}-${src?.slice?.(0, 32) ?? idx}`}
+                className="relative overflow-hidden rounded-xl border border-gray-200 bg-gray-50"
+              >
+                <img src={src} alt="" className="aspect-[4/3] h-32 w-full object-cover sm:h-40" />
+                <button
+                  type="button"
+                  onClick={() => removeImageAt(idx)}
+                  className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-white transition hover:bg-black/70"
+                  aria-label="ลบรูป"
+                >
+                  <X size={16} />
+                </button>
+                {idx === 0 ? (
+                  <span className="absolute bottom-2 left-2 rounded-md bg-primary/90 px-2 py-0.5 text-[10px] font-semibold text-white">
+                    ปก
+                  </span>
+                ) : null}
+              </div>
+            ))}
+            {imagePreviews.length < MAX_ITEM_GALLERY ? (
+              <label
+                htmlFor="image-upload"
+                className="flex min-h-[8rem] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 p-4 text-center transition hover:border-primary hover:bg-primary/5 sm:min-h-[10rem]"
+              >
+                <ImageIcon className="mb-2 text-gray-400" size={36} />
+                <p className="mb-1 text-xs font-medium text-gray-700 sm:text-sm">คลิกเพื่อเพิ่มรูป</p>
+                <p className="text-[11px] text-gray-500 sm:text-xs">พีเอ็นจี / เจพีจี ไม่เกิน 5 เมกะไบต์ต่อไฟล์</p>
+              </label>
+            ) : null}
+          </div>
         </div>
 
         {/* Item Name */}

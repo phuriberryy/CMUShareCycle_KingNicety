@@ -182,17 +182,17 @@ export default function DonationRequestDetailPage() {
 
   const getStatusColor = () => {
     if (!donationRequest) return 'bg-yellow-100 text-yellow-800'
-    if (donationRequest.status === 'completed') return 'bg-green-100 text-green-800'
+    if (donationRequest.status === 'completed') return 'bg-primary/10 text-primary-dark'
     if (donationRequest.status === 'in_progress') return 'bg-blue-100 text-blue-800'
-    if (donationRequest.status === 'chatting') return 'bg-green-100 text-green-800'
+    if (donationRequest.status === 'chatting') return 'bg-primary/10 text-primary-dark'
     if (donationRequest.status === 'rejected') return 'bg-red-100 text-red-800'
-    if (donationRequest.owner_accepted && donationRequest.requester_accepted) return 'bg-green-100 text-green-800'
+    if (donationRequest.owner_accepted && donationRequest.requester_accepted) return 'bg-primary/10 text-primary-dark'
     return 'bg-yellow-100 text-yellow-800'
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FAFBF9]">
+      <div className="min-h-screen bg-surface">
         <div className="mx-auto max-w-4xl px-4 py-16 text-center">
           <div className="rounded-2xl border border-gray-200 bg-white p-12 shadow-sm">
             <p className="text-lg text-gray-600">กำลังโหลด...</p>
@@ -204,7 +204,7 @@ export default function DonationRequestDetailPage() {
 
   if (error || !donationRequest) {
     return (
-      <div className="min-h-screen bg-[#FAFBF9]">
+      <div className="min-h-screen bg-surface">
         <div className="mx-auto max-w-4xl px-4 py-16 text-center">
           <div className="rounded-2xl border border-gray-200 bg-white p-12 shadow-sm">
             <p className="text-lg text-red-600">{error || 'ไม่พบคำขอรับบริจาค'}</p>
@@ -239,7 +239,7 @@ export default function DonationRequestDetailPage() {
   const co2Reduced = co2Footprint ? co2Footprint * 0.8 : null
 
   return (
-    <div className="min-h-screen bg-[#FAFBF9]">
+    <div className="min-h-screen bg-surface">
       <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8 overflow-x-hidden">
       {/* Back Button */}
       <button
@@ -354,8 +354,8 @@ export default function DonationRequestDetailPage() {
 
         {/* CO₂ Info */}
         {co2Reduced && (
-          <div className="rounded-xl bg-green-50 p-4">
-            <p className="text-sm font-semibold text-green-800">
+          <div className="rounded-xl bg-primary/5 p-4">
+            <p className="text-sm font-semibold text-primary-dark">
               CO₂ Reduced: {co2Reduced.toFixed(2)} kg CO₂e
             </p>
           </div>
@@ -387,7 +387,7 @@ export default function DonationRequestDetailPage() {
           <button
             onClick={handleAccept}
             disabled={processing}
-            className="flex-1 rounded-full bg-green-600 px-6 py-3 text-base font-semibold text-white shadow-md transition hover:bg-green-700 disabled:opacity-60 flex items-center justify-center gap-2"
+            className="flex-1 rounded-full bg-primary px-6 py-3 text-base font-semibold text-white shadow-md transition hover:bg-primary-dark disabled:opacity-60 flex items-center justify-center gap-2"
           >
             <CheckCircle size={20} />
             {processing ? 'Processing...' : 'Accept'}

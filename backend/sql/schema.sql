@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS items (
   description TEXT,
   available_until DATE,
   image_url TEXT,
+  image_urls JSONB NOT NULL DEFAULT '[]'::jsonb,
   status TEXT DEFAULT 'active',
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()

@@ -1,6 +1,6 @@
 // CO₂ Footprint Calculator (Frontend)
 // คำนวณค่า CO₂ footprint ของแต่ละ item ตาม category และ condition
-// ต้องตรงกับ backend/src/utils/co2Calculator.js
+// ต้องตรงกับ backend/src/shared/utils/co2Calculator.js
 
 // ค่า CO₂ footprint ต่อ category (kg CO₂e ต่อ 1 item)
 const CO2_BY_CATEGORY = {

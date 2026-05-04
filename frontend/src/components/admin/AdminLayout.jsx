@@ -9,11 +9,11 @@ import AdminReportsPage from '../../pages/admin/AdminReportsPage'
 import AdminChatsPage from '../../pages/admin/AdminChatsPage'
 
 const navItems = [
-  { to: '/admin', label: 'Overview', icon: LayoutDashboard, end: true },
-  { to: '/admin/users', label: 'Users', icon: Users },
-  { to: '/admin/items', label: 'Items', icon: Package },
-  { to: '/admin/reports', label: 'Reports', icon: Flag },
-  { to: '/admin/chats', label: 'Chats', icon: MessageCircle },
+  { to: '/admin', label: 'ภาพรวม', icon: LayoutDashboard, end: true },
+  { to: '/admin/users', label: 'ผู้ใช้', icon: Users },
+  { to: '/admin/items', label: 'สินค้า', icon: Package },
+  { to: '/admin/reports', label: 'รายงาน', icon: Flag },
+  { to: '/admin/chats', label: 'แชท', icon: MessageCircle },
 ]
 
 export default function AdminLayout() {
@@ -23,19 +23,19 @@ export default function AdminLayout() {
   useEffect(() => setSidebarOpen(false), [])
 
   return (
-    <div className="min-h-screen bg-[#FAFBF9] text-gray-900">
+    <div className="min-h-screen bg-surface text-gray-900">
       <div className="flex flex-col md:flex-row">
         <aside className="md:w-64">
           <div className="flex items-center justify-between border-b border-gray-100 bg-white px-4 py-3 md:px-6 md:py-4">
             <div className="flex flex-col">
-              <span className="text-xs font-semibold uppercase tracking-wide text-primary">CMU ShareCycle</span>
-              <span className="text-sm font-bold text-gray-900">Admin Panel</span>
+              <span className="text-xs font-semibold tracking-wide text-primary">CMU ShareCycle</span>
+              <span className="text-sm font-bold text-gray-900">แผงผู้ดูแลระบบ</span>
             </div>
             <button
               type="button"
               className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 text-gray-600 md:hidden"
               onClick={() => setSidebarOpen((prev) => !prev)}
-              aria-label="Toggle admin navigation"
+              aria-label="เปิดเมนูแอดมิน"
               aria-expanded={sidebarOpen}
             >
               {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
@@ -57,7 +57,9 @@ export default function AdminLayout() {
                   end={end}
                   className={({ isActive }) =>
                     `flex min-h-11 items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium ${
-                      isActive ? 'bg-primary text-white shadow-sm' : 'text-gray-700 hover:bg-gray-50'
+                      isActive
+                        ? 'bg-primary text-white shadow-sm hover:bg-primary-dark hover:text-white'
+                        : 'text-gray-800 hover:bg-primary-light/80 hover:text-primary-dark'
                     }`
                   }
                   onClick={() => setSidebarOpen(false)}

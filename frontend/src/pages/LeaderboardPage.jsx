@@ -19,16 +19,16 @@ import { leaderboardApi } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 
 const TABS = [
-  { key: 'points', label: 'Points', icon: Star },
-  { key: 'co2', label: 'CO₂ Reduced', icon: Leaf },
-  { key: 'exchanges', label: 'Exchanges', icon: ArrowRightLeft },
-  { key: 'faculty', label: 'Faculty', icon: Users },
+  { key: 'points', label: 'คะแนน', icon: Star },
+  { key: 'co2', label: 'CO₂ ที่ลดได้', icon: Leaf },
+  { key: 'exchanges', label: 'การแลกเปลี่ยน', icon: ArrowRightLeft },
+  { key: 'faculty', label: 'ตามคณะ', icon: Users },
 ]
 
 const PERIODS = [
-  { key: 'week', label: 'Week', shortLabel: 'Wk', icon: CalendarDays },
-  { key: 'month', label: 'Month', shortLabel: 'Mo', icon: CalendarDays },
-  { key: 'all', label: 'All', shortLabel: 'All', icon: Repeat },
+  { key: 'week', label: 'สัปดาห์นี้', shortLabel: 'สปด.', icon: CalendarDays },
+  { key: 'month', label: 'เดือนนี้', shortLabel: 'ด.', icon: CalendarDays },
+  { key: 'all', label: 'ตลอดกาล', shortLabel: 'ทั้งหมด', icon: Repeat },
 ]
 
 const REASON_LABELS = {
@@ -49,7 +49,7 @@ function getMyRankBadgeStyle(rank) {
   if (rank === 1) return 'from-amber-400 via-yellow-500 to-amber-600 shadow-amber-200/50 ring-2 ring-amber-300/50'
   if (rank === 2) return 'from-slate-300 via-gray-400 to-slate-500 shadow-slate-300/50 ring-2 ring-slate-300/50'
   if (rank === 3) return 'from-amber-600 via-orange-500 to-amber-700 shadow-orange-300/50 ring-2 ring-amber-400/50'
-  return 'from-primary to-emerald-600 shadow-primary/30 ring-2 ring-primary/20'
+  return 'from-primary to-primary-bright shadow-primary/30 ring-2 ring-primary/20'
 }
 
 function RankBadge({ rank }) {
@@ -60,8 +60,8 @@ function RankBadge({ rank }) {
 }
 
 function formatValue(value, type) {
-  if (type === 'co2') return `${parseFloat(value).toFixed(1)} kg`
-  if (type === 'points') return `${parseInt(value).toLocaleString()} pts`
+  if (type === 'co2') return `${parseFloat(value).toFixed(1)} กก. CO₂`
+  if (type === 'points') return `${parseInt(value).toLocaleString()} คะแนน`
   return parseInt(value).toLocaleString()
 }
 
@@ -114,16 +114,16 @@ export default function LeaderboardPage() {
   }, [token, activeTab])
 
   return (
-    <div className="min-h-screen bg-[#FAFBF9]">
+    <div className="min-h-screen bg-surface">
       <div className="mx-auto max-w-5xl px-4 py-6 sm:py-10 sm:px-6 lg:px-8">
       {/* Header */}
       <section className="mb-6 sm:mb-8">
-        <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-white px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-primary shadow-sm">
+        <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-white px-4 py-1.5 text-xs font-semibold tracking-wide text-primary shadow-sm">
           <Trophy size={14} />
-          Leaderboard
+          กระดานคะแนน
         </div>
-        <h1 className="text-2xl font-bold text-gray-900 sm:text-4xl">Top Contributors</h1>
-        <p className="mt-2 text-sm text-gray-600 sm:text-lg">See who's making the biggest impact at CMU</p>
+        <h1 className="text-2xl font-bold text-gray-900 sm:text-4xl">ผู้มีส่วนร่วมสูงสุด</h1>
+        <p className="mt-2 text-sm text-gray-600 sm:text-lg">ดูว่าใครสร้างผลกระทบเชิงบวกให้วิทยาเขต มช. มากที่สุด</p>
       </section>
 
       {/* My Rank Card */}
@@ -146,15 +146,15 @@ export default function LeaderboardPage() {
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3">
-                <div className="rounded-xl bg-white px-3 py-2 text-center shadow-sm"><p className="text-base font-bold text-primary sm:text-lg">{myRank.totalPoints.toLocaleString()}</p><p className="text-[10px] text-gray-500 sm:text-xs">Points</p></div>
-                <div className="rounded-xl bg-white px-3 py-2 text-center shadow-sm"><p className="text-base font-bold text-emerald-600 sm:text-lg">{parseFloat(myRank.totalCO2Reduced).toFixed(1)}</p><p className="text-[10px] text-gray-500 sm:text-xs">kg CO₂</p></div>
-                <div className="rounded-xl bg-white px-3 py-2 text-center shadow-sm"><p className="text-base font-bold text-purple-600 sm:text-lg">{myRank.totalExchanges}</p><p className="text-[10px] text-gray-500 sm:text-xs">Exchanges</p></div>
-                <div className="rounded-xl bg-white px-3 py-2 text-center shadow-sm"><p className="text-base font-bold text-red-500 sm:text-lg">{myRank.totalDonations}</p><p className="text-[10px] text-gray-500 sm:text-xs">Donations</p></div>
+                <div className="rounded-xl bg-white px-3 py-2 text-center shadow-sm"><p className="text-base font-bold text-primary sm:text-lg">{myRank.totalPoints.toLocaleString()}</p><p className="text-[10px] text-gray-500 sm:text-xs">คะแนน</p></div>
+                <div className="rounded-xl bg-white px-3 py-2 text-center shadow-sm"><p className="text-base font-bold text-primary sm:text-lg">{parseFloat(myRank.totalCO2Reduced).toFixed(1)}</p><p className="text-[10px] text-gray-500 sm:text-xs">กก. CO₂</p></div>
+                <div className="rounded-xl bg-white px-3 py-2 text-center shadow-sm"><p className="text-base font-bold text-purple-600 sm:text-lg">{myRank.totalExchanges}</p><p className="text-[10px] text-gray-500 sm:text-xs">ครั้งแลก</p></div>
+                <div className="rounded-xl bg-white px-3 py-2 text-center shadow-sm"><p className="text-base font-bold text-red-500 sm:text-lg">{myRank.totalDonations}</p><p className="text-[10px] text-gray-500 sm:text-xs">ครั้งบริจาค</p></div>
               </div>
             </div>
             {myRank.recentPoints && myRank.recentPoints.length > 0 && (
               <details className="mt-4 border-t border-primary/10 pt-4">
-                <summary className="cursor-pointer list-none text-xs font-semibold uppercase tracking-wide text-gray-500">Recent Points</summary>
+                <summary className="cursor-pointer list-none text-xs font-semibold tracking-wide text-gray-500">คะแนนล่าสุด</summary>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {myRank.recentPoints.slice(0, 5).map((pt, i) => (<span key={i} className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary"><Sparkles size={12} />+{pt.points} {REASON_LABELS[pt.reason] || pt.reason}</span>))}
                 </div>
@@ -168,7 +168,7 @@ export default function LeaderboardPage() {
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex gap-1 overflow-x-auto rounded-full border border-gray-200 bg-white p-1.5 shadow-sm scrollbar-hide">
           {TABS.map((tab) => (
-            <button key={tab.key} onClick={() => setActiveTab(tab.key)} className={`flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition ${activeTab === tab.key ? 'bg-primary text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'}`}>
+            <button key={tab.key} onClick={() => setActiveTab(tab.key)} className={`flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition ${activeTab === tab.key ? 'bg-primary text-white shadow-md hover:bg-primary-dark hover:text-white' : 'text-gray-800 hover:bg-primary-light/80 hover:text-primary-dark'}`}>
               <tab.icon size={16} />
               {tab.label}
             </button>
@@ -188,7 +188,7 @@ export default function LeaderboardPage() {
       {/* Loading */}
       {loading && (
         <div className="rounded-2xl border border-gray-200 bg-white p-12 text-center shadow-sm">
-          <p className="text-sm text-gray-500">Loading leaderboard...</p>
+          <p className="text-sm text-gray-500">กำลังโหลดกระดานคะแนน…</p>
         </div>
       )}
 
@@ -264,8 +264,8 @@ export default function LeaderboardPage() {
           {faculties.length === 0 ? (
             <div className="rounded-2xl border border-gray-200 bg-white p-12 text-center shadow-sm">
               <Users size={48} className="mx-auto mb-4 text-gray-300" />
-              <p className="text-lg font-semibold text-gray-600">No faculty data yet</p>
-              <p className="mt-1 text-sm text-gray-500">Faculty rankings will appear when students start exchanging</p>
+              <p className="text-lg font-semibold text-gray-600">ยังไม่มีข้อมูลตามคณะ</p>
+              <p className="mt-1 text-sm text-gray-500">อันดับคณะจะแสดงเมื่อมีการแลกเปลี่ยนในระบบ</p>
             </div>
           ) : (
             faculties.map((f) => {
@@ -288,16 +288,16 @@ export default function LeaderboardPage() {
                         <p className="text-base font-semibold text-gray-900 truncate">{f.faculty}</p>
                         {isFirst && <Flame size={16} className="text-yellow-500 flex-shrink-0" />}
                       </div>
-                      <p className="text-xs text-gray-500">{f.memberCount} members</p>
+                      <p className="text-xs text-gray-500">{f.memberCount} คนในคณะ</p>
                     </div>
                     <div className="flex flex-col items-end gap-1 sm:flex-row sm:gap-4">
                       <div className="text-right">
-                        <p className="text-lg font-bold text-emerald-600">{f.totalValue.toFixed(1)}</p>
-                        <p className="text-[10px] text-gray-500 sm:text-xs">Total kg CO₂</p>
+                        <p className="text-lg font-bold text-primary">{f.totalValue.toFixed(1)}</p>
+                        <p className="text-[10px] text-gray-500 sm:text-xs">CO₂ รวม (กก.)</p>
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-semibold text-gray-700">{f.avgValue.toFixed(1)}</p>
-                        <p className="text-[10px] text-gray-500 sm:text-xs">Avg/person</p>
+                        <p className="text-[10px] text-gray-500 sm:text-xs">เฉลี่ยต่อคน</p>
                       </div>
                     </div>
                   </div>
@@ -313,8 +313,8 @@ export default function LeaderboardPage() {
           <summary className="flex cursor-pointer list-none items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><Sparkles size={22} /></div>
             <div className="flex-1">
-              <h3 className="text-lg font-bold text-gray-900">How to Earn Points</h3>
-              <p className="text-sm text-gray-500">Every action helps the community and earns you points</p>
+              <h3 className="text-lg font-bold text-gray-900">สะสมคะแนนอย่างไร</h3>
+              <p className="text-sm text-gray-500">ทุกการกระทำช่วยชุมชนและเพิ่มคะแนนให้คุณ</p>
             </div>
           </summary>
           <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">

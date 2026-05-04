@@ -118,21 +118,21 @@ function AppContent() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#FAFBF9] text-sm text-gray-500">
+      <div className="flex min-h-screen w-full min-w-0 items-center justify-center bg-surface font-sans text-sm text-gray-500 antialiased">
         กำลังโหลด...
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FAFBF9]">
+    <div className="flex min-h-screen min-w-0 w-full max-w-[100%] flex-col bg-surface font-sans antialiased">
       {showLayout && (
         <Header
           unread={unreadCount}
           onNotificationsClick={handleNotificationsClick}
         />
       )}
-      <main className="flex-1">
+      <main className="min-w-0 flex-1 w-full">
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -13,6 +13,7 @@ import {
 import { itemsApi } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import { calculateItemCO2 } from '../utils/co2Calculator'
+import { getGalleryUrlsFromItem } from '../utils/itemImages'
 
 export default function ItemDetailPage({ onExchangeItem, onDonationItem }) {
   const { itemId } = useParams()
@@ -20,11 +21,12 @@ export default function ItemDetailPage({ onExchangeItem, onDonationItem }) {
   const [item, setItem] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [activeImageIndex, setActiveImageIndex] = useState(0)
 
   useEffect(() => {
     const fetchItem = async () => {
       if (!itemId) {
-        setError('Item ID not found')
+        setError('ไม่พบรายการนี้')
         setLoading(false)
         return
       }
@@ -36,7 +38,7 @@ export default function ItemDetailPage({ onExchangeItem, onDonationItem }) {
         setError(null)
       } catch (err) {
         console.error('Failed to fetch item:', err)
-        setError('Item not found')
+        setError('โหลดรายการไม่ได้หรือไม่มีรายการนี้')
       } finally {
         setLoading(false)
       }
@@ -44,6 +46,12 @@ export default function ItemDetailPage({ onExchangeItem, onDonationItem }) {
 
     fetchItem()
   }, [itemId])
+
+  useEffect(() => {
+    setActiveImageIndex(0)
+  }, [itemId, item?.id])
+
+  const galleryUrls = useMemo(() => (item ? getGalleryUrlsFromItem(item) : []), [item])
 
   const handleExchange = () => {
     if (onExchangeItem) {
@@ -76,10 +84,10 @@ export default function ItemDetailPage({ onExchangeItem, onDonationItem }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FAFBF9]">
+      <div className="min-h-screen bg-surface">
         <div className="mx-auto max-w-4xl px-4 py-10">
           <div className="rounded-2xl border border-gray-200 bg-white p-12 text-center shadow-sm">
-            <p className="text-lg text-gray-600">Loading data...</p>
+            <p className="text-lg text-gray-600">กำลังโหลดรายละเอียด…</p>
           </div>
         </div>
       </div>
@@ -88,7 +96,7 @@ export default function ItemDetailPage({ onExchangeItem, onDonationItem }) {
 
   if (error || !item) {
     return (
-      <div className="min-h-screen bg-[#FAFBF9]">
+      <div className="min-h-screen bg-surface">
         <div className="mx-auto max-w-4xl px-4 py-10">
         <div className="rounded-2xl border border-gray-200 bg-white p-12 text-center shadow-sm">
           <AlertCircle className="mx-auto mb-4 h-12 w-12 text-red-500" />
@@ -110,9 +118,10 @@ export default function ItemDetailPage({ onExchangeItem, onDonationItem }) {
   const isOwner = user && user.id === item.user_id
   const daysRemaining = getDaysRemaining(item.available_until)
   const co2Footprint = calculateItemCO2(item.category, item.item_condition)
+  const mainImageSrc = galleryUrls[activeImageIndex] || galleryUrls[0]
 
   return (
-    <div className="min-h-screen bg-[#FAFBF9]">
+    <div className="min-h-screen bg-surface">
       <div className="mx-auto max-w-4xl overflow-x-hidden px-4 py-4 sm:px-6 sm:py-8 lg:px-8">
         <Link
           to="/"
@@ -124,17 +133,17 @@ export default function ItemDetailPage({ onExchangeItem, onDonationItem }) {
 
         <div className="rounded-2xl border border-gray-200 bg-white shadow-sm">
           <div className="relative aspect-[16/12] w-full overflow-hidden rounded-t-2xl bg-gray-100 sm:aspect-[4/3]">
-            {item.image_url ? (
+            {mainImageSrc ? (
               <img
                 src={
-                  item.image_url?.startsWith('data:')
-                    ? item.image_url
-                    : `${item.image_url}?t=${Date.now()}`
+                  mainImageSrc?.startsWith('data:')
+                    ? mainImageSrc
+                    : `${mainImageSrc}?t=${Date.now()}`
                 }
                 alt={item.title}
                 className="h-full w-full object-cover"
                 onError={(e) => {
-                  console.error('[ITEM DETAIL] Failed to load image:', item.image_url?.substring(0, 100))
+                  console.error('[ITEM DETAIL] Failed to load image:', mainImageSrc?.substring(0, 100))
                   e.target.style.display = 'none'
                   const parent = e.target.parentElement
                   if (parent && !parent.querySelector('.error-placeholder')) {
@@ -162,6 +171,26 @@ export default function ItemDetailPage({ onExchangeItem, onDonationItem }) {
                 </div>
               </div>
             )}
+            {galleryUrls.length > 1 ? (
+              <div className="absolute bottom-0 left-0 right-0 flex gap-1.5 bg-gradient-to-t from-black/50 to-transparent p-3 pt-8">
+                {galleryUrls.map((url, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setActiveImageIndex(i)}
+                    className={`relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg border-2 sm:h-16 sm:w-16 ${
+                      i === activeImageIndex ? 'border-white ring-2 ring-primary' : 'border-white/40 opacity-90'
+                    }`}
+                  >
+                    <img
+                      src={url?.startsWith('data:') ? url : `${url}?t=${Date.now()}`}
+                      alt=""
+                      className="h-full w-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            ) : null}
             <div className="absolute left-3 top-3 flex flex-col gap-2 sm:left-4 sm:top-4">
               {item.available_until && daysRemaining !== null && (
                 <>
@@ -256,13 +285,13 @@ export default function ItemDetailPage({ onExchangeItem, onDonationItem }) {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 rounded-xl bg-green-50 p-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
-                    <Zap size={20} className="text-green-600" />
+                <div className="flex items-center gap-3 rounded-xl bg-primary/5 p-4">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                    <Zap size={20} className="text-primary" />
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">CO₂ Footprint</p>
-                    <p className="font-semibold text-green-700">{co2Footprint.toFixed(2)} kg CO₂e</p>
+                    <p className="font-semibold text-primary-dark">{co2Footprint.toFixed(2)} kg CO₂e</p>
                   </div>
                 </div>
               </div>
@@ -316,9 +345,9 @@ export default function ItemDetailPage({ onExchangeItem, onDonationItem }) {
                   </div>
                 )}
                 {item.status === 'donated' && (
-                  <div className="flex-1 rounded-xl bg-green-50 p-4 text-center">
-                    <p className="text-sm font-semibold text-green-900 flex items-center justify-center gap-2">
-                      <Heart size={20} className="text-green-600" />
+                  <div className="flex-1 rounded-xl bg-primary/5 p-4 text-center">
+                    <p className="text-sm font-semibold text-primary-dark flex items-center justify-center gap-2">
+                      <Heart size={20} className="text-primary" />
                       สินค้านี้ถูกบริจาคแล้ว
                     </p>
                   </div>

@@ -7,11 +7,11 @@ const TOAST_DURATION = 4000
 
 const toastStyles = {
   success: {
-    bg: 'bg-green-50 border-green-200',
+    bg: 'bg-primary-light border-primary/25',
     icon: CheckCircle,
-    iconColor: 'text-green-500',
-    title: 'text-green-800',
-    message: 'text-green-700'
+    iconColor: 'text-primary',
+    title: 'text-primary-dark',
+    message: 'text-primary-dark'
   },
   error: {
     bg: 'bg-red-50 border-red-200',

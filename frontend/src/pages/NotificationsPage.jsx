@@ -24,7 +24,7 @@ function getNotificationIcon(type, title) {
     case 'exchange_request':
       return <ArrowRight size={22} className="text-blue-500" />
     case 'exchange_accepted':
-      return <CheckCircle size={22} className="text-green-500" />
+      return <CheckCircle size={22} className="text-primary" />
     case 'exchange_rejected':
       return <XCircle size={22} className="text-red-500" />
     case 'exchange_completed':
@@ -32,7 +32,7 @@ function getNotificationIcon(type, title) {
     case 'donation_request':
       return <Heart size={22} className="text-rose-500" />
     case 'donation_accepted':
-      return <CheckCircle size={22} className="text-green-500" />
+      return <CheckCircle size={22} className="text-primary" />
     case 'donation_rejected':
       return <XCircle size={22} className="text-red-500" />
     default:
@@ -81,7 +81,7 @@ export default function NotificationsPage() {
 
   if (!token) {
     return (
-      <div className="min-h-screen bg-[#FAFBF9]">
+      <div className="min-h-screen bg-surface">
         <div className="mx-auto max-w-2xl px-4 py-8">
           <p className="text-center text-gray-600">กรุณาเข้าสู่ระบบเพื่อดูการแจ้งเตือน</p>
           <Link to="/login" className="mt-4 inline-block text-primary font-semibold hover:underline">ไปหน้าเข้าสู่ระบบ</Link>
@@ -91,7 +91,7 @@ export default function NotificationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFBF9]">
+    <div className="min-h-screen bg-surface">
       <div className="mx-auto max-w-2xl px-4 py-6 sm:py-8">
         {/* Header */}
         <div className="mb-6 flex items-center gap-4">

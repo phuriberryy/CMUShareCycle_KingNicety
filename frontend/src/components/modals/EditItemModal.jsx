@@ -1,12 +1,22 @@
-import { useState, useEffect } from 'react'
-import { Image as ImageIcon } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Image as ImageIcon, X } from 'lucide-react'
 import Modal from '../ui/Modal'
 import { itemsApi } from '../../lib/api'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
+import { MAX_ITEM_GALLERY, getGalleryUrlsFromItem } from '../../utils/itemImages'
+
+const readFileAsDataUrl = (file) =>
+  new Promise((resolve, reject) => {
+    const r = new FileReader()
+    r.onloadend = () => resolve(r.result)
+    r.onerror = reject
+    r.readAsDataURL(file)
+  })
 
 export default function EditItemModal({ open, onClose, item, onSuccess }) {
   const toast = useToast()
+  const fileInputRef = useRef(null)
   const [formData, setFormData] = useState({
     itemName: '',
     category: '',
@@ -16,7 +26,7 @@ export default function EditItemModal({ open, onClose, item, onSuccess }) {
     pickupLocation: '',
     description: '',
   })
-  const [imagePreview, setImagePreview] = useState(null)
+  const [imagePreviews, setImagePreviews] = useState([])
   const [submitting, setSubmitting] = useState(false)
   const { token } = useAuth()
 
@@ -31,7 +41,8 @@ export default function EditItemModal({ open, onClose, item, onSuccess }) {
         pickupLocation: item.pickup_location || '',
         description: item.description || '',
       })
-      setImagePreview(item.image_url || null)
+      setImagePreviews(getGalleryUrlsFromItem(item))
+      if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }, [item, open])
 
@@ -40,21 +51,50 @@ export default function EditItemModal({ open, onClose, item, onSuccess }) {
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleImageChange = (e) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setImagePreview(reader.result)
+  const handleImageChange = async (e) => {
+    const files = Array.from(e.target.files || [])
+    if (fileInputRef.current) fileInputRef.current.value = ''
+    if (!files.length) return
+
+    setImagePreviews((prev) => {
+      const room = MAX_ITEM_GALLERY - prev.length
+      if (room <= 0) {
+        toast.warning('เพิ่มได้ไม่เกิน 3 รูป', 'เกินจำนวน')
+        return prev
       }
-      reader.readAsDataURL(file)
-    }
+      void (async () => {
+        let next = [...prev]
+        for (const file of files) {
+          if (next.length >= MAX_ITEM_GALLERY) break
+          if (file.size > 5 * 1024 * 1024) {
+            toast.warning('ไฟล์ใหญ่เกิน 5MB', 'รูปภาพใหญ่เกินไป')
+            continue
+          }
+          try {
+            const dataUrl = await readFileAsDataUrl(file)
+            next = [...next, dataUrl].slice(0, MAX_ITEM_GALLERY)
+          } catch {
+            toast.error('อ่านไฟล์ไม่สำเร็จ', 'เกิดข้อผิดพลาด')
+          }
+        }
+        setImagePreviews(next)
+      })()
+      return prev
+    })
+  }
+
+  const removeImageAt = (index) => {
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index))
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!token || !item) {
       toast.warning('กรุณาเข้าสู่ระบบก่อนแก้ไขโพสต์', 'ยังไม่ได้เข้าสู่ระบบ')
+      return
+    }
+    if (imagePreviews.length === 0) {
+      toast.warning('ต้องมีรูปสินค้าอย่างน้อย 1 รูป', 'ข้อมูลไม่ครบ')
       return
     }
     setSubmitting(true)
@@ -66,7 +106,8 @@ export default function EditItemModal({ open, onClose, item, onSuccess }) {
         lookingFor: formData.lookingFor,
         description: formData.description,
         availableUntil: formData.availableUntil,
-        imageUrl: imagePreview,
+        imageUrl: imagePreviews[0],
+        imageUrls: imagePreviews,
         pickupLocation: formData.pickupLocation,
       })
       toast.success('แก้ไขโพสต์สำเร็จ!', 'สำเร็จ')
@@ -109,38 +150,54 @@ export default function EditItemModal({ open, onClose, item, onSuccess }) {
       size="lg"
     >
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Image Upload */}
+        {/* Image Upload — up to 3 */}
         <div>
           <label className="mb-2 block text-sm font-bold text-gray-900">
-            Upload Image <span className="text-red-500">*</span>
+            รูปสินค้า <span className="text-red-500">*</span>
+            <span className="ml-1 font-normal text-gray-500">(สูงสุด {MAX_ITEM_GALLERY} รูป)</span>
           </label>
           <input
             type="file"
             accept="image/*"
+            multiple
             onChange={handleImageChange}
             className="hidden"
             id="image-upload-edit"
+            ref={fileInputRef}
           />
-          <label
-            htmlFor="image-upload-edit"
-            className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 p-12 text-center transition hover:border-primary hover:bg-primary/5"
-          >
-            {imagePreview ? (
-              <img
-                src={imagePreview}
-                alt="Preview"
-                className="h-48 w-full rounded-lg object-cover"
-              />
-            ) : (
-              <>
-                <ImageIcon className="mb-3 text-gray-400" size={48} />
-                <p className="mb-1 text-sm font-medium text-gray-700">
-                  Click to upload or drag and drop
-                </p>
-                <p className="text-xs text-gray-500">PNG, JPG up to 5MB</p>
-              </>
-            )}
-          </label>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            {imagePreviews.map((src, idx) => (
+              <div
+                key={`edit-${idx}-${String(src).slice(0, 24)}`}
+                className="relative overflow-hidden rounded-xl border border-gray-200 bg-gray-50"
+              >
+                <img src={src} alt="" className="aspect-[4/3] h-36 w-full object-cover sm:h-40" />
+                <button
+                  type="button"
+                  onClick={() => removeImageAt(idx)}
+                  className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-white transition hover:bg-black/70"
+                  aria-label="ลบรูป"
+                >
+                  <X size={16} />
+                </button>
+                {idx === 0 ? (
+                  <span className="absolute bottom-2 left-2 rounded-md bg-primary/90 px-2 py-0.5 text-[10px] font-semibold text-white">
+                    ปก
+                  </span>
+                ) : null}
+              </div>
+            ))}
+            {imagePreviews.length < MAX_ITEM_GALLERY ? (
+              <label
+                htmlFor="image-upload-edit"
+                className="flex min-h-[9rem] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 p-4 text-center transition hover:border-primary hover:bg-primary/5"
+              >
+                <ImageIcon className="mb-2 text-gray-400" size={36} />
+                <p className="mb-1 text-xs font-medium text-gray-700 sm:text-sm">คลิกเพื่อเพิ่มรูป</p>
+                <p className="text-[11px] text-gray-500">ไม่เกิน 5 เมกะไบต์ต่อไฟล์</p>
+              </label>
+            ) : null}
+          </div>
         </div>
 
         {/* Item Name */}

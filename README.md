@@ -12,20 +12,8 @@
 
 </div>
 
-รันที่เดียว
-cd /Users/pmykingg/Documents/CMUShareCycle_KingNicety/CMUShareCycle_KingNicety
-chmod +x start.sh
-./start.sh
-
-รึว่าจะรันแยก
-# Terminal 1
-cd /Users/pmykingg/Documents/CMUShareCycle_KingNicety/CMUShareCycle_KingNicety/backend
-npm run dev
-
-# Terminal 2
-cd /Users/pmykingg/Documents/CMUShareCycle_KingNicety/CMUShareCycle_KingNicety/frontend
-npm start
-
+รันที่รากโปรเจกต์ (โฟลเดอร์เดียวกับ `backend/` และ `frontend/`): `npm start` หรือ `chmod +x scripts/start.sh && ./scripts/start.sh`  
+รันเฉพาะ backend / frontend: `npm run start:backend` / `npm run start:frontend` (หรือ `bash scripts/start-backend.sh`, `bash scripts/start-frontend.sh`)
 
 ---
 
@@ -170,31 +158,17 @@ npm start
 ## 📁 โครงสร้างโปรเจค
 
 ```
-hackkathon2025byg4/
+./                          (ราก repo — โฟลเดอร์เดียวกับ package.json ชุดนี้)
 ├── backend/
 │   ├── src/
-│   │   ├── controllers/      # Business logic
-│   │   │   ├── authController.js
-│   │   │   ├── itemController.js
-│   │   │   ├── exchangeController.js
-│   │   │   ├── donationController.js
-│   │   │   ├── donationRequestController.js
-│   │   │   ├── chatController.js
-│   │   │   ├── notificationController.js
-│   │   │   ├── profileController.js
-│   │   │   └── statisticsController.js
-│   │   ├── routes/          # API routes
-│   │   ├── middleware/      # Auth, validation
-│   │   ├── services/        # Socket.io service
-│   │   ├── utils/           # Utilities
-│   │   │   ├── email.js
-│   │   │   ├── co2Calculator.js
-│   │   │   ├── contentModeration.js
-│   │   │   └── token.js
-│   │   ├── db/              # Database connection
-│   │   ├── config/          # Configuration
-│   │   ├── app.js           # Express app
-│   │   └── server.js        # Server entry point
+│   │   ├── composition/           # app.js, server.js (ประกอบร่าง)
+│   │   ├── adapters/
+│   │   │   ├── inbound/http/      # routes, controllers, middleware
+│   │   │   └── outbound/persistence/  # pool.js
+│   │   ├── application/services/  # เช่น chatService (Socket.IO)
+│   │   ├── infrastructure/config/ # env (Zod)
+│   │   └── shared/utils/          # email, token, points, …
+│   ├── Dockerfile
 │   ├── sql/                 # Database migrations
 │   ├── scripts/             # Utility scripts
 │   └── package.json
@@ -218,11 +192,25 @@ hackkathon2025byg4/
 │   │   ├── lib/             # API utilities
 │   │   │   └── api.js
 │   │   └── utils/           # Frontend utilities
+│   ├── Dockerfile
+│   ├── docker/nginx.conf
 │   ├── public/
 │   └── package.json
 │
-├── PROJECT_DOCUMENTATION.md # เอกสารรายละเอียด
-└── README.md                # ไฟล์นี้
+├── docker-compose.yml
+├── docs/                    # เอกสารทั้งหมด (.md)
+│   ├── ARCHITECTURE.md
+│   ├── PROJECT_DOCUMENTATION.md
+│   ├── RUN_INSTRUCTIONS.md
+│   ├── EMAIL_SETUP.md
+│   ├── FEATURE_PLAN.md
+│   └── BUG_REPORT.md
+├── scripts/                 # สคริปต์ shell รันโปรเจกต์
+│   ├── start.sh
+│   ├── start-backend.sh
+│   └── start-frontend.sh
+├── package.json
+└── README.md
 ```
 
 ---
@@ -237,7 +225,7 @@ hackkathon2025byg4/
 ### ขั้นตอนที่ 1: Clone Repository
 ```bash
 git clone <repository-url>
-cd hackkathon2025byg4
+cd <โฟลเดอร์ที่ clone มา>   # โฟลเดอร์ที่มี backend/, frontend/, package.json ชุดนี้
 ```
 
 ### ขั้นตอนที่ 2: ติดตั้ง Dependencies
@@ -705,21 +693,19 @@ Authorization: Bearer <token>
 ```bash
 npm install -g pm2
 cd backend
-pm2 start src/server.js --name sharecycle-backend
+pm2 start src/composition/server.js --name sharecycle-backend
 pm2 save
 pm2 startup
 ```
 
-#### ใช้ Docker (ตัวอย่าง)
-```dockerfile
-FROM node:18-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY . .
-EXPOSE 4000
-CMD ["node", "src/server.js"]
+#### ใช้ Docker
+จากรากโปรเจกต์ (ที่มี `docker-compose.yml`):
+
+```bash
+docker compose up --build
 ```
+
+รายละเอียด image แบบ multi-stage อยู่ใน `backend/Dockerfile` และ `frontend/Dockerfile` ดู `docs/ARCHITECTURE.md`
 
 ### การ Deploy Frontend
 

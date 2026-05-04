@@ -21,7 +21,7 @@ export default function ManageItemModal({ open, onClose, item, onUpdate }) {
           setExchangeRequests(data)
         } catch (err) {
           console.error('Failed to fetch exchange requests:', err)
-          setError(err.message || 'โหลดคำขอแลกไม่สำเร็จ')
+          setError(err.message || 'โหลดคำขอแลกเปลี่ยนไม่สำเร็จ ลองปิดแล้วเปิดใหม่')
         } finally {
           setLoading(false)
         }
@@ -53,7 +53,7 @@ export default function ManageItemModal({ open, onClose, item, onUpdate }) {
     switch (status) {
       case 'accepted':
         return (
-          <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
+          <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary-dark">
             Accepted
           </span>
         )
@@ -110,7 +110,7 @@ export default function ManageItemModal({ open, onClose, item, onUpdate }) {
           ) : (
             <div className="space-y-4">
               <p className="text-sm font-semibold text-gray-700">
-                คำขอแลกเปลี่ยน ({exchangeRequests.length})
+                คำขอแลกเปลี่ยน
               </p>
               {exchangeRequests.map((request) => (
                 <div

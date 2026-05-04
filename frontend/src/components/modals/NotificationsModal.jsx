@@ -114,7 +114,7 @@ export default function NotificationsModal({ open, onClose, onUnreadChange }) {
       case 'exchange_request':
         return <RefreshCw size={20} className="text-blue-500" />
       case 'exchange_accepted':
-        return <CheckCircle size={20} className="text-green-500" />
+        return <CheckCircle size={20} className="text-primary" />
       case 'exchange_rejected':
         return <XCircle size={20} className="text-red-500" />
       case 'exchange_completed':
@@ -122,7 +122,7 @@ export default function NotificationsModal({ open, onClose, onUnreadChange }) {
       case 'donation_request':
         return <Heart size={20} className="text-red-500" />
       case 'donation_accepted':
-        return <CheckCircle size={20} className="text-green-500" />
+        return <CheckCircle size={20} className="text-primary" />
       case 'donation_rejected':
         return <XCircle size={20} className="text-red-500" />
       default:

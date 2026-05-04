@@ -4,9 +4,9 @@
   "private": true,
   "description": "CMU ShareCycle - ระบบแลกเปลี่ยนสินค้าสำหรับชุมชน CMU",
   "scripts": {
-    "start": "./start.sh",
-    "start:backend": "./start-backend.sh",
-    "start:frontend": "./start-frontend.sh",
+    "start": "bash scripts/start.sh",
+    "start:backend": "bash scripts/start-backend.sh",
+    "start:frontend": "bash scripts/start-frontend.sh",
     "install:all": "cd backend && npm install && cd ../frontend && npm install",
     "setup": "npm run install:all && echo '✅ ติดตั้ง dependencies สำเร็จ'",
     "email:setup": "cd backend && npm run email:setup",

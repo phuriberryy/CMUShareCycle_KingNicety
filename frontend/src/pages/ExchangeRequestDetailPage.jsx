@@ -195,17 +195,17 @@ export default function ExchangeRequestDetailPage() {
 
   const getStatusColor = () => {
     if (!exchangeRequest) return 'bg-yellow-100 text-yellow-800'
-    if (exchangeRequest.status === 'completed') return 'bg-green-100 text-green-800'
+    if (exchangeRequest.status === 'completed') return 'bg-primary/10 text-primary-dark'
     if (exchangeRequest.status === 'in_progress') return 'bg-blue-100 text-blue-800'
-    if (exchangeRequest.status === 'chatting') return 'bg-green-100 text-green-800'
+    if (exchangeRequest.status === 'chatting') return 'bg-primary/10 text-primary-dark'
     if (exchangeRequest.status === 'rejected') return 'bg-red-100 text-red-800'
-    if (exchangeRequest.owner_accepted && exchangeRequest.requester_accepted) return 'bg-green-100 text-green-800'
+    if (exchangeRequest.owner_accepted && exchangeRequest.requester_accepted) return 'bg-primary/10 text-primary-dark'
     return 'bg-yellow-100 text-yellow-800'
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FAFBF9]">
+      <div className="min-h-screen bg-surface">
         <div className="mx-auto max-w-4xl px-4 py-16 text-center">
           <div className="rounded-2xl border border-gray-200 bg-white p-12 shadow-sm">
             <p className="text-lg text-gray-600">กำลังโหลด...</p>
@@ -217,7 +217,7 @@ export default function ExchangeRequestDetailPage() {
 
   if (error || !exchangeRequest) {
     return (
-      <div className="min-h-screen bg-[#FAFBF9]">
+      <div className="min-h-screen bg-surface">
         <div className="mx-auto max-w-4xl px-4 py-16 text-center">
           <div className="rounded-2xl border border-gray-200 bg-white p-12 shadow-sm">
             <p className="text-lg text-red-600">{error || 'ไม่พบคำขอแลกเปลี่ยน'}</p>
@@ -264,7 +264,7 @@ export default function ExchangeRequestDetailPage() {
   const co2Data = calculateCO2()
 
   return (
-    <div className="min-h-screen bg-[#FAFBF9]">
+    <div className="min-h-screen bg-surface">
       <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8 overflow-x-hidden">
       {/* Back Button */}
       <button
@@ -301,7 +301,7 @@ export default function ExchangeRequestDetailPage() {
       </div>
 
       {/* Exchange Request Card */}
-      <div className="mb-6 rounded-2xl border border-green-200 bg-green-50 p-6 shadow-sm">
+      <div className="mb-6 rounded-2xl border border-primary/20 bg-primary/5 p-6 shadow-sm">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <RefreshCw size={20} className="text-primary" />
@@ -366,12 +366,12 @@ export default function ExchangeRequestDetailPage() {
             </div>
             <div className="flex flex-wrap gap-2">
               {exchangeRequest.item_category && (
-              <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-gray-700">
+              <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-gray-700">
                 {exchangeRequest.item_category}
               </span>
               )}
               {exchangeRequest.item_condition && (
-              <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-gray-700">
+              <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-gray-700">
                 {exchangeRequest.item_condition}
               </span>
               )}
@@ -430,12 +430,12 @@ export default function ExchangeRequestDetailPage() {
             </h3>
             <div className="flex flex-wrap gap-2">
               {exchangeRequest.requester_item_category && (
-                <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-gray-700">
+                <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-gray-700">
                   {exchangeRequest.requester_item_category}
                 </span>
               )}
               {exchangeRequest.requester_item_condition && (
-                <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-gray-700">
+                <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-gray-700">
                   {exchangeRequest.requester_item_condition}
                 </span>
               )}
@@ -486,9 +486,9 @@ export default function ExchangeRequestDetailPage() {
 
       {/* Status and Action Section */}
       {showChatButton ? (
-        <div className="rounded-2xl border border-green-200 bg-green-50 p-6 shadow-sm">
+        <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6 shadow-sm">
           <div className="mb-4 flex items-center gap-2">
-            <CheckCircle size={24} className="text-green-500" />
+            <CheckCircle size={24} className="text-primary" />
             <p className="text-lg font-semibold text-gray-900">
               Both parties accepted – Ready to chat!
             </p>

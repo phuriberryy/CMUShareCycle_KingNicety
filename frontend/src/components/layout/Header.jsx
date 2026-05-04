@@ -1,11 +1,12 @@
-import { Bell, Menu, X, Leaf, Trophy, MessageCircle, ChevronRight } from 'lucide-react'
+import { Bell, Menu, X, Trophy, MessageCircle, ChevronRight } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import ShareCycleLogo from '../brand/ShareCycleLogo'
 
 const navLinks = [
-  { label: 'Home', to: '/' },
-  { label: 'Leaderboard', to: '/leaderboard', icon: Trophy },
+  { label: 'หน้าแรก', to: '/' },
+  { label: 'กระดานคะแนน', to: '/leaderboard', icon: Trophy },
 ]
 
 function Header({ unread, onNotificationsClick }) {
@@ -29,16 +30,16 @@ function Header({ unread, onNotificationsClick }) {
   }, [location.pathname])
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-gray-200 bg-white/95 shadow-sm backdrop-blur-sm">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2.5 sm:px-6 sm:py-4 lg:px-8">
-        <Link to="/" className="flex min-h-11 items-center gap-2 sm:gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-primary text-white shadow-md sm:h-12 sm:w-12">
-            <Leaf size={18} className="sm:hidden" />
-            <Leaf size={24} className="hidden sm:block" />
-          </div>
-          <div className="leading-tight">
-            <p className="text-sm font-bold text-primary sm:text-lg">CMU ShareCycle</p>
-            <p className="hidden text-xs text-gray-600 sm:block">Green Campus</p>
+    <header className="sticky top-0 z-40 w-full min-w-0 border-b border-primary/10 bg-white/90 shadow-sm backdrop-blur-md supports-[backdrop-filter]:bg-white/80">
+      <div className="mx-auto flex w-full min-w-0 max-w-5xl items-center justify-between gap-2 py-2 pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))] sm:gap-3 sm:px-6 sm:py-2.5 lg:px-8">
+        <Link to="/" className="flex min-h-10 min-w-0 flex-1 items-center gap-2 sm:flex-initial sm:gap-2.5">
+          <ShareCycleLogo className="h-8 w-8 shrink-0 overflow-hidden rounded-xl shadow-sm ring-1 ring-primary/10 sm:h-10 sm:w-10 sm:rounded-2xl" />
+          <div className="min-w-0 leading-tight">
+            <p className="truncate text-sm text-primary sm:text-base">
+              <span className="font-bold">CMU</span>
+              <span className="font-medium"> ShareCycle</span>
+            </p>
+            <p className="hidden truncate text-xs font-medium text-primary/70 sm:block">Green Campus</p>
           </div>
         </Link>
 
@@ -51,8 +52,8 @@ function Header({ unread, onNotificationsClick }) {
                 className={({ isActive }) =>
                   `rounded-full px-5 py-2.5 transition ${
                     isActive
-                      ? 'bg-primary text-white shadow-md'
-                      : 'text-gray-700 hover:bg-gray-100'
+                      ? 'bg-primary text-white shadow-md hover:bg-primary-dark hover:text-white focus-visible:bg-primary-dark focus-visible:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80'
+                      : 'text-gray-800 hover:bg-primary-light/80 hover:text-primary-dark'
                   }`
                 }
               >
@@ -105,8 +106,8 @@ function Header({ unread, onNotificationsClick }) {
               onClick={onLogin}
               className={`min-h-11 rounded-full px-5 py-2.5 text-sm font-semibold transition ${
                 location.pathname === '/login'
-                  ? 'bg-primary text-white shadow-md'
-                  : 'border border-gray-200 text-gray-700 hover:bg-gray-50'
+                  ? 'bg-primary text-white shadow-md hover:bg-primary-dark hover:text-white'
+                  : 'border border-gray-200 text-gray-800 hover:bg-primary-light/80 hover:text-primary-dark'
               }`}
             >
               เข้าสู่ระบบ
@@ -139,7 +140,7 @@ function Header({ unread, onNotificationsClick }) {
             type="button"
             className="flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 active:scale-95"
             onClick={() => setOpen((prev) => !prev)}
-            aria-label="toggle menu"
+            aria-label="เปิดเมนู"
             aria-expanded={open}
           >
             {open ? <X size={20} /> : <Menu size={20} />}
@@ -151,7 +152,7 @@ function Header({ unread, onNotificationsClick }) {
         <>
           <button
             type="button"
-            aria-label="Close navigation menu"
+            aria-label="ปิดเมนูนำทาง"
             className="fixed inset-0 z-30 cursor-default bg-black/20 sm:hidden"
             onClick={() => setOpen(false)}
           />
@@ -196,7 +197,9 @@ function Header({ unread, onNotificationsClick }) {
                   onClick={() => setOpen(false)}
                   className={({ isActive }) =>
                     `flex min-h-11 items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold transition ${
-                      isActive ? 'bg-primary text-white' : 'text-gray-700 hover:bg-gray-50'
+                      isActive
+                        ? 'bg-primary text-white hover:bg-primary-dark hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80'
+                        : 'text-gray-800 hover:bg-primary-light/70 hover:text-primary-dark'
                     }`
                   }
                 >

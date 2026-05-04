@@ -4,15 +4,15 @@ import { adminApi } from '../../lib/api'
 import { useAuth } from '../../context/AuthContext'
 
 const cards = [
-  { key: 'totalUsers', label: 'Total Users', icon: Users, tone: 'blue' },
-  { key: 'totalItems', label: 'Total Items', icon: Package, tone: 'green' },
-  { key: 'totalChats', label: 'Total Chats', icon: MessageCircle, tone: 'teal' },
-  { key: 'totalReports', label: 'Total Reports', icon: Flag, tone: 'orange' },
+  { key: 'totalUsers', label: 'ผู้ใช้ทั้งหมด', icon: Users, tone: 'blue' },
+  { key: 'totalItems', label: 'สินค้าทั้งหมด', icon: Package, tone: 'green' },
+  { key: 'totalChats', label: 'ห้องแชททั้งหมด', icon: MessageCircle, tone: 'teal' },
+  { key: 'totalReports', label: 'รายงานทั้งหมด', icon: Flag, tone: 'orange' },
 ]
 
 const toneClasses = {
   blue: 'from-blue-50 to-blue-100/40 text-blue-700',
-  green: 'from-emerald-50 to-emerald-100/40 text-emerald-700',
+  green: 'from-primary-light to-primary-light/60 text-primary-dark',
   teal: 'from-teal-50 to-teal-100/40 text-teal-700',
   orange: 'from-orange-50 to-orange-100/40 text-orange-700',
 }
@@ -35,7 +35,7 @@ export default function AdminDashboardPage() {
       })
       .catch((err) => {
         console.error('Failed to load admin summary:', err)
-        if (mounted) setError(err.message || 'Failed to load dashboard')
+        if (mounted) setError(err.message || 'โหลดข้อมูลไม่สำเร็จ ลองรีโหลดหน้า')
       })
       .finally(() => {
         if (mounted) setLoading(false)
@@ -48,15 +48,15 @@ export default function AdminDashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Admin Overview</h1>
+        <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">ภาพรวมระบบ</h1>
         <p className="mt-1 text-sm text-gray-600">
-          High-level health of users, items, chats, and reports.
+          สถานะผู้ใช้ สินค้า แชท และรายงานในมุมมองเดียว
         </p>
       </div>
 
       {loading && (
         <div className="rounded-2xl border border-gray-200 bg-white p-6 text-sm text-gray-500 shadow-sm">
-          Loading dashboard...
+          กำลังโหลดแดชบอร์ด…
         </div>
       )}
 
@@ -81,7 +81,7 @@ export default function AdminDashboardPage() {
               <p className="text-2xl font-bold text-gray-900 sm:text-3xl">
                 {Number(summary[key] || 0).toLocaleString()}
               </p>
-              <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-gray-500">
+              <p className="mt-1 text-xs font-semibold tracking-wide text-gray-500">
                 {label}
               </p>
             </div>

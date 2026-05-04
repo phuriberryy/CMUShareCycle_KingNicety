@@ -4,26 +4,31 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        // Fresh forest — readable on white, less “flat mud” than pure Pantone screen hex
         primary: {
-          DEFAULT: '#2D7D3F',
-          light: '#E8F4EA',
-          dark: '#1F5A2D',
+          DEFAULT: '#2A6B52',
+          light: '#E8F2EC',
+          dark: '#1B4332',
+          bright: '#3D9270',
         },
-        muted: '#5C6F63',
-        surface: '#F5F6F0',
-        'surface-light': '#FBFDF8',
+        muted: '#556B62',
+        surface: '#F0F6F3',
+        'surface-light': '#FAFCFB',
       },
       boxShadow: {
-        soft: '0 25px 55px rgba(33, 79, 58, 0.15)',
-        card: '0 18px 40px rgba(33, 68, 54, 0.12)',
+        soft: '0 24px 48px -12px rgba(27, 67, 50, 0.14)',
+        card: '0 4px 24px -4px rgba(42, 107, 82, 0.08), 0 1px 3px rgba(15, 40, 30, 0.05)',
+        elevated:
+          '0 2px 8px -2px rgba(15, 23, 42, 0.06), 0 12px 32px -8px rgba(27, 67, 50, 0.1)',
+        'elevated-hover':
+          '0 4px 12px -2px rgba(15, 23, 42, 0.08), 0 20px 44px -12px rgba(42, 107, 82, 0.16)',
+        'glow-primary': '0 8px 28px -6px rgba(42, 107, 82, 0.38)',
       },
       borderRadius: {
         xl: '1.5rem',
       },
       fontFamily: {
-        sans: ['Poppins', 'Inter', 'system-ui', 'sans-serif'],
-        poppins: ['Poppins', 'sans-serif'],
-        inter: ['Inter', 'sans-serif'],
+        sans: ['IBM Plex Sans Thai', 'Noto Sans Thai', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
       fontWeight: {
         normal: '400',

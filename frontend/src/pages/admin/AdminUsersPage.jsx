@@ -77,7 +77,7 @@ export default function AdminUsersPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Users</h1>
+          <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">ผู้ใช้</h1>
           <p className="mt-1 text-sm text-gray-600">
             Manage roles, suspension state, and cleanup soft-deleted accounts.
           </p>
@@ -115,7 +115,7 @@ export default function AdminUsersPage() {
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
                     <span className="inline-flex items-center gap-1 rounded-full bg-primary/5 px-2.5 py-1 text-primary"><Shield size={12} />{user.role || 'user'}</span>
-                    {user.is_suspended ? <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-1 text-red-700"><Ban size={12} />Suspended</span> : <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-700"><CheckCircle size={12} />Active</span>}
+                    {user.is_suspended ? <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-1 text-red-700"><Ban size={12} />Suspended</span> : <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-primary-dark"><CheckCircle size={12} />Active</span>}
                     <span className="rounded-full bg-gray-100 px-2.5 py-1 text-gray-600">{user.created_at ? new Date(user.created_at).toLocaleDateString() : '-'}</span>
                   </div>
                   <div className="mt-3 grid grid-cols-2 gap-2">
@@ -142,7 +142,7 @@ export default function AdminUsersPage() {
                     <tr key={user.id} className="align-top">
                       <td className="px-4 py-3"><div className="flex flex-col"><span className="font-semibold text-gray-900">{user.name || 'Unknown'}</span><span className="text-xs text-gray-500">{user.email}</span></div></td>
                       <td className="px-4 py-3"><span className="inline-flex items-center gap-1 rounded-full bg-primary/5 px-2.5 py-1 text-xs font-semibold text-primary"><Shield size={12} />{user.role || 'user'}</span></td>
-                      <td className="px-4 py-3">{user.is_suspended ? <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700"><Ban size={12} />Suspended</span> : <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700"><CheckCircle size={12} />Active</span>}</td>
+                      <td className="px-4 py-3">{user.is_suspended ? <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700"><Ban size={12} />Suspended</span> : <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary-dark"><CheckCircle size={12} />Active</span>}</td>
                       <td className="px-4 py-3 text-xs text-gray-500">{user.created_at ? new Date(user.created_at).toLocaleDateString() : '-'}</td>
                       <td className="px-4 py-3"><div className="flex justify-end gap-2"><button type="button" onClick={() => openConfirm(user.role === 'admin' ? 'make-user' : 'make-admin', user)} className="rounded-full border border-primary/20 px-3 py-1 text-xs font-semibold text-primary hover:bg-primary/5">{user.role === 'admin' ? 'ตั้งเป็นผู้ใช้' : 'ตั้งเป็นแอดมิน'}</button><button type="button" onClick={() => openConfirm(user.is_suspended ? 'unsuspend' : 'suspend', user)} className="rounded-full border border-yellow-200 px-3 py-1 text-xs font-semibold text-yellow-700 hover:bg-yellow-50">{user.is_suspended ? 'ยกเลิกระงับ' : 'ระงับ'}</button><button type="button" onClick={() => openConfirm('delete', user)} className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-red-50 text-red-600 hover:bg-red-100"><Trash2 size={14} /></button></div></td>
                     </tr>

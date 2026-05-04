@@ -20,6 +20,7 @@ import { useToast } from '../context/ToastContext'
 import { profileApi, exchangeApi, donationApi, itemsApi, API_BASE } from '../lib/api'
 import { io } from 'socket.io-client'
 import EditItemModal from '../components/modals/EditItemModal'
+import { itemCoverUrl } from '../utils/itemImages'
 import ManageItemModal from '../components/modals/ManageItemModal'
 
 const fetchMyItems = async ({ token, activeTab, setMyItems }) => {
@@ -267,16 +268,16 @@ export default function ProfilePage() {
   }, [user])
 
   const tabItems = [
-    { id: 'posts', label: 'Posts', shortLabel: 'Post', icon: Box },
-    { id: 'expired', label: 'Expired', shortLabel: 'Exp', icon: TimerReset },
-    { id: 'history', label: 'History', shortLabel: 'Hist', icon: History },
-    { id: 'donations', label: 'Donations', shortLabel: 'Donate', icon: Heart },
+    { id: 'posts', label: 'โพสต์', shortLabel: 'โพสต์', icon: Box },
+    { id: 'expired', label: 'หมดอายุ', shortLabel: 'หมดอายุ', icon: TimerReset },
+    { id: 'history', label: 'ประวัติแลก', shortLabel: 'แลก', icon: History },
+    { id: 'donations', label: 'บริจาค', shortLabel: 'บริจาค', icon: Heart },
   ]
 
   if (!user) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-16 text-center">
-        <p className="text-lg text-gray-600">Please log in to view your profile</p>
+        <p className="text-lg text-gray-600">กรุณาเข้าสู่ระบบเพื่อดูโปรไฟล์</p>
       </div>
     )
   }
@@ -292,18 +293,18 @@ export default function ProfilePage() {
   const displayUser = profile?.user || user
   const stats = profile?.stats || { itemsShared: 0, co2Reduced: '0.00' }
   const statCards = [
-    { key: 'points', label: 'Points', value: (stats.totalPoints || 0).toLocaleString(), icon: Star, tone: 'primary' },
-    { key: 'shared', label: 'Items Shared', value: stats.itemsShared || 0, icon: Package, tone: 'green' },
-    { key: 'co2', label: 'CO₂ Reduced', value: `${stats.co2Reduced || '0.00'}kg`, icon: CheckCircle, tone: 'emerald' },
-    { key: 'exchanges', label: 'Exchanges', value: stats.totalExchanges || 0, icon: ArrowRightLeft, tone: 'purple' },
-    { key: 'donations', label: 'Donations', value: stats.totalDonations || 0, icon: Heart, tone: 'rose' },
+    { key: 'points', label: 'คะแนน', value: (stats.totalPoints || 0).toLocaleString(), icon: Star, tone: 'primary' },
+    { key: 'shared', label: 'สิ่งของที่แบ่งปัน', value: stats.itemsShared || 0, icon: Package, tone: 'green' },
+    { key: 'co2', label: 'CO₂ ที่ลดได้', value: `${stats.co2Reduced || '0.00'} กก.`, icon: CheckCircle, tone: 'primary' },
+    { key: 'exchanges', label: 'การแลกเปลี่ยน', value: stats.totalExchanges || 0, icon: ArrowRightLeft, tone: 'purple' },
+    { key: 'donations', label: 'การบริจาค', value: stats.totalDonations || 0, icon: Heart, tone: 'rose' },
   ]
 
   return (
-    <div className="min-h-screen bg-[#FAFBF9]">
-      <div className="mx-auto max-w-5xl px-4 py-6 sm:py-10 sm:px-6 lg:px-8">
-      <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-        <div className="h-28 sm:h-40 bg-gradient-to-r from-[#1B843C] via-[#2D7D3F] to-[#76BE7B]" />
+    <div className="min-h-screen w-full min-w-0 bg-surface">
+      <div className="mx-auto w-full min-w-0 max-w-5xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
+      <section className="w-full overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-elevated ring-1 ring-black/[0.03]">
+        <div className="h-28 sm:h-40 bg-gradient-to-r from-primary-dark via-primary to-primary-bright" />
         <div className="relative px-4 sm:px-8 pb-8 sm:pb-10 pt-4">
           <div className="absolute -top-12 sm:-top-16 left-4 sm:left-10 flex h-24 w-24 sm:h-32 sm:w-32 items-center justify-center rounded-full border-4 sm:border-[6px] border-white bg-primary text-2xl sm:text-4xl font-bold text-white shadow-md">
             {initials}
@@ -311,7 +312,7 @@ export default function ProfilePage() {
 
           <div className="mt-14 sm:mt-16 flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900">{displayUser.name || 'Your Name'}</h1>
+              <h1 className="text-3xl font-bold text-gray-900">{displayUser.name || 'ชื่อผู้ใช้'}</h1>
               <div className="mt-4 space-y-3">
                 {displayUser.faculty && (
                   <div className="flex items-center gap-3">
@@ -319,7 +320,7 @@ export default function ProfilePage() {
                       <User size={20} className="text-primary" />
                     </div>
                     <div>
-                      <p className="text-xs font-medium text-gray-500">Faculty/College</p>
+                      <p className="text-xs font-medium text-gray-500">คณะ / หน่วยงาน</p>
                       <p className="text-base font-semibold text-gray-900">{displayUser.faculty}</p>
                     </div>
                   </div>
@@ -329,7 +330,7 @@ export default function ProfilePage() {
                     <Mail size={20} className="text-primary" />
                 </div>
                   <div>
-                    <p className="text-xs font-medium text-gray-500">Email</p>
+                    <p className="text-xs font-medium text-gray-500">อีเมล</p>
                     <p className="text-base font-semibold text-gray-900">{displayUser.email}</p>
                 </div>
                 </div>
@@ -337,26 +338,31 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="mt-6 grid grid-cols-2 gap-3 border-t border-gray-100 pt-6 sm:mt-8 sm:grid-cols-5 sm:gap-4 sm:pt-6">
-            {statCards.map((stat) => (
-              <div key={stat.key} className="flex h-full flex-col items-start justify-between rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition hover:shadow-md">
-                <div className={`mb-3 flex h-10 w-10 items-center justify-center rounded-full ${stat.tone === 'primary' ? 'bg-primary/10 text-primary' : stat.tone === 'green' ? 'bg-green-100 text-green-600' : stat.tone === 'emerald' ? 'bg-emerald-100 text-emerald-600' : stat.tone === 'purple' ? 'bg-purple-100 text-purple-600' : 'bg-red-100 text-red-600'}`}>
-                  <stat.icon size={18} />
-                </div>
-                <div>
-                  <p className="text-xl font-bold tracking-tight text-gray-900 sm:text-2xl">{stat.value}</p>
-                  <p className="mt-1 text-xs font-medium text-gray-500 sm:text-sm">{stat.label}</p>
-                </div>
+          <div className="mt-5 border-t border-gray-100 pt-5 sm:mt-6 sm:pt-6">
+            <div className="rounded-2xl border border-primary/10 bg-gradient-to-br from-primary-light/50 via-white/90 to-surface-light/80 p-3 shadow-sm sm:p-4">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-5 sm:gap-3">
+                {statCards.map((stat, idx) => (
+                  <div
+                    key={stat.key}
+                    className={`flex flex-col rounded-xl border border-gray-100/90 bg-white/95 px-3 py-2.5 shadow-sm transition hover:border-primary/20 hover:bg-white hover:shadow-md sm:min-w-0 sm:px-3 sm:py-3 ${idx === 4 ? 'col-span-2 sm:col-span-1' : ''}`}
+                  >
+                    <div
+                      className={`mb-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${stat.tone === 'primary' ? 'bg-primary/10 text-primary' : stat.tone === 'green' ? 'bg-primary/10 text-primary' : stat.tone === 'emerald' ? 'bg-primary/10 text-primary' : stat.tone === 'purple' ? 'bg-purple-100 text-purple-600' : 'bg-red-100 text-red-600'}`}
+                    >
+                      <stat.icon size={16} strokeWidth={2} />
+                    </div>
+                    <p className="text-lg font-bold tabular-nums tracking-tight text-gray-900 sm:text-xl">{stat.value}</p>
+                    <p className="mt-0.5 text-[11px] font-medium leading-snug text-gray-600 sm:text-xs">{stat.label}</p>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
         </div>
 
         <div className="border-t border-gray-100 px-4 py-4 sm:px-8 sm:py-4">
-          <div className="relative">
-            <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-8 bg-gradient-to-r from-[#F0F7F1] to-transparent sm:hidden" />
-            <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-gradient-to-l from-[#F0F7F1] to-transparent sm:hidden" />
-            <div className="flex overflow-x-auto gap-2 rounded-full bg-[#F0F7F1] p-2 scrollbar-hide scroll-smooth sm:gap-3">
+          {/* แบ่งพื้นที่เท่ากัน 4 ช่อง — ไม่ชิดซ้ายเหลือว่างขวาเหมือน flex + flex-initial */}
+          <div className="grid grid-cols-4 gap-1.5 rounded-full bg-primary-light p-1.5 sm:gap-2 sm:p-2">
             {tabItems.map((tab) => {
               const Icon = tab.icon
               const isActive = activeTab === tab.id
@@ -367,27 +373,29 @@ export default function ProfilePage() {
                   onClick={() => setActiveTab(tab.id)}
                   title={tab.label}
                   aria-label={tab.label}
-                  className={`flex min-h-11 min-w-11 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3 py-2 text-xs font-semibold transition active:scale-95 sm:flex-initial sm:min-w-0 sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm ${isActive ? 'bg-gray-900 text-white shadow-md ring-2 ring-gray-900/10' : 'bg-transparent text-gray-700 hover:bg-white/80'}`}
+                  className={`flex min-h-11 min-w-0 w-full flex-row flex-wrap items-center justify-center gap-x-0.5 gap-y-0.5 rounded-full px-1 py-2 text-[9px] font-semibold leading-tight transition active:scale-[0.98] sm:gap-2 sm:px-2 sm:py-2.5 sm:text-sm ${isActive ? 'bg-primary text-white shadow-md ring-2 ring-primary/25 hover:bg-primary-dark hover:text-white' : 'bg-transparent text-gray-800 hover:bg-white/90 hover:text-primary-dark'}`}
                 >
-                  <Icon size={16} className="sm:w-4 sm:h-4" />
-                  <span className="hidden sm:inline">{tab.label}</span>
-                  <span className="sm:hidden">&nbsp;</span>
-                  {badge !== null && <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${isActive ? 'bg-white/20 text-white' : 'bg-white text-gray-700'}`}>{badge}</span>}
+                  <Icon size={14} className="shrink-0 sm:h-4 sm:w-4" />
+                  <span className="max-w-full text-center leading-tight sm:max-w-[8rem] sm:truncate">{tab.label}</span>
+                  {badge !== null ? (
+                    <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold tabular-nums sm:text-[10px] ${isActive ? 'bg-white/20 text-white' : 'bg-white text-gray-700'}`}>
+                      {badge}
+                    </span>
+                  ) : null}
                 </button>
               )
             })}
-            </div>
           </div>
         </div>
       </section>
 
-      <div className="mt-10">
+      <div className="mt-10 w-full min-w-0">
         {activeTab === 'posts' && (
           <div>
             {activeItems.length === 0 ? (
               <div className="rounded-2xl border border-gray-200 bg-white p-8 sm:p-12 text-center shadow-sm">
-                <p className="text-lg font-semibold text-gray-700">No active posts yet.</p>
-                <p className="mt-2 text-sm text-gray-500">Start sharing items to see them appear in your profile.</p>
+                <p className="text-lg font-semibold text-gray-700">ยังไม่มีโพสต์ที่แสดงอยู่</p>
+                <p className="mt-2 text-sm text-gray-500">ลองโพสต์สินค้าเพื่อแสดงรายการในหน้าโปรไฟล์ของคุณ</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -403,9 +411,9 @@ export default function ProfilePage() {
                     >
                       {/* Image with Status Badge */}
                       <div className="relative h-48 w-full overflow-hidden">
-                        {item.image_url ? (
+                        {itemCoverUrl(item) ? (
                           <img
-                            src={item.image_url}
+                            src={itemCoverUrl(item)}
                             alt={item.title}
                             className="h-full w-full object-cover"
                           />
@@ -415,7 +423,7 @@ export default function ProfilePage() {
                           </div>
                         )}
                         {isActive && (
-                          <span className="absolute right-3 top-3 rounded-full bg-green-500 px-3 py-1 text-xs font-semibold text-white shadow-md">
+                          <span className="absolute right-3 top-3 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-white shadow-md">
                             Active
                           </span>
                         )}
@@ -429,7 +437,7 @@ export default function ProfilePage() {
 
                         {/* Category Tag */}
                         <div className="mb-3 flex flex-wrap gap-2">
-                          <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-gray-700">
+                          <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-gray-700">
                             {item.category}
                           </span>
                         </div>
@@ -508,9 +516,9 @@ export default function ProfilePage() {
                     >
                       {/* Image with หมดอายุ Badge */}
                       <div className="relative h-48 w-full overflow-hidden">
-                        {item.image_url ? (
+                        {itemCoverUrl(item) ? (
                           <img
-                            src={item.image_url}
+                            src={itemCoverUrl(item)}
                             alt={item.title}
                             className="h-full w-full object-cover grayscale-[30%]"
                           />
@@ -589,8 +597,8 @@ export default function ProfilePage() {
           <div>
             {exchangeHistory.length === 0 ? (
               <div className="rounded-2xl border border-gray-200 bg-white p-8 sm:p-12 text-center shadow-sm">
-                <p className="text-lg font-semibold text-gray-700">No exchange history yet.</p>
-                <p className="mt-2 text-sm text-gray-500">Your exchange timeline will show up here.</p>
+                <p className="text-lg font-semibold text-gray-700">ยังไม่มีประวัติการแลกเปลี่ยน</p>
+                <p className="mt-2 text-sm text-gray-500">เมื่อแลกเปลี่ยนสำเร็จ รายการจะแสดงที่นี่</p>
               </div>
             ) : (
               <div className="space-y-6">
@@ -611,8 +619,8 @@ export default function ProfilePage() {
                             year: 'numeric'
                           })}
                         </p>
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-3 py-1 text-sm font-semibold text-green-700">
-                          <CheckCircle size={16} className="text-green-600" />
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary-dark">
+                          <CheckCircle size={16} className="text-primary" />
                           ประหยัด CO₂ {parseFloat(history.co2_reduced || 0).toFixed(1)}kg
                         </span>
                       </div>
@@ -693,8 +701,8 @@ export default function ProfilePage() {
             {donationHistory.length === 0 ? (
               <div className="rounded-2xl border border-gray-200 bg-white p-8 sm:p-12 text-center shadow-sm">
                 <Heart size={48} className="mx-auto mb-4 text-gray-400" />
-                <p className="text-lg font-semibold text-gray-700">No donations yet.</p>
-                <p className="mt-2 text-sm text-gray-500">Your donation history will show up here.</p>
+                <p className="text-lg font-semibold text-gray-700">ยังไม่มีประวัติการบริจาค</p>
+                <p className="mt-2 text-sm text-gray-500">เมื่อบริจาคสำเร็จ รายการจะแสดงที่นี่</p>
               </div>
             ) : (
               <div className="space-y-6">

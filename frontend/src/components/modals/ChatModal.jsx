@@ -94,7 +94,16 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
     })
   }, [])
 
-  const getChatStatusLabel = (chat) => chat ? (chat.status === 'active' ? (chat.qrConfirmed ? 'ยืนยันแล้ว' : 'พร้อมแชท') : chat.status === 'pending' ? ((chat.ownerAccepted || chat.requesterAccepted) ? 'รออีกฝ่ายยืนยัน' : 'รอยืนยัน') : chat.status === 'declined' ? 'ถูกปฏิเสธ' : chat.status) : ''
+  const getChatStatusLabel = (chat) => {
+    if (!chat) return ''
+    const { status } = chat
+    if (status === 'active') return chat.qrConfirmed ? 'ยืนยันแล้ว' : 'พร้อมแชท'
+    if (status === 'pending') return chat.ownerAccepted || chat.requesterAccepted ? 'รออีกฝ่ายยืนยัน' : 'รอยืนยัน'
+    if (status === 'declined') return 'ถูกปฏิเสธ'
+    if (status === 'closed') return 'ปิดแล้ว'
+    if (status === 'chatting') return 'กำลังสนทนา'
+    return typeof status === 'string' ? status : ''
+  }
 
   const isMobileChatDetail = isMobile && selectedChat !== null
   const activeChat = useMemo(() => chats.find((c) => c.id === selectedChat) || null, [chats, selectedChat])
@@ -280,7 +289,7 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
       if (selectedChat === chatId) setSelectedChat(null)
       toast.success('ลบแชทแล้ว')
     } catch (err) {
-      toast.error(err.message || 'Failed to delete chat')
+      toast.error(err.message || 'ลบแชทไม่สำเร็จ')
     } finally {
       setDeletingChatId(null)
     }
@@ -359,46 +368,100 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
     }
   }
 
+  const chatListEmpty = (
+    <div className="flex gap-3 rounded-2xl border border-gray-200 bg-white p-3.5 text-left shadow-sm sm:p-4">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100 sm:h-11 sm:w-11">
+        <MessageCircle size={20} className="text-primary" strokeWidth={2} />
+      </div>
+      <div className="min-w-0 py-0.5">
+        <p className="text-sm font-semibold text-gray-900">ยังไม่มีการสนทนา</p>
+        <p className="mt-0.5 text-xs leading-snug text-gray-500">พอมีคำขอแลกหรือบริจาค แชทจะขึ้นที่นี่</p>
+      </div>
+    </div>
+  )
+
   const mobileList = (
     <div className={`flex h-full min-h-0 flex-col bg-white md:hidden ${isMobileChatDetail ? 'hidden' : 'flex'}`}>
-      <div className="flex shrink-0 flex-col border-b border-gray-100 bg-white px-4 py-4">
+      <div className="flex shrink-0 flex-col border-b border-gray-200 bg-white px-4 py-3">
         <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-lg font-bold text-gray-900">Messages</p>
-            <p className="text-xs text-gray-500">Your inbox and requests</p>
+          <div className="min-w-0">
+            <p className="text-base font-bold text-gray-900">ข้อความ</p>
+            <p className="text-xs text-gray-500">แชทจากคำขอแลกหรือบริจาค</p>
           </div>
-          <button type="button" onClick={onClose} className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-500" aria-label="ปิด">
-            <X size={18} />
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 shadow-sm transition hover:bg-gray-50"
+            aria-label="ปิด"
+          >
+            <X size={16} />
           </button>
         </div>
-        <div className="mt-3 flex items-center gap-2 rounded-2xl border border-gray-200 bg-gray-50 px-3 py-2.5 focus-within:border-primary focus-within:bg-white focus-within:ring-2 focus-within:ring-primary/10">
-          <Search size={16} className="text-gray-400" />
-          <input type="text" value={chatSearch} onChange={(e) => setChatSearch(e.target.value)} placeholder="Search conversations" className="w-full bg-transparent text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none" aria-label="Search conversations" />
+        <div className="mt-2.5 flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 focus-within:border-primary focus-within:bg-white focus-within:ring-2 focus-within:ring-primary/10">
+          <Search size={15} className="shrink-0 text-gray-400" />
+          <input type="text" value={chatSearch} onChange={(e) => setChatSearch(e.target.value)} placeholder="ค้นหาชื่อหรืออีเมล" className="w-full bg-transparent text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none" aria-label="ค้นหาชื่อหรืออีเมล" />
         </div>
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
-        <div className="mb-3 flex items-center justify-between px-2 text-xs font-semibold uppercase tracking-wide text-gray-400"><span>Inbox</span><span>{filteredChats.length}</span></div>
-        <div className="space-y-2 pr-1">
-          {loading ? <div className="flex items-center gap-2 rounded-2xl bg-gray-50 px-4 py-4 text-sm text-gray-500"><Loader2 className="animate-spin shrink-0" size={16} /> กำลังโหลด...</div> : filteredChats.length > 0 ? filteredChats.map((chat) => {
-            const isDeleting = deletingChatId === chat.id
-            const lastText = chatMeta?.[chat.id]?.lastText || chat.participant_email || 'Start chatting'
-            const lastTime = chatMeta?.[chat.id]?.lastAt ? formatMessageTime(new Date(chatMeta[chat.id].lastAt).toISOString()) : ''
-            const unread = chatMeta?.[chat.id]?.unread || 0
-            const initials = (chat.participant_name || 'CMU').split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase()
-            return (
-              <div key={chat.id} className="group flex items-stretch gap-2">
-                <button type="button" className="flex flex-1 min-w-0 items-center gap-3 rounded-2xl border border-transparent bg-white px-3 py-3 text-left transition hover:border-gray-200 hover:bg-gray-50" onClick={() => handleSelectChat(chat.id)}>
-                  <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white shadow-sm">{initials}{unread > 0 && <span className="absolute -right-0.5 -top-0.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-primary" />}</div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-2"><p className="truncate font-semibold text-gray-900">{chat.participant_name || 'นักศึกษา CMU'}</p><span className="shrink-0 text-[10px] text-gray-400">{lastTime}</span></div>
-                    <p className="truncate text-xs text-gray-500">{lastText}</p>
-                    <div className="mt-1 flex items-center justify-between gap-2"><p className="text-[11px] font-semibold text-primary">{getChatStatusLabel(chat)}</p>{unread > 0 ? <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-white">{unread > 99 ? '99+' : unread}</span> : null}</div>
-                  </div>
-                </button>
-                <button type="button" onClick={() => handleDeleteChat(chat.id)} disabled={isDeleting} className="flex h-11 w-11 shrink-0 items-center justify-center self-center rounded-full text-red-500 transition hover:bg-red-50 disabled:opacity-50" aria-label="ลบแชท">{isDeleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}</button>
-              </div>
-            )
-          }) : <div className="rounded-3xl border border-dashed border-gray-200 bg-gray-50 px-4 py-10 text-center"><div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm"><MessageCircle size={28} className="text-primary" /></div><p className="font-semibold text-gray-700">No conversations yet</p><p className="mt-1 text-sm text-gray-500">Start a chat by entering a CMU email above.</p></div>}
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-3 py-2.5">
+        <div className="mb-1.5 px-0.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+          <span>กล่องขาเข้า</span>
+        </div>
+        <div className="flex flex-col gap-2">
+          {loading ? (
+            <div className="flex items-center gap-2 rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-500 shadow-sm">
+              <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+              กำลังโหลด...
+            </div>
+          ) : filteredChats.length > 0 ? (
+            filteredChats.map((chat) => {
+              const isDeleting = deletingChatId === chat.id
+              const isActive = selectedChat === chat.id
+              const lastText = chatMeta?.[chat.id]?.lastText || chat.participant_email || 'เริ่มแชท'
+              const lastTime = chatMeta?.[chat.id]?.lastAt ? formatMessageTime(new Date(chatMeta[chat.id].lastAt).toISOString()) : ''
+              const unread = chatMeta?.[chat.id]?.unread || 0
+              const initials = (chat.participant_name || 'CMU').split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase()
+              return (
+                <div key={chat.id} className="group flex items-stretch gap-1.5">
+                  <button
+                    type="button"
+                    className={`flex min-w-0 flex-1 items-start gap-3 rounded-2xl border bg-white p-3 text-left shadow-sm transition hover:shadow-md ${isActive ? 'border-primary/30 ring-1 ring-primary/15' : 'border-gray-200'} ${!isActive && unread > 0 ? 'border-l-[3px] border-l-primary' : ''}`}
+                    onClick={() => handleSelectChat(chat.id)}
+                  >
+                    <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-xs font-bold text-white shadow-sm">
+                      {initials}
+                      {unread > 0 && <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-primary" />}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="truncate text-sm font-semibold text-gray-900">{chat.participant_name || 'นักศึกษา CMU'}</p>
+                        {lastTime ? <span className="shrink-0 text-[10px] text-gray-400">{lastTime}</span> : null}
+                      </div>
+                      <p className="mt-0.5 truncate text-xs text-gray-600">{lastText}</p>
+                      <div className="mt-1.5 flex items-center justify-between gap-2">
+                        <p className="text-[11px] font-semibold text-primary">{getChatStatusLabel(chat)}</p>
+                        {unread > 0 ? (
+                          <span className="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-white">
+                            {unread > 99 ? '99+' : unread}
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteChat(chat.id)}
+                    disabled={isDeleting}
+                    className="flex h-9 w-9 shrink-0 items-center justify-center self-center rounded-xl text-red-500 transition hover:bg-red-50 disabled:opacity-50"
+                    aria-label="ลบแชท"
+                  >
+                    {isDeleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                  </button>
+                </div>
+              )
+            })
+          ) : (
+            chatListEmpty
+          )}
         </div>
       </div>
     </div>
@@ -415,7 +478,7 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
             <p className="truncate text-base font-semibold text-gray-900">{activeChat?.participant_name || 'นักศึกษา CMU'}</p>
             <p className="truncate text-xs text-gray-500">{activeChat?.participant_email || ''}</p>
           </div>
-          <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold ${socketConnected ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>{socketConnected ? 'Online' : 'Connecting'}</span>
+          <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold ${socketConnected ? 'bg-primary/10 text-primary-dark' : 'bg-amber-50 text-amber-700'}`}>{socketConnected ? 'ออนไลน์' : 'รอเชื่อมต่อ'}</span>
         </div>
       </div>
 
@@ -427,7 +490,7 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
               return (
                 <div key={getMessageId(message)} className={`flex ${mine ? 'justify-end' : 'justify-start'} ${message._groupStart ? 'mt-3' : 'mt-0.5'}`}>
                   <div className={`max-w-[82%] rounded-2xl px-3 py-2 text-sm shadow-sm transition-opacity ${mine ? 'bg-primary text-white' : 'bg-white text-gray-800 border border-gray-200'} ${message.pending ? 'opacity-70' : 'opacity-100'}`}>
-                    {message.image_url ? <img src={message.image_url} alt="attached" className="mb-2 max-h-72 w-full rounded-xl object-cover" /> : null}
+                    {message.image_url ? <img src={message.image_url} alt="รูปที่แนบ" className="mb-2 max-h-72 w-full rounded-xl object-cover" /> : null}
                     {message.body ? <p className="whitespace-pre-wrap break-words">{message.body}</p> : null}
                     {message.pending ? <p className={`mt-1 text-[10px] ${mine ? 'text-white/80' : 'text-gray-400'}`}>กำลังส่ง…</p> : null}
                     {message._showTimestamp ? <p className={`mt-1 text-[10px] ${mine ? 'text-white/75' : 'text-gray-400'}`}>{formatMessageTime(message.created_at)}</p> : null}
@@ -439,7 +502,7 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
         ) : (
           <div className="flex h-full items-center justify-center text-center text-gray-500">
             <div>
-              <p className="font-medium text-gray-700">No messages yet</p>
+              <p className="font-medium text-gray-700">ยังไม่มีข้อความ</p>
               <p className="mt-1 text-sm text-gray-500">ส่งข้อความแรกได้เลย</p>
             </div>
           </div>
@@ -454,17 +517,17 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
             <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-gray-200" />
             <button type="button" onClick={() => { handlePickImage(); setSheetOpen(false) }} className="flex min-h-12 w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-medium text-gray-800 transition active:scale-[0.98] hover:bg-gray-50">
               <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary"><ImageIcon size={18} /></span>
-              Upload image
+              อัปโหลดรูป
             </button>
             <button type="button" onClick={() => { handlePickImage(); setSheetOpen(false) }} className="mt-2 flex min-h-12 w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-medium text-gray-800 transition active:scale-[0.98] hover:bg-gray-50">
-              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600"><Camera size={18} /></span>
-              Open camera
+              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary"><Camera size={18} /></span>
+              เปิดกล้อง
             </button>
-            <button type="button" onClick={() => setSheetOpen(false)} className="mt-2 flex min-h-12 w-full items-center justify-center rounded-2xl bg-gray-100 px-4 py-3 text-sm font-semibold text-gray-700 transition active:scale-[0.98]">Close</button>
+            <button type="button" onClick={() => setSheetOpen(false)} className="mt-2 flex min-h-12 w-full items-center justify-center rounded-2xl bg-gray-100 px-4 py-3 text-sm font-semibold text-gray-700 transition active:scale-[0.98]">ปิด</button>
           </div>
         </div>
 
-        {pendingImage ? <div className="mb-3 flex items-center gap-3 rounded-2xl border border-gray-200 bg-gray-50 p-2"><img src={pendingImage} alt="preview" className="h-12 w-12 rounded-xl object-cover" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-medium text-gray-800">Image ready to send</p><p className="text-xs text-gray-500">แตะส่งเพื่ออัปโหลด</p></div><button type="button" onClick={() => setPendingImage(null)} className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-gray-500"><X size={16} /></button></div> : null}
+        {pendingImage ? <div className="mb-3 flex items-center gap-3 rounded-2xl border border-gray-200 bg-gray-50 p-2"><img src={pendingImage} alt="ตัวอย่างรูป" className="h-12 w-12 rounded-xl object-cover" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-medium text-gray-800">พร้อมส่งรูป</p><p className="text-xs text-gray-500">กดส่งเพื่ออัปโหลดรูป</p></div><button type="button" onClick={() => setPendingImage(null)} className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-gray-500"><X size={16} /></button></div> : null}
 
         <div className="flex items-end gap-2">
           <button type="button" onClick={() => setSheetOpen(true)} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-700 transition active:scale-95" aria-label="เปิดเมนูเพิ่มเติม">
@@ -496,46 +559,87 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
 
   const desktopLayout = (
     <div className="hidden md:flex h-full min-h-0 overflow-hidden bg-[#F4F7F5]">
-      <aside className="flex min-h-0 w-[360px] flex-col border-r border-gray-200 bg-white">
-        <div className="flex shrink-0 flex-col border-b border-gray-100 bg-white/95 px-5 py-5 backdrop-blur-sm">
+      <aside className="flex min-h-0 w-[300px] shrink-0 flex-col border-r border-gray-200 bg-white lg:w-[320px]">
+        <div className="flex shrink-0 flex-col border-b border-gray-200 bg-white px-4 py-3">
           <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-lg font-bold text-gray-900">Messages</p>
-              <p className="text-xs text-gray-500">Your inbox and requests</p>
+            <div className="min-w-0">
+              <p className="text-base font-bold text-gray-900">ข้อความ</p>
+              <p className="text-xs text-gray-500">แชทจากคำขอแลกหรือบริจาค</p>
             </div>
-            <button type="button" onClick={onClose} className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition hover:bg-gray-200" aria-label="ปิด">
-              <X size={18} />
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 shadow-sm transition hover:bg-gray-50"
+              aria-label="ปิด"
+            >
+              <X size={16} />
             </button>
           </div>
-          <div className="mt-3 flex items-center gap-2 rounded-2xl border border-gray-200 bg-gray-50 px-3 py-2.5 focus-within:border-primary focus-within:bg-white focus-within:ring-2 focus-within:ring-primary/10">
-            <Search size={16} className="text-gray-400" />
-            <input type="text" value={chatSearch} onChange={(e) => setChatSearch(e.target.value)} placeholder="Search conversations" className="w-full bg-transparent text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none" aria-label="Search conversations" />
+          <div className="mt-2.5 flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 focus-within:border-primary focus-within:bg-white focus-within:ring-2 focus-within:ring-primary/10">
+            <Search size={15} className="shrink-0 text-gray-400" />
+            <input type="text" value={chatSearch} onChange={(e) => setChatSearch(e.target.value)} placeholder="ค้นหาชื่อหรืออีเมล" className="w-full bg-transparent text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none" aria-label="ค้นหาชื่อหรืออีเมล" />
           </div>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3">
-          <div className="mb-3 flex items-center justify-between px-2 text-xs font-semibold uppercase tracking-wide text-gray-400"><span>Inbox</span><span>{filteredChats.length}</span></div>
-          <div className="space-y-2 pr-1">
-            {loading ? <div className="flex items-center gap-2 rounded-2xl bg-gray-50 px-4 py-4 text-sm text-gray-500"><Loader2 className="animate-spin shrink-0" size={16} /> กำลังโหลด...</div> : filteredChats.length > 0 ? filteredChats.map((chat) => {
-              const isDeleting = deletingChatId === chat.id
-              const isActive = selectedChat === chat.id
-              const lastText = chatMeta?.[chat.id]?.lastText || chat.participant_email || 'Start chatting'
-              const lastTime = chatMeta?.[chat.id]?.lastAt ? formatMessageTime(new Date(chatMeta[chat.id].lastAt).toISOString()) : ''
-              const unread = chatMeta?.[chat.id]?.unread || 0
-              const initials = (chat.participant_name || 'CMU').split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase()
-              return (
-                <div key={chat.id} className="group flex items-stretch gap-2">
-                  <button type="button" className={`flex flex-1 min-w-0 items-center gap-3 rounded-2xl border px-3 py-3 text-left transition ${isActive ? 'border-primary/20 bg-primary/5 shadow-sm' : 'border-transparent bg-white hover:border-gray-200 hover:bg-gray-50'}`} onClick={() => handleSelectChat(chat.id)}>
-                    <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white shadow-sm">{initials}{unread > 0 && <span className="absolute -right-0.5 -top-0.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-primary" />}</div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-start justify-between gap-2"><p className="truncate font-semibold text-gray-900">{chat.participant_name || 'นักศึกษา CMU'}</p><span className="shrink-0 text-[10px] text-gray-400">{lastTime}</span></div>
-                      <p className="truncate text-xs text-gray-500">{lastText}</p>
-                      <div className="mt-1 flex items-center justify-between gap-2"><p className="text-[11px] font-semibold text-primary">{getChatStatusLabel(chat)}</p>{unread > 0 ? <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-white">{unread > 99 ? '99+' : unread}</span> : null}</div>
-                    </div>
-                  </button>
-                  <button type="button" onClick={() => handleDeleteChat(chat.id)} disabled={isDeleting} className="flex h-11 w-11 shrink-0 items-center justify-center self-center rounded-full text-red-500 transition hover:bg-red-50 disabled:opacity-50" aria-label="ลบแชท">{isDeleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}</button>
-                </div>
-              )
-            }) : <div className="rounded-3xl border border-dashed border-gray-200 bg-gray-50 px-4 py-10 text-center"><div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm"><MessageCircle size={28} className="text-primary" /></div><p className="font-semibold text-gray-700">No conversations yet</p><p className="mt-1 text-sm text-gray-500">Start a chat by entering a CMU email above.</p></div>}
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-3 py-2.5">
+          <div className="mb-1.5 px-0.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+            <span>กล่องขาเข้า</span>
+          </div>
+          <div className="flex flex-col gap-2">
+            {loading ? (
+              <div className="flex items-center gap-2 rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-500 shadow-sm">
+                <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+                กำลังโหลด...
+              </div>
+            ) : filteredChats.length > 0 ? (
+              filteredChats.map((chat) => {
+                const isDeleting = deletingChatId === chat.id
+                const isActive = selectedChat === chat.id
+                const lastText = chatMeta?.[chat.id]?.lastText || chat.participant_email || 'เริ่มแชท'
+                const lastTime = chatMeta?.[chat.id]?.lastAt ? formatMessageTime(new Date(chatMeta[chat.id].lastAt).toISOString()) : ''
+                const unread = chatMeta?.[chat.id]?.unread || 0
+                const initials = (chat.participant_name || 'CMU').split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase()
+                return (
+                  <div key={chat.id} className="group flex items-stretch gap-1.5">
+                    <button
+                      type="button"
+                      className={`flex min-w-0 flex-1 items-start gap-3 rounded-2xl border bg-white p-3 text-left shadow-sm transition hover:shadow-md ${isActive ? 'border-primary/30 ring-1 ring-primary/15' : 'border-gray-200'} ${!isActive && unread > 0 ? 'border-l-[3px] border-l-primary' : ''}`}
+                      onClick={() => handleSelectChat(chat.id)}
+                    >
+                      <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-xs font-bold text-white shadow-sm">
+                        {initials}
+                        {unread > 0 && <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-primary" />}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="truncate text-sm font-semibold text-gray-900">{chat.participant_name || 'นักศึกษา CMU'}</p>
+                          {lastTime ? <span className="shrink-0 text-[10px] text-gray-400">{lastTime}</span> : null}
+                        </div>
+                        <p className="mt-0.5 truncate text-xs text-gray-600">{lastText}</p>
+                        <div className="mt-1.5 flex items-center justify-between gap-2">
+                          <p className="text-[11px] font-semibold text-primary">{getChatStatusLabel(chat)}</p>
+                          {unread > 0 ? (
+                            <span className="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-white">
+                              {unread > 99 ? '99+' : unread}
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteChat(chat.id)}
+                      disabled={isDeleting}
+                      className="flex h-9 w-9 shrink-0 items-center justify-center self-center rounded-xl text-red-500 transition hover:bg-red-50 disabled:opacity-50"
+                      aria-label="ลบแชท"
+                    >
+                      {isDeleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                    </button>
+                  </div>
+                )
+              })
+            ) : (
+              chatListEmpty
+            )}
           </div>
         </div>
       </aside>
@@ -550,7 +654,7 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
                 </button>
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white shadow-sm">{(activeChat?.participant_name || 'CMU').split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase()}</div>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2"><p className="truncate text-lg font-semibold text-gray-900">{activeChat?.participant_name || 'นักศึกษา CMU'}</p><span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${socketConnected ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>{socketConnected ? 'Online' : 'Connecting'}</span></div>
+                  <div className="flex items-center gap-2"><p className="truncate text-lg font-semibold text-gray-900">{activeChat?.participant_name || 'นักศึกษา CMU'}</p><span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${socketConnected ? 'bg-primary/10 text-primary-dark' : 'bg-amber-50 text-amber-700'}`}>{socketConnected ? 'ออนไลน์' : 'รอเชื่อมต่อ'}</span></div>
                   <p className="truncate text-xs text-gray-500">{activeChat?.participant_email || ''}</p>
                 </div>
               </div>
@@ -563,7 +667,7 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
                     return (
                       <div key={getMessageId(message)} className={`flex ${mine ? 'justify-end' : 'justify-start'} ${message._groupStart ? 'mt-3' : 'mt-0.5'}`}>
                         <div className={`max-w-[72%] rounded-2xl px-3 py-2 text-sm shadow-sm transition-opacity ${mine ? 'bg-primary text-white' : 'bg-white text-gray-800 border border-gray-200'} ${message.pending ? 'opacity-70' : 'opacity-100'}`}>
-                          {message.image_url ? <img src={message.image_url} alt="attached" className="mb-2 max-h-72 w-full rounded-xl object-cover" /> : null}
+                          {message.image_url ? <img src={message.image_url} alt="รูปที่แนบ" className="mb-2 max-h-72 w-full rounded-xl object-cover" /> : null}
                           {message.body ? <p className="whitespace-pre-wrap break-words">{message.body}</p> : null}
                           {message.pending ? <p className={`mt-1 text-[10px] ${mine ? 'text-white/80' : 'text-gray-400'}`}>กำลังส่ง…</p> : null}
                           {message._showTimestamp ? <p className={`mt-1 text-[10px] ${mine ? 'text-white/75' : 'text-gray-400'}`}>{formatMessageTime(message.created_at)}</p> : null}
@@ -576,7 +680,7 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
               )}
             </div>
             <div ref={composerRef} className="relative shrink-0 border-t border-gray-100 bg-white px-5 py-3 shadow-[0_-8px_24px_rgba(0,0,0,0.04)]">
-              {pendingImage ? <div className="mb-3 flex items-center gap-3 rounded-2xl border border-gray-200 bg-gray-50 p-2"><img src={pendingImage} alt="preview" className="h-12 w-12 rounded-xl object-cover" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-medium text-gray-800">Image ready to send</p><p className="text-xs text-gray-500">แตะส่งเพื่ออัปโหลด</p></div><button type="button" onClick={() => setPendingImage(null)} className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-gray-500"><X size={16} /></button></div> : null}
+              {pendingImage ? <div className="mb-3 flex items-center gap-3 rounded-2xl border border-gray-200 bg-gray-50 p-2"><img src={pendingImage} alt="ตัวอย่างรูป" className="h-12 w-12 rounded-xl object-cover" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-medium text-gray-800">พร้อมส่งรูป</p><p className="text-xs text-gray-500">กดส่งเพื่ออัปโหลดรูป</p></div><button type="button" onClick={() => setPendingImage(null)} className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-gray-500"><X size={16} /></button></div> : null}
               <div className="flex items-end gap-2">
                 <button type="button" onClick={() => setShowActions((v) => !v)} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-700" aria-label="เปิดเมนูเพิ่มเติม"><Plus size={18} className={showActions ? 'rotate-45 transition-transform' : 'transition-transform'} /></button>
                 <div className="min-w-0 flex-1 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-2.5 focus-within:border-primary focus-within:bg-white focus-within:ring-2 focus-within:ring-primary/10">
@@ -592,11 +696,11 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
                       <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-gray-200" />
                       <button type="button" onClick={() => { handlePickImage(); setShowActions(false) }} className="flex min-h-12 w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-medium text-gray-800 transition active:scale-[0.98] hover:bg-gray-50">
                         <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary"><ImageIcon size={18} /></span>
-                        Upload image
+                        อัปโหลดรูป
                       </button>
                       <button type="button" onClick={() => { handlePickImage(); setShowActions(false) }} className="mt-2 flex min-h-12 w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-medium text-gray-800 transition active:scale-[0.98] hover:bg-gray-50">
-                        <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600"><Camera size={18} /></span>
-                        Open camera
+                        <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary"><Camera size={18} /></span>
+                        เปิดกล้อง
                       </button>
                     </div>
                   </div>
@@ -606,10 +710,16 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
             </div>
           </>
         ) : (
-          <div className="flex min-h-full flex-1 flex-col items-center justify-center gap-4 px-6 py-12 text-center">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gray-100"><MessageCircle className="text-gray-400" size={40} /></div>
-            <p className="text-base font-medium text-gray-700">เลือกแชทหรือเริ่มแชทใหม่</p>
-            <p className="max-w-xs text-sm text-gray-500">เลือกจากรายการด้านซ้าย หรือกรอกอีเมล @cmu.ac.th แล้วกด เริ่มแชท</p>
+          <div className="grid min-h-0 w-full flex-1 place-content-center px-4 py-8 sm:px-8">
+            <div className="mx-auto flex w-full max-w-md gap-3 rounded-2xl border border-gray-200 bg-white p-4 text-left shadow-sm">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100 sm:h-11 sm:w-11">
+                <MessageCircle className="text-primary/80" size={20} strokeWidth={2} />
+              </div>
+              <div className="min-w-0 py-0.5">
+                <p className="text-sm font-semibold text-gray-900">เลือกการสนทนา</p>
+                <p className="mt-0.5 text-xs leading-snug text-gray-500">แตะรายการซ้าย หรือเริ่มแชทด้วยอีเมล @cmu.ac.th</p>
+              </div>
+            </div>
           </div>
         )}
       </main>
@@ -626,14 +736,14 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
 
   if (asPage && open) {
     return (
-      <div className="min-h-screen bg-[#FAFBF9]">
-        <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-          <div className="mb-6 flex items-center justify-between gap-4"><div className="flex items-center gap-4"><Link to="/" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 shadow-sm transition hover:bg-gray-50" aria-label="กลับ"><ArrowLeft size={20} /></Link><div><h1 className="text-xl font-bold text-gray-900 sm:text-2xl">แชท</h1><p className="text-sm text-gray-500">{socketConnected ? 'เชื่อมต่อแล้ว · เลือกการสนทนา' : 'กำลังเชื่อมต่อ...'}</p></div></div><span className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ${socketConnected ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>{socketConnected ? 'ออนไลน์' : 'กำลังเชื่อมต่อ...'}</span></div>
+      <div className="min-h-screen bg-surface">
+        <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+          <div className="mb-6 flex items-center justify-between gap-4"><div className="flex items-center gap-4"><Link to="/" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 shadow-sm transition hover:bg-gray-50" aria-label="กลับ"><ArrowLeft size={20} /></Link><div><h1 className="text-xl font-bold text-gray-900 sm:text-2xl">แชท</h1><p className="text-sm text-gray-500">{socketConnected ? 'เลือกการสนทนาจากรายการด้านซ้าย' : 'รอสักครู่ แล้วเลือกการสนทนา'}</p></div></div><span className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ${socketConnected ? 'bg-primary/10 text-primary-dark' : 'bg-amber-50 text-amber-700'}`}>{socketConnected ? 'พร้อมแชท' : 'รอเชื่อมต่อ'}</span></div>
           <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">{chatContent}</div>
         </div>
       </div>
     )
   }
 
-  return <Modal open={open} onClose={onClose} title="แชท" subtitle={socketConnected ? 'เชื่อมต่อแล้ว' : 'กำลังเชื่อมต่อ...'} size="xl" bodyClassName="!overflow-hidden !p-0">{chatContent}</Modal>
+  return <Modal open={open} onClose={onClose} title="แชท" subtitle={socketConnected ? 'พร้อมแชท' : 'รอเชื่อมต่อ'} size="xl" bodyClassName="!overflow-hidden !p-0">{chatContent}</Modal>
 }

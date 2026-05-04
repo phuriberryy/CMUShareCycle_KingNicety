@@ -8,7 +8,7 @@ export default function ProtectedRoute({ children }) {
   // กำลังโหลด auth state
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#FAFBF9] text-sm text-gray-500">
+      <div className="flex min-h-screen items-center justify-center bg-surface text-sm text-gray-500">
         กำลังโหลด...
       </div>
     )

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <title>CMU ShareCycle</title>
+  <defs>
+    <clipPath id="scTreeClip">
+      <circle cx="24" cy="24" r="21.5" />
+    </clipPath>
+  </defs>
+  <circle cx="24" cy="24" r="23" fill="#e8f2ec" />
+  <circle cx="24" cy="24" r="22.5" fill="none" stroke="#c5ddd0" stroke-width="1" />
+  <g clip-path="url(#scTreeClip)">
+    <path
+      d="M 11 24 A 13 13 0 0 1 37 24"
+      fill="none"
+      stroke="#3d9270"
+      stroke-width="1.65"
+      stroke-linecap="round"
+      stroke-dasharray="3.2 3.8"
+      opacity="0.9"
+    />
+    <circle cx="17.75" cy="19.25" r="6.25" fill="#3d9270" />
+    <circle cx="30.25" cy="19.25" r="6.25" fill="#3d9270" />
+    <circle cx="24" cy="14.75" r="7" fill="#1b4332" />
+    <rect x="21.85" y="21.25" width="4.3" height="12.5" rx="1.15" fill="#1b4332" />
+  </g>
+</svg>
