@@ -582,7 +582,11 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
                   <button type="button" onClick={handlePickImage} className="flex flex-col items-center gap-2 rounded-2xl bg-white px-3 py-4 text-xs font-medium text-gray-700 shadow-sm"><Camera size={18} />รูปภาพ</button>
                   <button type="button" onClick={() => setShowActions(false)} className="flex flex-col items-center gap-2 rounded-2xl bg-white px-3 py-4 text-xs font-medium text-gray-700 shadow-sm"><X size={18} />ปิด</button>
 <<<<<<< HEAD
+<<<<<<< HEAD
                   <button type="button" onClick={() => setSheetOpen(false)} className="flex flex-col items-center gap-2 rounded-2xl bg-white px-3 py-4 text-xs font-medium text-gray-700 shadow-sm">Close</button>
+=======
+                  <button type="button" onClick={() => setShowActions(false)} className="flex flex-col items-center gap-2 rounded-2xl bg-white px-3 py-4 text-xs font-medium text-gray-700 shadow-sm"><MessageCircle size={18} />QR</button>
+>>>>>>> parent of 6b0a321 (Final Chat)
 =======
                   <button type="button" onClick={() => setShowActions(false)} className="flex flex-col items-center gap-2 rounded-2xl bg-white px-3 py-4 text-xs font-medium text-gray-700 shadow-sm"><MessageCircle size={18} />QR</button>
 >>>>>>> parent of 6b0a321 (Final Chat)
