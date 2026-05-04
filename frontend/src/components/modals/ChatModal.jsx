@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import { io } from 'socket.io-client'
 import { Link } from 'react-router-dom'
-import { Send, MessageCircle, Loader2, X, Trash2, Camera, ArrowLeft, Search, Plus, Image as ImageIcon, QrCode } from 'lucide-react'
+import { Send, MessageCircle, Loader2, X, Trash2, Camera, ArrowLeft, Search, Plus, Image as ImageIcon } from 'lucide-react'
 import Modal from '../ui/Modal'
 import { API_BASE, chatApi } from '../../lib/api'
 import { useAuth } from '../../context/AuthContext'
@@ -451,10 +451,6 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
               <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600"><Camera size={18} /></span>
               Open camera
             </button>
-            <button type="button" onClick={() => { setSheetOpen(false) }} className="mt-2 flex min-h-12 w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-medium text-gray-800 transition active:scale-[0.98] hover:bg-gray-50">
-              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-50 text-blue-600"><QrCode size={18} /></span>
-              QR
-            </button>
             <button type="button" onClick={() => setSheetOpen(false)} className="mt-2 flex min-h-12 w-full items-center justify-center rounded-2xl bg-gray-100 px-4 py-3 text-sm font-semibold text-gray-700 transition active:scale-[0.98]">Close</button>
           </div>
         </div>
@@ -540,12 +536,14 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
           <>
             <div className="shrink-0 border-b border-gray-200 bg-white/95 px-5 py-4 backdrop-blur-sm">
               <div className="flex items-center gap-3">
+                <button type="button" onClick={handleBackToList} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition hover:bg-gray-200" aria-label="กลับไปรายการแชท">
+                  <ArrowLeft size={18} />
+                </button>
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white shadow-sm">{(activeChat?.participant_name || 'CMU').split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase()}</div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2"><p className="truncate text-lg font-semibold text-gray-900">{activeChat?.participant_name || 'นักศึกษา CMU'}</p><span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${socketConnected ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>{socketConnected ? 'Online' : 'Connecting'}</span></div>
                   <p className="truncate text-xs text-gray-500">{activeChat?.participant_email || ''}</p>
                 </div>
-                <button type="button" onClick={onClose} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition hover:bg-gray-200" aria-label="ปิด"><X size={18} /></button>
               </div>
             </div>
             <div ref={messageScrollRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5" style={{ paddingBottom: `calc(${composerHeight}px + 1rem)` }}>
@@ -581,9 +579,7 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
                 <div className="mt-3 grid grid-cols-3 gap-2 rounded-2xl border border-gray-200 bg-gray-50 p-2">
                   <button type="button" onClick={handlePickImage} className="flex flex-col items-center gap-2 rounded-2xl bg-white px-3 py-4 text-xs font-medium text-gray-700 shadow-sm"><Camera size={18} />รูปภาพ</button>
                   <button type="button" onClick={() => setShowActions(false)} className="flex flex-col items-center gap-2 rounded-2xl bg-white px-3 py-4 text-xs font-medium text-gray-700 shadow-sm"><X size={18} />ปิด</button>
-                  <button type="button" onClick={() => setSheetOpen(false)} className="flex flex-col items-center gap-2 rounded-2xl bg-white px-3 py-4 text-xs font-medium text-gray-700 shadow-sm">Close</button>
-                  <button type="button" onClick={() => setShowActions(false)} className="flex flex-col items-center gap-2 rounded-2xl bg-white px-3 py-4 text-xs font-medium text-gray-700 shadow-sm"><MessageCircle size={18} />QR</button>
-                  <button type="button" onClick={() => setShowActions(false)} className="flex flex-col items-center gap-2 rounded-2xl bg-white px-3 py-4 text-xs font-medium text-gray-700 shadow-sm"><MessageCircle size={18} />QR</button>
+                  <button type="button" onClick={() => setShowActions(false)} className="flex flex-col items-center gap-2 rounded-2xl bg-white px-3 py-4 text-xs font-medium text-gray-700 shadow-sm">Close</button>
                 </div>
               ) : null}
               <input ref={fileInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleImageSelected} />
@@ -612,7 +608,7 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
     return (
       <div className="min-h-screen bg-[#FAFBF9]">
         <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-          <div className="mb-6 flex items-center justify-between gap-4"><div className="flex items-center gap-4"><Link to="/" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 shadow-sm transition hover:bg-gray-50" aria-label="กลับ"><ArrowLeft size={20} /></Link><div><h1 className="text-xl font-bold text-gray-900 sm:text-2xl">แชท</h1><p className="text-sm text-gray-500">{socketConnected ? 'เชื่อมต่อแล้ว · เลือกการสนทนาหรือสแกน QR' : 'กำลังเชื่อมต่อ...'}</p></div></div><span className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ${socketConnected ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>{socketConnected ? 'ออนไลน์' : 'กำลังเชื่อมต่อ...'}</span></div>
+          <div className="mb-6 flex items-center justify-between gap-4"><div className="flex items-center gap-4"><Link to="/" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 shadow-sm transition hover:bg-gray-50" aria-label="กลับ"><ArrowLeft size={20} /></Link><div><h1 className="text-xl font-bold text-gray-900 sm:text-2xl">แชท</h1><p className="text-sm text-gray-500">{socketConnected ? 'เชื่อมต่อแล้ว · เลือกการสนทนา' : 'กำลังเชื่อมต่อ...'}</p></div></div><span className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ${socketConnected ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>{socketConnected ? 'ออนไลน์' : 'กำลังเชื่อมต่อ...'}</span></div>
           <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">{chatContent}</div>
         </div>
       </div>
