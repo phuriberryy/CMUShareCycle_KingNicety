@@ -156,46 +156,31 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
     })
   }, [items, searchQuery, selectedCategory, selectedCondition])
 
-  const activeFilterCount = [
-    selectedCategory !== 'All Categories',
-    selectedCondition !== 'All Conditions',
-  ].filter(Boolean).length
-
   return (
     <div className="sc-page overflow-x-hidden">
-      <div className="sc-container space-y-6 sm:space-y-8">
+      <div className="sc-container space-y-4 sm:space-y-8">
         <section className="sc-card overflow-hidden border-primary/15 bg-gradient-to-br from-primary/8 via-white to-primary/5 shadow-sm">
-          <div className="flex flex-col gap-3 px-4 py-4 sm:px-6 sm:py-8 lg:flex-row lg:items-center lg:justify-between lg:gap-14 lg:px-10 lg:py-10">
-            <div className="max-w-xl space-y-2 sm:space-y-4">
+          <div className="flex flex-col gap-2 px-4 py-3 sm:px-6 sm:py-8 lg:flex-row lg:items-center lg:justify-between lg:gap-14 lg:px-10 lg:py-10">
+            <div className="max-w-xl space-y-1.5 sm:space-y-4">
               <p className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-white/90 px-3 py-1.5 text-xs font-semibold tracking-wide text-primary shadow-sm backdrop-blur-sm">
                 <Leaf size={14} strokeWidth={2.5} />
                 CMU ShareCycle
               </p>
-              <div className="space-y-1 sm:space-y-2">
-                <h1 className="text-xl font-extrabold tracking-tight text-gray-900 sm:text-4xl lg:text-[2.75rem] lg:leading-[1.15]">
+              <div className="space-y-0.5 sm:space-y-2">
+                <h1 className="text-[1.15rem] font-extrabold tracking-tight text-gray-900 sm:text-4xl lg:text-[2.75rem] lg:leading-[1.15]">
                   Swap what you have. Get what you need.
                 </h1>
-                <p className="max-w-lg text-sm text-gray-600 sm:text-base lg:text-lg">
+                <p className="max-w-lg text-[13px] leading-snug text-gray-600 sm:text-base lg:text-lg">
                   Free exchange & donation.
                 </p>
               </div>
-              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              <div className="flex items-center gap-2 sm:gap-3">
                 <button
                   onClick={() => document.getElementById('items-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-                  className="sc-btn-primary min-h-11 px-5 py-3"
+                  className="sc-btn-primary min-h-11 px-4 py-3 text-xs sm:px-5 sm:text-sm"
                 >
                   Browse
                   <ArrowRight size={16} strokeWidth={2.5} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFiltersOpen((prev) => !prev)}
-                  className="sc-btn-secondary min-h-11 px-4 sm:hidden"
-                  aria-expanded={filtersOpen}
-                >
-                  <SlidersHorizontal size={16} />
-                  Filters
-                  {activeFilterCount > 0 && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">{activeFilterCount}</span>}
                 </button>
                 <span className="hidden min-h-11 items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm sm:inline-flex">
                   <Zap size={16} className="text-primary" />
@@ -265,30 +250,29 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
             <p className="text-sm text-gray-500">ค้นหาและกรองรายการได้อย่างรวดเร็ว</p>
           </div>
 
-          <div className="sticky top-[72px] z-20 -mx-4 border-y border-gray-200 bg-[#FAFBF9]/95 px-4 py-3 backdrop-blur-sm sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0">
-            <div className="space-y-3 rounded-2xl border border-gray-200 bg-white p-3 shadow-sm sm:space-y-4 sm:p-4">
+          <div className="sticky top-[72px] z-20 -mx-4 border-y border-gray-200 bg-[#FAFBF9]/95 px-4 py-2 backdrop-blur-sm sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0">
+            <div className="space-y-2 rounded-2xl border border-gray-200 bg-white p-2.5 shadow-sm sm:space-y-4 sm:p-4">
               <label className="sr-only" htmlFor="search-items">ค้นหาสินค้า</label>
-              <div className="relative">
-                <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  id="search-items"
-                  type="text"
-                  placeholder="Search items"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="sc-input bg-gray-50 py-3 pl-10 pr-4"
-                />
-              </div>
-              <div className="flex items-center gap-2 sm:hidden">
+              <div className="flex items-center gap-2 sm:grid sm:grid-cols-[1.4fr_auto] sm:items-center">
+                <div className="relative min-w-0 flex-1">
+                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    id="search-items"
+                    type="text"
+                    placeholder="Search items"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="sc-input h-11 bg-gray-50 py-2.5 pl-9 pr-4 text-sm"
+                  />
+                </div>
                 <button
                   type="button"
                   onClick={() => setFiltersOpen((prev) => !prev)}
-                  className="sc-btn-secondary min-h-11 flex-1 px-4"
+                  className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-sm transition active:scale-95 sm:hidden"
+                  aria-label="Filter items"
                   aria-expanded={filtersOpen}
                 >
-                  <SlidersHorizontal size={16} />
-                  Filter
-                  {activeFilterCount > 0 && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">{activeFilterCount}</span>}
+                  <SlidersHorizontal size={18} />
                 </button>
               </div>
               <div className="hidden sm:block">
@@ -314,30 +298,32 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
               {filtersOpen && (
                 <div className="fixed inset-0 z-50 flex items-end bg-black/30 sm:hidden" onClick={() => setFiltersOpen(false)}>
                   <div className="w-full rounded-t-3xl bg-white p-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-                    <div className="mb-4 flex items-center justify-between">
+                    <div className="mb-3 flex items-center justify-between">
                       <div>
-                        <p className="text-base font-semibold text-gray-900">Filters</p>
-                        <p className="text-sm text-gray-500">Refine your search</p>
+                        <p className="text-base font-semibold text-gray-900">Filter</p>
+                        <p className="text-sm text-gray-500">Refine search</p>
                       </div>
-                      <button type="button" onClick={() => setFiltersOpen(false)} className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-600">
+                      <button type="button" onClick={() => setFiltersOpen(false)} className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-600" aria-label="Close filters">
                         <X size={18} />
                       </button>
                     </div>
                     <div className="space-y-3">
-                      <div className="relative">
-                        <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="sc-select pr-9">
-                          {categoryOptions.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
-                        </select>
-                        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                      </div>
-                      <div className="relative">
-                        <select value={selectedCondition} onChange={(e) => setSelectedCondition(e.target.value)} className="sc-select pr-9">
-                          {conditionOptions.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
-                        </select>
-                        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="relative">
+                          <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="sc-select h-11 pr-9 text-sm">
+                            {categoryOptions.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
+                          </select>
+                          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                        </div>
+                        <div className="relative">
+                          <select value={selectedCondition} onChange={(e) => setSelectedCondition(e.target.value)} className="sc-select h-11 pr-9 text-sm">
+                            {conditionOptions.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
+                          </select>
+                          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                        </div>
                       </div>
                       <button onClick={() => setFiltersOpen(false)} className="sc-btn-primary min-h-11 w-full">
-                        Apply filters
+                        Apply
                       </button>
                     </div>
                   </div>

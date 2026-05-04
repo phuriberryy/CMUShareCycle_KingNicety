@@ -191,17 +191,17 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
       subtitle=""
       size="lg"
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
         {/* Listing Type Selection */}
         <div>
-          <label className="mb-2 block text-sm font-bold text-gray-900">
+          <label className="mb-2 block text-sm font-bold text-gray-900 sm:text-sm">
             ประเภทโพสต์ <span className="text-red-500">*</span>
           </label>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3">
             <button
               type="button"
               onClick={() => setFormData((prev) => ({ ...prev, listingType: 'exchange' }))}
-              className={`rounded-xl border-2 px-4 py-3 text-sm font-semibold transition ${
+              className={`rounded-xl border-2 px-4 py-2.5 text-sm font-semibold transition ${
                 formData.listingType === 'exchange'
                   ? 'border-primary bg-primary text-white'
                   : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
@@ -212,7 +212,7 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
             <button
               type="button"
               onClick={() => setFormData((prev) => ({ ...prev, listingType: 'donation' }))}
-              className={`rounded-xl border-2 px-4 py-3 text-sm font-semibold transition ${
+              className={`rounded-xl border-2 px-4 py-2.5 text-sm font-semibold transition ${
                 formData.listingType === 'donation'
                   ? 'border-red-500 bg-red-500 text-white'
                   : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
@@ -243,21 +243,21 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
           />
           <label
             htmlFor="image-upload"
-            className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 p-12 text-center transition hover:border-primary hover:bg-primary/5"
+            className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 p-6 text-center transition hover:border-primary hover:bg-primary/5 sm:p-12"
           >
             {imagePreview ? (
               <img
                 src={imagePreview}
                 alt="Preview"
-                className="h-48 w-full rounded-lg object-cover"
+                className="h-32 w-full rounded-lg object-cover sm:h-48"
               />
             ) : (
               <>
-                <ImageIcon className="mb-3 text-gray-400" size={48} />
-                <p className="mb-1 text-sm font-medium text-gray-700">
+                <ImageIcon className="mb-2 text-gray-400" size={40} />
+                <p className="mb-1 text-xs font-medium text-gray-700 sm:text-sm">
                   คลิกเพื่ออัปโหลดรูป
                 </p>
-                <p className="text-xs text-gray-500">PNG/JPG ขนาดไม่เกิน 5MB</p>
+                <p className="text-[11px] text-gray-500 sm:text-xs">PNG/JPG ขนาดไม่เกิน 5MB</p>
               </>
             )}
           </label>
@@ -265,7 +265,7 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
 
         {/* Item Name */}
         <div>
-          <label className="mb-2 block text-sm font-bold text-gray-900">
+          <label className="mb-2 block text-sm font-bold text-gray-900 sm:text-sm">
             ชื่อสินค้า <span className="text-red-500">*</span>
           </label>
           <input
@@ -274,23 +274,23 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
             value={formData.itemName}
             onChange={handleInputChange}
             placeholder="เช่น ตำรา Calculus, หม้อหุงข้าว, ราวตากผ้า"
-            className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0"
+            className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0 sm:py-3 sm:text-base"
             required
           />
-          <p className="mt-1 text-xs text-gray-500">แนะนำให้ใส่ชื่อที่คนค้นหาเจอง่าย (อย่างน้อย 3 ตัวอักษร)</p>
+          <p className="mt-1 text-[11px] text-gray-500 sm:text-xs">แนะนำให้ใส่ชื่อที่คนค้นหาเจอง่าย (อย่างน้อย 3 ตัวอักษร)</p>
         </div>
 
         {/* Category and Condition */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
           <div>
-            <label className="mb-2 block text-sm font-bold text-gray-900">
+            <label className="mb-2 block text-sm font-bold text-gray-900 sm:text-sm">
               หมวดหมู่ <span className="text-red-500">*</span>
             </label>
             <select
               name="category"
               value={formData.category}
               onChange={handleInputChange}
-              className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0"
+              className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0 sm:py-3 sm:text-base"
               required
             >
               {categoryOptions.map((opt) => (
@@ -301,14 +301,14 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
             </select>
           </div>
           <div>
-            <label className="mb-2 block text-sm font-bold text-gray-900">
+            <label className="mb-2 block text-sm font-bold text-gray-900 sm:text-sm">
               สภาพสินค้า <span className="text-red-500">*</span>
             </label>
             <select
               name="condition"
               value={formData.condition}
               onChange={handleInputChange}
-              className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0"
+              className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0 sm:py-3 sm:text-base"
               required
             >
               {conditionOptions.map((opt) => (
@@ -323,7 +323,7 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
         {/* Looking to Exchange For - Only show for exchange type */}
         {formData.listingType === 'exchange' && (
           <div>
-            <label className="mb-2 block text-sm font-bold text-gray-900">
+            <label className="mb-2 block text-sm font-bold text-gray-900 sm:text-sm">
               ต้องการแลกกับอะไร <span className="text-red-500">*</span>
             </label>
             <input
@@ -332,10 +332,10 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
               value={formData.lookingFor}
               onChange={handleInputChange}
               placeholder="เช่น ชั้นวางโน้ตบุ๊ก, อุปกรณ์ครัว, โคมไฟอ่านหนังสือ"
-              className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0"
+              className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0 sm:py-3 sm:text-base"
               required
             />
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-[11px] text-gray-500 sm:text-xs">
               ระบุให้ชัด จะช่วยให้แมตช์ได้เร็วขึ้น
             </p>
           </div>
@@ -343,51 +343,51 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
 
         {/* Expiration Date */}
         <div>
-          <label className="mb-2 block text-sm font-bold text-gray-900">
+          <label className="mb-2 block text-sm font-bold text-gray-900 sm:text-sm">
             หมดอายุโพสต์ <span className="text-red-500">*</span>
           </label>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <input
               type="date"
               name="availableUntil"
               value={formData.availableUntil}
               onChange={handleInputChange}
               min={getTodayIso()}
-              className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0"
+              className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0 sm:py-3 sm:text-base"
               required
             />
-            <div className="flex gap-2">
+            <div className="grid grid-cols-3 gap-2 sm:flex">
               <button
                 type="button"
                 onClick={() => setFormData((prev) => ({ ...prev, availableUntil: addDaysIso(7) }))}
-                className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-[11px] font-semibold text-gray-700 hover:bg-gray-50"
               >
-                +7 วัน
+                +7d
               </button>
               <button
                 type="button"
                 onClick={() => setFormData((prev) => ({ ...prev, availableUntil: addDaysIso(14) }))}
-                className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-[11px] font-semibold text-gray-700 hover:bg-gray-50"
               >
-                +14 วัน
+                +14d
               </button>
               <button
                 type="button"
                 onClick={() => setFormData((prev) => ({ ...prev, availableUntil: addDaysIso(30) }))}
-                className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-[11px] font-semibold text-gray-700 hover:bg-gray-50"
               >
-                +30 วัน
+                +30d
               </button>
             </div>
           </div>
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-[11px] text-gray-500 sm:text-xs">
             ตั้งวันหมดอายุเพื่อให้รายการไม่ค้างนานเกินไป
           </p>
         </div>
 
         {/* Pickup Location */}
         <div>
-          <label className="mb-2 block text-sm font-bold text-gray-900">
+          <label className="mb-2 block text-sm font-bold text-gray-900 sm:text-sm">
             จุดนัดรับ/แลก <span className="text-red-500">*</span>
           </label>
           <input
@@ -396,7 +396,7 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
             value={formData.pickupLocation}
             onChange={handleInputChange}
             placeholder="เช่น หอสมุดกลาง, คณะวิศวะ, หน้าโรงอาหาร"
-            className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0"
+            className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0 sm:py-3 sm:text-base"
             required
             list="pickup-suggestions"
           />
@@ -412,7 +412,7 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
 
         {/* Description */}
         <div>
-          <label className="mb-2 block text-sm font-bold text-gray-900">
+          <label className="mb-2 block text-sm font-bold text-gray-900 sm:text-sm">
             รายละเอียด <span className="text-red-500">*</span>
           </label>
           <textarea
@@ -420,14 +420,14 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
             value={formData.description}
             onChange={handleInputChange}
             placeholder="บอกสภาพ/ตำหนิ/วิธีนัดรับ เช่น ใช้งานมา 6 เดือน มีรอยเล็กน้อย นัดรับที่หอสมุดช่วงเย็น"
-            rows={4}
-            className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0 resize-none"
+            rows={3}
+            className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0 resize-none sm:py-3 sm:text-base"
             required
           />
         </div>
 
         {/* Actions */}
-        <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-gray-200">
+        <div className="flex flex-col justify-end gap-3 border-t border-gray-200 pt-3 sm:flex-row sm:pt-4">
           <button
             type="button"
             onClick={onClose}
