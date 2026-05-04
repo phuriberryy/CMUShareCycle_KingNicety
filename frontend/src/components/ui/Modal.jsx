@@ -10,6 +10,7 @@ export default function Modal({
   size = 'md',
   showCloseButton = true,
   mobileFullScreen = false,
+  bodyClassName = '',
 }) {
   useEffect(() => {
     if (open) {
@@ -67,7 +68,7 @@ export default function Modal({
             )}
           </div>
         )}
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 pb-safe sm:px-6">{children}</div>
+        <div className={`min-h-0 flex-1 overflow-y-auto px-4 py-4 pb-safe sm:px-6 ${bodyClassName}`}>{children}</div>
       </div>
     </div>
   )

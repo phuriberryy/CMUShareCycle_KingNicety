@@ -154,5 +154,5 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
     )
   }
 
-  return <Modal open={open} onClose={onClose} title="แชท" subtitle={socketConnected ? 'เชื่อมต่อแล้ว' : 'กำลังเชื่อมต่อ...'} size="xl">{chatContent}</Modal>
+  return <Modal open={open} onClose={onClose} title="แชท" subtitle={socketConnected ? 'เชื่อมต่อแล้ว' : 'กำลังเชื่อมต่อ...'} size="xl" bodyClassName="!overflow-hidden !p-0">{chatContent}</Modal>
 }
