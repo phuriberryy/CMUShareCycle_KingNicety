@@ -5,6 +5,9 @@ import { itemsApi } from '../../lib/api'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import { MAX_ITEM_GALLERY } from '../../utils/itemImages'
+import FormField from '../../shared/ui/FormField'
+import Input from '../../shared/ui/Input'
+import Textarea from '../../shared/ui/Textarea'
 
 const readFileAsDataUrl = (file) =>
   new Promise((resolve, reject) => {
@@ -367,25 +370,23 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
         </div>
 
         {/* Looking to Exchange For - Only show for exchange type */}
-        {formData.listingType === 'exchange' && (
-          <div>
-            <label className="mb-2 block text-sm font-bold text-gray-900 sm:text-sm">
-              ต้องการแลกกับอะไร <span className="text-red-500">*</span>
-            </label>
-            <input
+        {formData.listingType === 'exchange' ? (
+          <FormField
+            label="ต้องการแลกกับอะไร"
+            required
+            hint="ระบุให้ชัด จะช่วยให้แมตช์ได้เร็วขึ้น"
+          >
+            <Input
               type="text"
               name="lookingFor"
               value={formData.lookingFor}
               onChange={handleInputChange}
               placeholder="เช่น ชั้นวางโน้ตบุ๊ก, อุปกรณ์ครัว, โคมไฟอ่านหนังสือ"
-              className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0 sm:py-3 sm:text-base"
+              className="sm:py-3 sm:text-base"
               required
             />
-            <p className="mt-1 text-[11px] text-gray-500 sm:text-xs">
-              ระบุให้ชัด จะช่วยให้แมตช์ได้เร็วขึ้น
-            </p>
-          </div>
-        )}
+          </FormField>
+        ) : null}
 
         {/* Expiration Date */}
         <div>
@@ -457,20 +458,17 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
         </div>
 
         {/* Description */}
-        <div>
-          <label className="mb-2 block text-sm font-bold text-gray-900 sm:text-sm">
-            รายละเอียด <span className="text-red-500">*</span>
-          </label>
-          <textarea
+        <FormField label="รายละเอียด" required>
+          <Textarea
             name="description"
             value={formData.description}
             onChange={handleInputChange}
             placeholder="บอกสภาพ/ตำหนิ/วิธีนัดรับ เช่น ใช้งานมา 6 เดือน มีรอยเล็กน้อย นัดรับที่หอสมุดช่วงเย็น"
             rows={3}
-            className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0 resize-none sm:py-3 sm:text-base"
+            className="resize-none sm:py-3 sm:text-base"
             required
           />
-        </div>
+        </FormField>
 
         {/* Actions */}
         <div className="flex flex-col justify-end gap-3 border-t border-gray-200 pt-3 sm:flex-row sm:pt-4">

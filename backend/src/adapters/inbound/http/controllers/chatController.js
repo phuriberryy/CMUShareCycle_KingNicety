@@ -4,10 +4,18 @@ import { query } from '../../../outbound/persistence/pool.js'
 import { getChatServer } from '../../../../application/services/chatService.js'
 import { calculateItemCO2, calculateExchangeCO2Reduction } from '../../../../shared/utils/co2Calculator.js'
 import { awardExchangePoints, awardDonationPoints } from '../../../../shared/utils/pointsService.js'
+import {
+  badRequest,
+  forbidden,
+  internalError,
+  notFound,
+  serviceUnavailable,
+  unauthorized,
+} from '../../../../shared/http/apiError.js'
 
 export const getChats = async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' })
+    return res.status(401).json(unauthorized())
   }
 
   try {
@@ -43,16 +51,16 @@ export const getChats = async (req, res) => {
   } catch (err) {
     if (err.message?.includes('timeout') || err.code === 'ETIMEDOUT') {
       console.error('Chats DB timeout:', err.message)
-      return res.status(503).json({ message: 'Service temporarily unavailable. Please try again.' })
+      return res.status(503).json(serviceUnavailable('Service temporarily unavailable. Please try again.'))
     }
     console.error('getChats error:', err.message)
-    return res.status(500).json({ message: 'Failed to load chats' })
+    return res.status(500).json(internalError('Failed to load chats'))
   }
 }
 
 export const getChatMessages = async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' })
+    return res.status(401).json(unauthorized())
   }
 
   const { chatId } = req.params
@@ -63,7 +71,7 @@ export const getChatMessages = async (req, res) => {
   )
 
   if (!membership.rowCount) {
-    return res.status(403).json({ message: 'You do not have access to this chat' })
+    return res.status(403).json(forbidden('You do not have access to this chat'))
   }
 
   // ดึงข้อความพร้อมข้อมูลสถานะการอ่าน
@@ -142,7 +150,7 @@ export const getChatMessages = async (req, res) => {
 
 export const createChat = async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' })
+    return res.status(401).json(unauthorized())
   }
 
   const errors = validationResult(req)
@@ -156,17 +164,17 @@ export const createChat = async (req, res) => {
   if (!participant && participantEmail) {
     const userResult = await query('SELECT id FROM users WHERE email=$1', [participantEmail])
     if (!userResult.rowCount) {
-      return res.status(404).json({ message: 'Participant not found' })
+      return res.status(404).json(notFound('Participant not found'))
     }
     participant = userResult.rows[0].id
   }
 
   if (!participant) {
-    return res.status(400).json({ message: 'Participant is required' })
+    return res.status(400).json(badRequest('Participant is required'))
   }
 
   if (participant === req.user.id) {
-    return res.status(400).json({ message: 'Cannot chat with yourself' })
+    return res.status(400).json(badRequest('Cannot chat with yourself'))
   }
 
   // ตรวจสอบว่ามีแชทกับอีเมลเดียวกันอยู่แล้วหรือไม่ (ไม่สนใจ item_id หรือ exchange_request_id)
@@ -234,14 +242,14 @@ export const createChat = async (req, res) => {
 export const acceptChat = async (req, res) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ message: 'Unauthorized' })
+      return res.status(401).json(unauthorized())
     }
 
     const { chatId } = req.params
     let chatRow = await fetchChatById(chatId)
 
     if (!chatRow) {
-      return res.status(404).json({ message: 'Chat not found' })
+      return res.status(404).json(notFound('Chat not found'))
     }
 
     // ตรวจสอบว่า chat ถูกปิดแล้วหรือไม่ แต่ถ้าเป็น exchange chat ที่ทั้งสองฝ่าย accept แล้ว
@@ -269,10 +277,10 @@ export const acceptChat = async (req, res) => {
             )
             chatRow = await fetchChatById(chatId)
           } else {
-            return res.status(400).json({ message: 'Chat has been closed' })
+            return res.status(400).json(badRequest('Chat has been closed'))
           }
         } else {
-          return res.status(400).json({ message: 'Chat has been closed' })
+          return res.status(400).json(badRequest('Chat has been closed'))
         }
       } else if (chatRow.donation_request_id) {
         const donationRequestResult = await query(
@@ -295,28 +303,28 @@ export const acceptChat = async (req, res) => {
             )
             chatRow = await fetchChatById(chatId)
           } else {
-            return res.status(400).json({ message: 'Chat has been closed' })
+            return res.status(400).json(badRequest('Chat has been closed'))
           }
         } else {
-          return res.status(400).json({ message: 'Chat has been closed' })
+          return res.status(400).json(badRequest('Chat has been closed'))
         }
       } else {
-        return res.status(400).json({ message: 'Chat has been closed' })
+        return res.status(400).json(badRequest('Chat has been closed'))
       }
     }
 
     if (!chatRow.exchange_request_id && !chatRow.donation_request_id) {
-      return res.status(400).json({ message: 'Chat confirmation is only available for exchange or donation chats' })
+      return res.status(400).json(badRequest('Chat confirmation is only available for exchange or donation chats'))
     }
 
     const role = resolveChatRole(chatRow, req.user.id)
     if (!role || role === 'viewer') {
-      return res.status(403).json({ message: 'You are not part of this chat' })
+      return res.status(403).json(forbidden('You are not part of this chat'))
     }
 
     // สำหรับ exchange chat ต้องเป็น owner หรือ requester เท่านั้น
     if (role !== 'owner' && role !== 'requester') {
-      return res.status(403).json({ message: 'Only owner or requester can accept exchange chat' })
+      return res.status(403).json(forbidden('Only owner or requester can accept exchange chat'))
     }
 
     const column = role === 'owner' ? 'owner_accepted' : 'requester_accepted'
@@ -470,31 +478,31 @@ export const acceptChat = async (req, res) => {
     }
 
     if (!chatRow) {
-      return res.status(500).json({ message: 'Failed to fetch updated chat' })
+      return res.status(500).json(internalError('Failed to fetch updated chat'))
     }
 
     return res.json(mapChatRow(chatRow, req.user.id))
   } catch (err) {
     console.error('Accept chat error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 
 export const declineChat = async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' })
+    return res.status(401).json(unauthorized())
   }
 
   const { chatId } = req.params
   let chatRow = await fetchChatById(chatId)
 
   if (!chatRow) {
-    return res.status(404).json({ message: 'Chat not found' })
+    return res.status(404).json(notFound('Chat not found'))
   }
 
   const role = resolveChatRole(chatRow, req.user.id)
   if (!role || role === 'viewer') {
-    return res.status(403).json({ message: 'You are not part of this chat' })
+    return res.status(403).json(forbidden('You are not part of this chat'))
   }
 
   if (chatRow.status === 'declined' || chatRow.status === 'closed') {
@@ -586,33 +594,33 @@ export const declineChat = async (req, res) => {
 
 export const confirmChatQr = async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' })
+    return res.status(401).json(unauthorized())
   }
 
   const { chatId } = req.params
   const { code } = req.body
 
   if (!code) {
-    return res.status(400).json({ message: 'QR code is required' })
+    return res.status(400).json(badRequest('QR code is required'))
   }
 
   let chatRow = await fetchChatById(chatId)
 
   if (!chatRow) {
-    return res.status(404).json({ message: 'Chat not found' })
+    return res.status(404).json(notFound('Chat not found'))
   }
 
   const role = resolveChatRole(chatRow, req.user.id)
   if (role !== 'requester') {
-    return res.status(403).json({ message: 'Only the requester can confirm the QR code' })
+    return res.status(403).json(forbidden('Only the requester can confirm the QR code'))
   }
 
   if (chatRow.status !== 'active') {
-    return res.status(400).json({ message: 'Chat is not ready for QR confirmation' })
+    return res.status(400).json(badRequest('Chat is not ready for QR confirmation'))
   }
 
   if (!chatRow.qr_code) {
-    return res.status(400).json({ message: 'QR code not generated yet' })
+    return res.status(400).json(badRequest('QR code not generated yet'))
   }
 
   if (chatRow.qr_confirmed) {
@@ -620,7 +628,7 @@ export const confirmChatQr = async (req, res) => {
   }
 
   if (chatRow.qr_code !== code.trim()) {
-    return res.status(400).json({ message: 'รหัสไม่ถูกต้อง กรุณาลองใหม่' })
+    return res.status(400).json(badRequest('รหัสไม่ถูกต้อง กรุณาลองใหม่'))
   }
 
   // อัปเดต QR confirmed แต่ไม่ปิดแชท เพื่อให้ยังสามารถส่งข้อความได้

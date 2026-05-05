@@ -5,22 +5,29 @@ import { hashPassword, comparePassword } from '../../../../shared/utils/password
 import { signToken } from '../../../../shared/utils/token.js'
 import { sendEmail } from '../../../../shared/utils/email.js'
 import env from '../../../../infrastructure/config/env.js'
+import {
+  badRequest,
+  conflict,
+  forbidden,
+  internalError,
+  unauthorized,
+} from '../../../../shared/http/apiError.js'
 
 export const register = async (req, res) => {
   const errors = validationResult(req)
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() })
+    return res.status(400).json({ ...badRequest('Validation failed'), errors: errors.array() })
   }
 
   const { name, email, password, faculty } = req.body
 
   if (!email.endsWith('@cmu.ac.th')) {
-    return res.status(400).json({ message: 'Only cmu.ac.th emails are allowed' })
+    return res.status(400).json(badRequest('Only cmu.ac.th emails are allowed'))
   }
 
   const existing = await query('SELECT id FROM users WHERE email=$1', [email])
   if (existing.rowCount) {
-    return res.status(409).json({ message: 'Email already registered' })
+    return res.status(409).json(conflict('Email already registered'))
   }
 
   const passwordHash = await hashPassword(password)
@@ -56,26 +63,26 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
   const errors = validationResult(req)
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() })
+    return res.status(400).json({ ...badRequest('Validation failed'), errors: errors.array() })
   }
 
   const { email, password } = req.body
   const result = await query('SELECT * FROM users WHERE email=$1', [email])
   if (!result.rowCount) {
-    return res.status(401).json({ message: 'Invalid credentials' })
+    return res.status(401).json(unauthorized('Invalid credentials'))
   }
 
   const user = result.rows[0]
   const valid = await comparePassword(password, user.password_hash)
   if (!valid) {
-    return res.status(401).json({ message: 'Invalid credentials' })
+    return res.status(401).json(unauthorized('Invalid credentials'))
   }
 
   const role = user.role || 'user'
   const isSuspended = Boolean(user.is_suspended)
 
   if (isSuspended) {
-    return res.status(403).json({ message: 'Account is suspended. Please contact support.' })
+    return res.status(403).json(forbidden('Account is suspended. Please contact support.'))
   }
 
   const token = signToken({ id: user.id, email: user.email, name: user.name, role })
@@ -98,13 +105,13 @@ export const login = async (req, res) => {
 export const forgotPassword = async (req, res) => {
   const errors = validationResult(req)
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() })
+    return res.status(400).json({ ...badRequest('Validation failed'), errors: errors.array() })
   }
 
   const { email } = req.body
 
   if (!email.endsWith('@cmu.ac.th')) {
-    return res.status(400).json({ message: 'Only cmu.ac.th emails are allowed' })
+    return res.status(400).json(badRequest('Only cmu.ac.th emails are allowed'))
   }
 
   try {
@@ -182,7 +189,7 @@ export const forgotPassword = async (req, res) => {
     })
   } catch (err) {
     console.error('Forgot password error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 
@@ -190,7 +197,7 @@ export const forgotPassword = async (req, res) => {
 export const resetPassword = async (req, res) => {
   const errors = validationResult(req)
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() })
+    return res.status(400).json({ ...badRequest('Validation failed'), errors: errors.array() })
   }
 
   const { token, password } = req.body
@@ -206,7 +213,7 @@ export const resetPassword = async (req, res) => {
     )
 
     if (!tokenResult.rowCount) {
-      return res.status(400).json({ message: 'Token ไม่ถูกต้องหรือหมดอายุแล้ว' })
+      return res.status(400).json(badRequest('Token ไม่ถูกต้องหรือหมดอายุแล้ว'))
     }
 
     const tokenData = tokenResult.rows[0]
@@ -232,7 +239,7 @@ export const resetPassword = async (req, res) => {
     })
   } catch (err) {
     console.error('Reset password error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 

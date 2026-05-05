@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { param } from 'express-validator'
 import { authenticate } from '../middleware/auth.js'
+import { validateRequest } from '../middleware/validateRequest.js'
 import {
   getNotifications,
   markNotificationsRead,
@@ -26,6 +27,7 @@ router.post('/read', markNotificationsRead)
 router.post(
   '/:notificationId/read',
   [param('notificationId').isUUID()],
+  validateRequest,
   markNotificationRead
 )
 

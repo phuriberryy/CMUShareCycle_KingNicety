@@ -3,17 +3,18 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import ShareCycleLogo from '../brand/ShareCycleLogo'
+import { APP_ROUTES } from '../../shared/constants/routes'
 
 const navLinks = [
-  { label: 'หน้าแรก', to: '/' },
-  { label: 'กระดานคะแนน', to: '/leaderboard', icon: Trophy },
+  { label: 'หน้าแรก', to: APP_ROUTES.home },
+  { label: 'กระดานคะแนน', to: APP_ROUTES.leaderboard, icon: Trophy },
 ]
 
 function Header({ unread, onNotificationsClick }) {
   const [open, setOpen] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
-  const onLogin = () => navigate('/login')
+  const onLogin = () => navigate(APP_ROUTES.login)
   const { user, logout } = useAuth()
   const initials = useMemo(() => {
     if (!user?.name) return 'CM'
@@ -30,16 +31,18 @@ function Header({ unread, onNotificationsClick }) {
   }, [location.pathname])
 
   return (
-    <header className="sticky top-0 z-40 w-full min-w-0 border-b border-primary/10 bg-white/90 shadow-sm backdrop-blur-md supports-[backdrop-filter]:bg-white/80">
+    <header className="sticky top-0 z-40 w-full min-w-0 border-b border-primary/10 bg-white/92 shadow-sm backdrop-blur-md supports-[backdrop-filter]:bg-white/85">
       <div className="mx-auto flex w-full min-w-0 max-w-5xl items-center justify-between gap-2 py-2 pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))] sm:gap-3 sm:px-6 sm:py-2.5 lg:px-8">
-        <Link to="/" className="flex min-h-10 min-w-0 flex-1 items-center gap-2 sm:flex-initial sm:gap-2.5">
-          <ShareCycleLogo className="h-8 w-8 shrink-0 overflow-hidden rounded-xl shadow-sm ring-1 ring-primary/10 sm:h-10 sm:w-10 sm:rounded-2xl" />
+        <Link
+          to={APP_ROUTES.home}
+          className="flex min-h-10 min-w-0 flex-1 items-center gap-2 sm:flex-initial sm:gap-2.5"
+        >
+          <ShareCycleLogo className="h-9 w-9 shrink-0 overflow-hidden rounded-xl shadow-sm ring-1 ring-primary/10 sm:h-10 sm:w-10 sm:rounded-2xl" />
           <div className="min-w-0 leading-tight">
-            <p className="truncate text-sm text-primary sm:text-base">
+            <p className="truncate text-sm text-primary-dark sm:text-base">
               <span className="font-bold">CMU</span>
               <span className="font-medium"> ShareCycle</span>
             </p>
-            <p className="hidden truncate text-xs font-medium text-primary/70 sm:block">Green Campus</p>
           </div>
         </Link>
 

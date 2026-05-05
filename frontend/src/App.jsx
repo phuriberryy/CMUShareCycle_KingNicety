@@ -1,27 +1,30 @@
-import { useState, useEffect } from 'react'
+import { Suspense, lazy, useEffect, useState } from 'react'
 import { Routes, Route, useLocation, useNavigate } from 'react-router-dom'
 import { io } from 'socket.io-client'
 import Header from './components/layout/Header'
 import Footer from './components/layout/Footer'
-import LoginPage from './pages/LoginPage'
-import HomePage from './pages/HomePage'
-import ProfilePage from './pages/ProfilePage'
-import RegisterPage from './pages/RegisterPage'
-import ExchangeRequestDetailPage from './pages/ExchangeRequestDetailPage'
-import DonationRequestDetailPage from './pages/DonationRequestDetailPage'
-import ItemDetailPage from './pages/ItemDetailPage'
-import LeaderboardPage from './pages/LeaderboardPage'
-import ChatPage from './pages/ChatPage'
-import NotificationsPage from './pages/NotificationsPage'
 import PostItemModal from './components/modals/PostItemModal'
 import ExchangeRequestModal from './components/modals/ExchangeRequestModal'
 import DonationRequestModal from './components/modals/DonationRequestModal'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import AdminRoute from './components/auth/AdminRoute'
-import AdminLayout from './components/admin/AdminLayout'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { ToastProvider } from './context/ToastContext'
 import { API_BASE, notificationApi } from './lib/api'
+import AppLoading from './components/system/AppLoading'
+import { APP_ROUTES } from './shared/constants/routes'
+
+const LoginPage = lazy(() => import('./pages/LoginPage'))
+const HomePage = lazy(() => import('./pages/HomePage'))
+const ProfilePage = lazy(() => import('./pages/ProfilePage'))
+const RegisterPage = lazy(() => import('./pages/RegisterPage'))
+const ExchangeRequestDetailPage = lazy(() => import('./pages/ExchangeRequestDetailPage'))
+const DonationRequestDetailPage = lazy(() => import('./pages/DonationRequestDetailPage'))
+const ItemDetailPage = lazy(() => import('./pages/ItemDetailPage'))
+const LeaderboardPage = lazy(() => import('./pages/LeaderboardPage'))
+const ChatPage = lazy(() => import('./pages/ChatPage'))
+const NotificationsPage = lazy(() => import('./pages/NotificationsPage'))
+const AdminLayout = lazy(() => import('./components/admin/AdminLayout'))
 
 const SOCKET_URL = (API_BASE || '').replace(/\/api$/, '')
 
@@ -36,8 +39,10 @@ function AppContent() {
   const [itemsVersion, setItemsVersion] = useState(0)
   const { token, loading } = useAuth()
 
-  const isLoginPage = location.pathname === '/login' || location.pathname === '/register'
-  const isChatOrNotifications = location.pathname === '/chat' || location.pathname === '/notifications'
+  const isLoginPage =
+    location.pathname === APP_ROUTES.login || location.pathname === APP_ROUTES.register
+  const isChatOrNotifications =
+    location.pathname === APP_ROUTES.chat || location.pathname === APP_ROUTES.notifications
   const isAuthenticated = !!token
   const showLayout = isAuthenticated && !isLoginPage && !isChatOrNotifications
 
@@ -56,7 +61,7 @@ function AppContent() {
   }
 
   const handleNotificationsClick = () => {
-    navigate('/notifications')
+    navigate(APP_ROUTES.notifications)
   }
 
   const handleItemCreated = () => {
@@ -133,13 +138,17 @@ function AppContent() {
         />
       )}
       <main className="min-w-0 flex-1 w-full">
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
-          <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
+        <Suspense fallback={<AppLoading />}>
+          <Routes>
+          <Route path={APP_ROUTES.login} element={<LoginPage />} />
+          <Route path={APP_ROUTES.register} element={<RegisterPage />} />
+          <Route path={APP_ROUTES.chat} element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
           <Route
-            path="/"
+            path={APP_ROUTES.notifications}
+            element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>}
+          />
+          <Route
+            path={APP_ROUTES.home}
             element={
               <ProtectedRoute>
               <HomePage 
@@ -152,7 +161,7 @@ function AppContent() {
             }
           />
           <Route
-            path="/profile"
+            path={APP_ROUTES.profile}
             element={
               <ProtectedRoute>
                 <ProfilePage />
@@ -160,7 +169,7 @@ function AppContent() {
             }
           />
           <Route
-            path="/leaderboard"
+            path={APP_ROUTES.leaderboard}
             element={
               <ProtectedRoute>
                 <LeaderboardPage />
@@ -168,7 +177,7 @@ function AppContent() {
             }
           />
           <Route
-            path="/items/:itemId"
+            path={APP_ROUTES.itemDetail}
             element={
               <ProtectedRoute>
                 <ItemDetailPage 
@@ -179,7 +188,7 @@ function AppContent() {
             }
           />
           <Route
-            path="/exchange/:requestId"
+            path={APP_ROUTES.exchangeDetail}
             element={
               <ProtectedRoute>
                 <ExchangeRequestDetailPage />
@@ -187,7 +196,7 @@ function AppContent() {
             }
           />
           <Route
-            path="/donation-requests/:requestId"
+            path={APP_ROUTES.donationRequestDetail}
             element={
               <ProtectedRoute>
                 <DonationRequestDetailPage />
@@ -195,7 +204,7 @@ function AppContent() {
             }
           />
           <Route
-            path="/admin/*"
+            path={APP_ROUTES.admin}
             element={
               <ProtectedRoute>
                 <AdminRoute>
@@ -204,7 +213,8 @@ function AppContent() {
               </ProtectedRoute>
             }
           />
-        </Routes>
+          </Routes>
+        </Suspense>
       </main>
       {showLayout && <Footer />}
 

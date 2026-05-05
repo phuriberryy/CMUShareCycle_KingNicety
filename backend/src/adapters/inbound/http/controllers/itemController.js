@@ -4,6 +4,7 @@ import { calculateItemCO2 } from '../../../../shared/utils/co2Calculator.js'
 import { detectSpam, validateImage, checkDuplicateContent } from '../../../../shared/utils/contentModeration.js'
 import { getChatServer } from '../../../../application/services/chatService.js'
 import { awardPostItemPoints } from '../../../../shared/utils/pointsService.js'
+import { forbidden, internalError, notFound, unauthorized, badRequest } from '../../../../shared/http/apiError.js'
 
 // Query หลัก: LEFT JOIN เพื่อไม่ทิ้ง item ถ้า user ถูกลบ, กรอง status และวันที่
 const MAX_ITEM_IMAGES = 3
@@ -113,7 +114,7 @@ export const getItems = async (_req, res) => {
         return res.json(Array.isArray(itemsWithCO2) ? itemsWithCO2 : [])
       } catch (retryErr) {
         console.error('Get items error (after retry):', retryErr.message)
-        return res.status(500).json({ message: 'Internal server error' })
+        return res.status(500).json(internalError())
       }
     }
     // ถ้า query หลัก fail (เช่น column ไม่มี) ลอง fallback
@@ -122,7 +123,7 @@ export const getItems = async (_req, res) => {
       return res.json(Array.isArray(itemsWithCO2) ? itemsWithCO2 : [])
     } catch (fallbackErr) {
       console.error('Get items error:', fallbackErr.message)
-      return res.status(500).json({ message: 'Internal server error' })
+      return res.status(500).json(internalError())
     }
   }
 }
@@ -149,7 +150,7 @@ export const getItemById = async (req, res) => {
     )
 
     if (!result.rowCount) {
-      return res.status(404).json({ message: 'Item not found' })
+      return res.status(404).json(notFound('Item not found'))
     }
 
     const item = withItemGallery(result.rows[0])
@@ -160,14 +161,14 @@ export const getItemById = async (req, res) => {
     return res.json(item)
   } catch (err) {
     console.error('Get item by id error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 
 // สร้าง item ใหม่
 export const createItem = async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' })
+    return res.status(401).json(unauthorized())
   }
 
   const errors = validationResult(req)
@@ -210,7 +211,7 @@ export const createItem = async (req, res) => {
 
     const gallery = normalizeImageGalleryFromBody(req.body)
     if (gallery.length === 0) {
-      return res.status(400).json({ message: 'At least one product image is required' })
+      return res.status(400).json(badRequest('At least one product image is required'))
     }
     for (const url of gallery) {
       const imageValidation = validateImage(url)
@@ -285,14 +286,14 @@ export const createItem = async (req, res) => {
     return res.status(201).json(item)
   } catch (err) {
     console.error('Create item error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 
 // อัปเดต item
 export const updateItem = async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' })
+    return res.status(401).json(unauthorized())
   }
 
   const { itemId } = req.params
@@ -348,7 +349,7 @@ export const updateItem = async (req, res) => {
     if (hasImageUrlsKey || hasImageUrlKey) {
       const gallery = normalizeImageGalleryFromBody(req.body)
       if (gallery.length === 0) {
-        return res.status(400).json({ message: 'At least one product image is required' })
+        return res.status(400).json(badRequest('At least one product image is required'))
       }
       for (const u of gallery) {
         const imageValidation = validateImage(u)
@@ -366,11 +367,11 @@ export const updateItem = async (req, res) => {
     // ตรวจสอบว่า item เป็นของ user นี้หรือไม่
     const itemCheck = await query('SELECT user_id FROM items WHERE id=$1', [itemId])
     if (!itemCheck.rowCount) {
-      return res.status(404).json({ message: 'Item not found' })
+      return res.status(404).json(notFound('Item not found'))
     }
 
     if (itemCheck.rows[0].user_id !== req.user.id) {
-      return res.status(403).json({ message: 'You can only update your own items' })
+      return res.status(403).json(forbidden('You can only update your own items'))
     }
 
     // Validate expiration date - cannot be in the past
@@ -436,14 +437,14 @@ export const updateItem = async (req, res) => {
     return res.json(item)
   } catch (err) {
     console.error('Update item error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 
 // ลบ item
 export const deleteItem = async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' })
+    return res.status(401).json(unauthorized())
   }
 
   const { itemId } = req.params
@@ -452,11 +453,11 @@ export const deleteItem = async (req, res) => {
     // ตรวจสอบว่า item เป็นของ user นี้หรือไม่
     const itemCheck = await query('SELECT user_id FROM items WHERE id=$1', [itemId])
     if (!itemCheck.rowCount) {
-      return res.status(404).json({ message: 'Item not found' })
+      return res.status(404).json(notFound('Item not found'))
     }
 
     if (itemCheck.rows[0].user_id !== req.user.id) {
-      return res.status(403).json({ message: 'You can only delete your own items' })
+      return res.status(403).json(forbidden('You can only delete your own items'))
     }
 
     // ลบ item (CASCADE จะลบ exchange_requests ที่เกี่ยวข้องด้วย)
@@ -471,14 +472,14 @@ export const deleteItem = async (req, res) => {
     return res.json({ success: true, message: 'Item deleted successfully' })
   } catch (err) {
     console.error('Delete item error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 
 // ดึง exchange requests ของ item
 export const getItemExchangeRequests = async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' })
+    return res.status(401).json(unauthorized())
   }
 
   const { itemId } = req.params
@@ -487,11 +488,11 @@ export const getItemExchangeRequests = async (req, res) => {
     // ตรวจสอบว่า item เป็นของ user นี้หรือไม่
     const itemCheck = await query('SELECT user_id FROM items WHERE id=$1', [itemId])
     if (!itemCheck.rowCount) {
-      return res.status(404).json({ message: 'Item not found' })
+      return res.status(404).json(notFound('Item not found'))
     }
 
     if (itemCheck.rows[0].user_id !== req.user.id) {
-      return res.status(403).json({ message: 'You can only view exchange requests for your own items' })
+      return res.status(403).json(forbidden('You can only view exchange requests for your own items'))
     }
 
     const result = await query(
@@ -512,14 +513,14 @@ export const getItemExchangeRequests = async (req, res) => {
     return res.json(result.rows)
   } catch (err) {
     console.error('Get item exchange requests error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 
 // ดึง items ของผู้ใช้
 export const getUserItems = async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' })
+    return res.status(401).json(unauthorized())
   }
 
   const { userId } = req.params
@@ -545,6 +546,6 @@ export const getUserItems = async (req, res) => {
     return res.json(itemsWithCO2)
   } catch (err) {
     console.error('Get user items error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }

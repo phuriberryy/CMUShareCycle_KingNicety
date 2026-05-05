@@ -7,6 +7,11 @@
     "start": "bash scripts/start.sh",
     "start:backend": "bash scripts/start-backend.sh",
     "start:frontend": "bash scripts/start-frontend.sh",
+    "lint": "npm run lint:frontend && npm run lint:backend",
+    "lint:frontend": "npm --prefix frontend run lint",
+    "lint:backend": "node --check backend/src/composition/app.js && node --check backend/src/composition/server.js",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "install:all": "cd backend && npm install && cd ../frontend && npm install",
     "setup": "npm run install:all && echo '✅ ติดตั้ง dependencies สำเร็จ'",
     "email:setup": "cd backend && npm run email:setup",
@@ -21,5 +26,8 @@
     "sustainability"
   ],
   "author": "CMU ShareCycle Team G4",
-  "license": "PRIVATE"
+  "license": "PRIVATE",
+  "devDependencies": {
+    "prettier": "^3.8.3"
+  }
 }

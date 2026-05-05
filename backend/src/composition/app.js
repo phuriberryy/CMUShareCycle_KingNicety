@@ -15,6 +15,9 @@ import donationRoutes from '../adapters/inbound/http/routes/donation.routes.js'
 import donationRequestRoutes from '../adapters/inbound/http/routes/donationRequest.routes.js'
 import leaderboardRoutes from '../adapters/inbound/http/routes/leaderboard.routes.js'
 import adminRoutes from '../adapters/inbound/http/routes/admin.routes.js'
+import { securityHeaders } from '../adapters/inbound/http/middleware/securityHeaders.js'
+import { sanitizeInput } from '../adapters/inbound/http/middleware/sanitizeInput.js'
+import { errorHandler, notFoundHandler } from '../adapters/inbound/http/middleware/errorHandler.js'
 
 const app = express()
 const corsOptions = {
@@ -23,8 +26,11 @@ const corsOptions = {
 }
 
 app.use(cors(corsOptions))
-app.use(express.json({ limit: '10mb' }))
+app.use(securityHeaders)
+app.use(express.json({ limit: '10mb', strict: true }))
+app.use(express.urlencoded({ extended: false, limit: '10mb' }))
 app.use(cookieParser())
+app.use(sanitizeInput)
 
 app.get('/health', (_req, res) => res.json({ ok: true }))
 
@@ -46,9 +52,7 @@ app.use('/api/donation-requests', donationRequestRoutes)
 app.use('/api/leaderboard', leaderboardRoutes)
 app.use('/api/admin', adminRoutes)
 
-app.use((err, _req, res, _next) => {
-  console.error(err)
-  res.status(500).json({ message: 'Internal server error' })
-})
+app.use(notFoundHandler)
+app.use(errorHandler)
 
 export default app

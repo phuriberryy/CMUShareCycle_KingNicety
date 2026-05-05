@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { body } from 'express-validator'
 import { authenticate } from '../middleware/auth.js'
 import { createDonation, receiveDonation, getMyDonations, getAllDonations } from '../controllers/donationController.js'
+import { validateRequest } from '../middleware/validateRequest.js'
 
 const router = Router()
 
@@ -18,6 +19,7 @@ router.post(
     body('donationLocation').optional().isString(),
     body('message').optional().isString(),
   ],
+  validateRequest,
   createDonation
 )
 
@@ -27,6 +29,7 @@ router.post(
   [
     body('itemId').isUUID().withMessage('Item ID is required'),
   ],
+  validateRequest,
   receiveDonation
 )
 

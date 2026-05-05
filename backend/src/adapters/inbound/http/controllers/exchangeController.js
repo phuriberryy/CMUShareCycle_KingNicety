@@ -4,11 +4,12 @@ import pool, { query } from '../../../outbound/persistence/pool.js'
 import { sendEmail } from '../../../../shared/utils/email.js'
 import { calculateItemCO2, calculateExchangeCO2Reduction } from '../../../../shared/utils/co2Calculator.js'
 import { getChatServer } from '../../../../application/services/chatService.js'
+import { badRequest, forbidden, internalError, notFound, unauthorized } from '../../../../shared/http/apiError.js'
 
 // สร้างคำขอแลกเปลี่ยน
 export const createExchangeRequest = async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' })
+    return res.status(401).json(unauthorized())
   }
 
   const errors = validationResult(req)
@@ -48,13 +49,13 @@ export const createExchangeRequest = async (req, res) => {
 
     if (!itemResult.rowCount) {
       await client.query('ROLLBACK')
-      return res.status(404).json({ message: 'Item not found' })
+      return res.status(404).json(notFound('Item not found'))
     }
 
     item = itemResult.rows[0]
     if (item.user_id === req.user.id) {
       await client.query('ROLLBACK')
-      return res.status(400).json({ message: 'You cannot exchange your own item' })
+      return res.status(400).json(badRequest('You cannot exchange your own item'))
     }
 
     // ตรวจสอบว่ามีคำขอแลกเปลี่ยนอยู่แล้วหรือไม่ (pending, chatting, in_progress)
@@ -185,7 +186,7 @@ export const createExchangeRequest = async (req, res) => {
       console.error('Failed to rollback exchange request:', rollbackErr)
     }
     console.error('Create exchange request error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   } finally {
     client.release()
   }
@@ -194,7 +195,7 @@ export const createExchangeRequest = async (req, res) => {
 // ดึงรายละเอียดคำขอแลกเปลี่ยน
 export const getExchangeRequest = async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' })
+    return res.status(401).json(unauthorized())
   }
 
   const { requestId } = req.params
@@ -240,14 +241,14 @@ export const getExchangeRequest = async (req, res) => {
     )
 
     if (!result.rowCount) {
-      return res.status(404).json({ message: 'Exchange request not found' })
+      return res.status(404).json(notFound('Exchange request not found'))
     }
 
     const exchangeRequest = result.rows[0]
     
     // ตรวจสอบสิทธิ์ (เจ้าของโพสต์หรือผู้ขอแลกเท่านั้นที่ดูได้)
     if (exchangeRequest.item_owner_id !== req.user.id && exchangeRequest.requester_id !== req.user.id) {
-      return res.status(403).json({ message: 'You do not have permission to view this exchange request' })
+      return res.status(403).json(forbidden('You do not have permission to view this exchange request'))
     }
 
     // ดึงข้อมูล item ที่ผู้ขอแลกต้องการแลก (ถ้ามี)
@@ -256,14 +257,14 @@ export const getExchangeRequest = async (req, res) => {
     return res.json(exchangeRequest)
   } catch (err) {
     console.error('Get exchange request error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 
 // เจ้าของโพสต์ยอมรับคำขอแลกเปลี่ยน
 export const acceptExchangeRequestByOwner = async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' })
+    return res.status(401).json(unauthorized())
   }
 
   const { requestId } = req.params
@@ -283,19 +284,19 @@ export const acceptExchangeRequestByOwner = async (req, res) => {
     )
 
     if (!requestResult.rowCount) {
-      return res.status(404).json({ message: 'Exchange request not found' })
+      return res.status(404).json(notFound('Exchange request not found'))
     }
 
     const exchangeRequest = requestResult.rows[0]
 
     // ตรวจสอบว่าเป็นเจ้าของโพสต์หรือไม่
     if (exchangeRequest.owner_id !== req.user.id) {
-      return res.status(403).json({ message: 'You can only accept requests for your own items' })
+      return res.status(403).json(forbidden('You can only accept requests for your own items'))
     }
 
     // ตรวจสอบว่ายัง pending อยู่หรือไม่
     if (exchangeRequest.status !== 'pending') {
-      return res.status(400).json({ message: 'Exchange request is not pending' })
+      return res.status(400).json(badRequest('Exchange request is not pending'))
     }
 
     // อัปเดต owner_accepted เป็น true
@@ -406,14 +407,14 @@ export const acceptExchangeRequestByOwner = async (req, res) => {
     })
   } catch (err) {
     console.error('Accept exchange request error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 
 // ผู้ขอแลกยอมรับคำขอแลกเปลี่ยน
 export const acceptExchangeRequestByRequester = async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' })
+    return res.status(401).json(unauthorized())
   }
 
   const { requestId } = req.params
@@ -433,24 +434,24 @@ export const acceptExchangeRequestByRequester = async (req, res) => {
     )
 
     if (!requestResult.rowCount) {
-      return res.status(404).json({ message: 'Exchange request not found' })
+      return res.status(404).json(notFound('Exchange request not found'))
     }
 
     const exchangeRequest = requestResult.rows[0]
 
     // ตรวจสอบว่าเป็นผู้ขอแลกหรือไม่
     if (exchangeRequest.requester_id !== req.user.id) {
-      return res.status(403).json({ message: 'You can only accept your own exchange requests' })
+      return res.status(403).json(forbidden('You can only accept your own exchange requests'))
     }
 
     // ตรวจสอบว่า owner accept แล้วหรือยัง
     if (!exchangeRequest.owner_accepted) {
-      return res.status(400).json({ message: 'Owner has not accepted the request yet' })
+      return res.status(400).json(badRequest('Owner has not accepted the request yet'))
     }
 
     // ตรวจสอบว่ายัง pending อยู่หรือไม่
     if (exchangeRequest.status !== 'pending') {
-      return res.status(400).json({ message: 'Exchange request is not pending' })
+      return res.status(400).json(badRequest('Exchange request is not pending'))
     }
 
     // อัปเดต requester_accepted เป็น true
@@ -526,14 +527,14 @@ export const acceptExchangeRequestByRequester = async (req, res) => {
     })
   } catch (err) {
     console.error('Accept exchange request by requester error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 
 // ปฏิเสธคำขอแลกเปลี่ยน
 export const rejectExchangeRequest = async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' })
+    return res.status(401).json(unauthorized())
   }
 
   const { requestId } = req.params
@@ -553,7 +554,7 @@ export const rejectExchangeRequest = async (req, res) => {
     )
 
     if (!requestResult.rowCount) {
-      return res.status(404).json({ message: 'Exchange request not found' })
+      return res.status(404).json(notFound('Exchange request not found'))
     }
 
     const exchangeRequest = requestResult.rows[0]
@@ -563,7 +564,7 @@ export const rejectExchangeRequest = async (req, res) => {
     const isRequester = exchangeRequest.requester_id === req.user.id
 
     if (!isOwner && !isRequester) {
-      return res.status(403).json({ message: 'You can only reject your own exchange requests' })
+      return res.status(403).json(forbidden('You can only reject your own exchange requests'))
     }
 
     // อัปเดต status เป็น rejected
@@ -616,14 +617,14 @@ export const rejectExchangeRequest = async (req, res) => {
     return res.json({ success: true, message: 'Exchange request rejected' })
   } catch (err) {
     console.error('Reject exchange request error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 
 // ดึงคำขอแลกเปลี่ยนที่เกี่ยวข้องกับผู้ใช้
 export const getMyExchangeRequests = async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' })
+    return res.status(401).json(unauthorized())
   }
 
   try {
@@ -653,7 +654,7 @@ export const getMyExchangeRequests = async (req, res) => {
     return res.json(result.rows)
   } catch (err) {
     console.error('Get my exchange requests error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 

@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { body, param } from 'express-validator'
 import { authenticate } from '../middleware/auth.js'
 import { createRateLimiter } from '../middleware/rateLimiter.js'
+import { validateRequest } from '../middleware/validateRequest.js'
 import {
   getItems,
   getItemById,
@@ -31,6 +32,7 @@ router.get(
   '/user/:userId',
   authenticate,
   [param('userId').isUUID()],
+  validateRequest,
   getUserItems
 )
 
@@ -38,11 +40,12 @@ router.get(
   '/:itemId/exchange-requests',
   authenticate,
   [param('itemId').isUUID()],
+  validateRequest,
   getItemExchangeRequests
 )
 
 // Parameterized routes (must be last)
-router.get('/:itemId', [param('itemId').isUUID()], getItemById)
+router.get('/:itemId', [param('itemId').isUUID()], validateRequest, getItemById)
 
 // Protected routes
 // Rate limit: 5 posts per hour per user
@@ -101,6 +104,7 @@ router.post(
       .isLength({ max: 100 })
       .withMessage('Pickup location must not exceed 100 characters'),
   ],
+  validateRequest,
   createItem
 )
 
@@ -158,6 +162,7 @@ router.put(
       .optional()
       .isIn(['active', 'inactive', 'exchanged', 'deleted']),
   ],
+  validateRequest,
   updateItem
 )
 
@@ -165,6 +170,7 @@ router.delete(
   '/:itemId',
   authenticate,
   [param('itemId').isUUID()],
+  validateRequest,
   deleteItem
 )
 

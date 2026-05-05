@@ -6,6 +6,7 @@ import {
   testExchangeAcceptedEmail,
   testExchangeCompletedEmail,
 } from '../controllers/emailController.js'
+import { validateRequest } from '../middleware/validateRequest.js'
 
 const router = Router()
 
@@ -17,6 +18,7 @@ router.post(
     body('subject').optional().isString(),
     body('html').optional().isString(),
   ],
+  validateRequest,
   testEmail
 )
 
@@ -24,6 +26,7 @@ router.post(
 router.post(
   '/test-exchange-request',
   [body('to').isEmail().withMessage('Valid email required')],
+  validateRequest,
   testExchangeRequestEmail
 )
 
@@ -31,6 +34,7 @@ router.post(
 router.post(
   '/test-exchange-accepted',
   [body('to').isEmail().withMessage('Valid email required')],
+  validateRequest,
   testExchangeAcceptedEmail
 )
 
@@ -38,6 +42,7 @@ router.post(
 router.post(
   '/test-exchange-completed',
   [body('to').isEmail().withMessage('Valid email required')],
+  validateRequest,
   testExchangeCompletedEmail
 )
 

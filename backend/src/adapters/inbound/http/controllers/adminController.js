@@ -1,6 +1,7 @@
 import { validationResult } from 'express-validator'
 import { query } from '../../../outbound/persistence/pool.js'
 import { logAdminAction } from '../../../../shared/utils/auditLogger.js'
+import { badRequest, internalError, notFound } from '../../../../shared/http/apiError.js'
 
 // ---- Dashboard -------------------------------------------------------------
 
@@ -21,7 +22,7 @@ export const getAdminSummary = async (_req, res) => {
     })
   } catch (err) {
     console.error('Admin summary error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 
@@ -71,7 +72,7 @@ export const listUsers = async (req, res) => {
     })
   } catch (err) {
     console.error('Admin list users error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 
@@ -80,7 +81,7 @@ export const updateUserRole = async (req, res) => {
   const { role } = req.body || {}
 
   if (!['user', 'admin'].includes(role)) {
-    return res.status(400).json({ message: 'Invalid role' })
+    return res.status(400).json(badRequest('Invalid role'))
   }
 
   try {
@@ -93,7 +94,7 @@ export const updateUserRole = async (req, res) => {
     )
 
     if (!result.rowCount) {
-      return res.status(404).json({ message: 'User not found' })
+      return res.status(404).json(notFound('User not found'))
     }
 
     await logAdminAction({
@@ -107,7 +108,7 @@ export const updateUserRole = async (req, res) => {
     return res.json(result.rows[0])
   } catch (err) {
     console.error('Admin update user role error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 
@@ -116,7 +117,7 @@ export const updateUserSuspension = async (req, res) => {
   const { suspended } = req.body || {}
 
   if (typeof suspended !== 'boolean') {
-    return res.status(400).json({ message: 'suspended must be boolean' })
+    return res.status(400).json(badRequest('suspended must be boolean'))
   }
 
   try {
@@ -129,7 +130,7 @@ export const updateUserSuspension = async (req, res) => {
     )
 
     if (!result.rowCount) {
-      return res.status(404).json({ message: 'User not found' })
+      return res.status(404).json(notFound('User not found'))
     }
 
     await logAdminAction({
@@ -142,14 +143,14 @@ export const updateUserSuspension = async (req, res) => {
     return res.json(result.rows[0])
   } catch (err) {
     console.error('Admin update user suspension error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 
 export const softDeleteUser = async (req, res) => {
   const { id } = req.params
   if (id === req.user.id) {
-    return res.status(400).json({ message: 'You cannot delete your own admin account' })
+    return res.status(400).json(badRequest('You cannot delete your own admin account'))
   }
 
   try {
@@ -162,7 +163,7 @@ export const softDeleteUser = async (req, res) => {
     )
 
     if (!result.rowCount) {
-      return res.status(404).json({ message: 'User not found or already deleted' })
+      return res.status(404).json(notFound('User not found or already deleted'))
     }
 
     await logAdminAction({
@@ -175,7 +176,7 @@ export const softDeleteUser = async (req, res) => {
     return res.json({ success: true })
   } catch (err) {
     console.error('Admin soft delete user error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 
@@ -228,7 +229,7 @@ export const listItems = async (req, res) => {
     })
   } catch (err) {
     console.error('Admin list items error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 
@@ -245,7 +246,7 @@ export const softDeleteItem = async (req, res) => {
     )
 
     if (!result.rowCount) {
-      return res.status(404).json({ message: 'Item not found or already deleted' })
+      return res.status(404).json(notFound('Item not found or already deleted'))
     }
 
     await logAdminAction({
@@ -258,7 +259,7 @@ export const softDeleteItem = async (req, res) => {
     return res.json({ success: true })
   } catch (err) {
     console.error('Admin soft delete item error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 
@@ -310,7 +311,7 @@ export const listReports = async (req, res) => {
     })
   } catch (err) {
     console.error('Admin list reports error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 
@@ -319,7 +320,7 @@ export const updateReportStatus = async (req, res) => {
   const { status } = req.body || {}
 
   if (!['approved', 'rejected', 'pending'].includes(status)) {
-    return res.status(400).json({ message: 'Invalid status' })
+    return res.status(400).json(badRequest('Invalid status'))
   }
 
   try {
@@ -333,7 +334,7 @@ export const updateReportStatus = async (req, res) => {
     )
 
     if (!result.rowCount) {
-      return res.status(404).json({ message: 'Report not found' })
+      return res.status(404).json(notFound('Report not found'))
     }
 
     await logAdminAction({
@@ -347,7 +348,7 @@ export const updateReportStatus = async (req, res) => {
     return res.json(result.rows[0])
   } catch (err) {
     console.error('Admin update report status error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 
@@ -391,7 +392,7 @@ export const listChats = async (req, res) => {
     })
   } catch (err) {
     console.error('Admin list chats error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 
@@ -415,7 +416,7 @@ export const getChatMessages = async (req, res) => {
     return res.json(messagesResult.rows)
   } catch (err) {
     console.error('Admin get chat messages error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 
@@ -434,7 +435,7 @@ export const softDeleteMessage = async (req, res) => {
     )
 
     if (!result.rowCount) {
-      return res.status(404).json({ message: 'Message not found or already deleted' })
+      return res.status(404).json(notFound('Message not found or already deleted'))
     }
 
     await logAdminAction({
@@ -448,7 +449,7 @@ export const softDeleteMessage = async (req, res) => {
     return res.json({ success: true })
   } catch (err) {
     console.error('Admin soft delete message error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 

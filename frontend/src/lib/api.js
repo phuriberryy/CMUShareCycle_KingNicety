@@ -20,6 +20,18 @@ const handleUnauthorized = () => {
   }
 }
 
+export function toApiErrorMessage(error, fallback = 'Request failed') {
+  if (!error) return fallback
+  if (typeof error === 'string') return error
+  if (typeof error?.message === 'string' && error.message.trim()) return error.message
+  if (Array.isArray(error?.errors) && error.errors.length > 0) {
+    const first = error.errors[0]
+    if (typeof first === 'string') return first
+    if (typeof first?.message === 'string') return first.message
+  }
+  return fallback
+}
+
 const handleResponse = async (res) => {
   if (res.status === 204) return null
   const data = await res.json().catch(() => ({}))
@@ -27,7 +39,7 @@ const handleResponse = async (res) => {
     if (res.status === 401) {
       handleUnauthorized()
     }
-    const error = new Error(data.message || 'Request failed')
+    const error = new Error(toApiErrorMessage(data, 'Request failed'))
     // Attach status code for better error handling
     error.status = res.status
     // Attach additional error data for error handling

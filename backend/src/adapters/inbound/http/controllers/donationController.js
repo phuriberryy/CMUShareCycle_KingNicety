@@ -3,11 +3,12 @@ import { query } from '../../../outbound/persistence/pool.js'
 import { calculateItemCO2 } from '../../../../shared/utils/co2Calculator.js'
 import { sendEmail } from '../../../../shared/utils/email.js'
 import env from '../../../../infrastructure/config/env.js'
+import { badRequest, internalError, notFound, unauthorized } from '../../../../shared/http/apiError.js'
 
 // สร้างการบริจาค
 export const createDonation = async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' })
+    return res.status(401).json(unauthorized())
   }
 
   const errors = validationResult(req)
@@ -118,14 +119,14 @@ export const createDonation = async (req, res) => {
     })
   } catch (err) {
     console.error('Create donation error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 
 // ดึงประวัติการบริจาคของผู้ใช้
 export const getMyDonations = async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' })
+    return res.status(401).json(unauthorized())
   }
 
   try {
@@ -149,14 +150,14 @@ export const getMyDonations = async (req, res) => {
     return res.json(result.rows)
   } catch (err) {
     console.error('Get my donations error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 
 // รับบริจาค (สำหรับคนอื่นที่เห็นของบริจาค)
 export const receiveDonation = async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' })
+    return res.status(401).json(unauthorized())
   }
 
   const { itemId } = req.body
@@ -283,7 +284,7 @@ export const receiveDonation = async (req, res) => {
     })
   } catch (err) {
     console.error('Receive donation error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 
@@ -299,7 +300,7 @@ export const getAllDonations = async (_req, res) => {
     return res.json(result.rows[0])
   } catch (err) {
     console.error('Get all donations error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 

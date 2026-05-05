@@ -1,4 +1,5 @@
 import { query } from '../../../outbound/persistence/pool.js'
+import { internalError, notFound, unauthorized } from '../../../../shared/http/apiError.js'
 
 /**
  * GET /api/leaderboard
@@ -129,7 +130,7 @@ export const getLeaderboard = async (req, res) => {
     res.json({ leaders: rankedLeaders, type, period })
   } catch (err) {
     console.error('Get leaderboard error:', err)
-    res.status(500).json({ message: 'Failed to fetch leaderboard' })
+    res.status(500).json(internalError('Failed to fetch leaderboard'))
   }
 }
 
@@ -186,7 +187,7 @@ export const getFacultyLeaderboard = async (req, res) => {
     res.json({ faculties: rankedFaculties, type, period })
   } catch (err) {
     console.error('Get faculty leaderboard error:', err)
-    res.status(500).json({ message: 'Failed to fetch faculty leaderboard' })
+    res.status(500).json(internalError('Failed to fetch faculty leaderboard'))
   }
 }
 
@@ -196,7 +197,7 @@ export const getFacultyLeaderboard = async (req, res) => {
  */
 export const getMyRank = async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' })
+    return res.status(401).json(unauthorized())
   }
 
   try {
@@ -214,7 +215,7 @@ export const getMyRank = async (req, res) => {
     )
 
     if (!userResult.rowCount) {
-      return res.status(404).json({ message: 'User not found' })
+      return res.status(404).json(notFound('User not found'))
     }
 
     const user = userResult.rows[0]
@@ -256,6 +257,6 @@ export const getMyRank = async (req, res) => {
     })
   } catch (err) {
     console.error('Get my rank error:', err)
-    res.status(500).json({ message: 'Failed to fetch rank' })
+    res.status(500).json(internalError('Failed to fetch rank'))
   }
 }

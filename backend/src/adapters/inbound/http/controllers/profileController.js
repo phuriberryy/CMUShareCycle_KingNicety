@@ -1,9 +1,10 @@
 import { query } from '../../../outbound/persistence/pool.js'
+import { badRequest, forbidden, internalError, notFound, unauthorized } from '../../../../shared/http/apiError.js'
 
 // ดึงข้อมูล profile และ statistics
 export const getProfile = async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' })
+    return res.status(401).json(unauthorized())
   }
 
   try {
@@ -14,7 +15,7 @@ export const getProfile = async (req, res) => {
     )
 
     if (!userResult.rowCount) {
-      return res.status(404).json({ message: 'User not found' })
+      return res.status(404).json(notFound('User not found'))
     }
 
     const user = userResult.rows[0]
@@ -45,14 +46,14 @@ export const getProfile = async (req, res) => {
     })
   } catch (err) {
     console.error('Get profile error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 
 // ดึง items ที่ผู้ใช้โพสต์
 export const getMyItems = async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' })
+    return res.status(401).json(unauthorized())
   }
 
   try {
@@ -81,14 +82,14 @@ export const getMyItems = async (req, res) => {
     return res.json(items)
   } catch (err) {
     console.error('Get my items error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 
 // อัปเดต item
 export const updateItem = async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' })
+    return res.status(401).json(unauthorized())
   }
 
   const { itemId } = req.params
@@ -98,11 +99,11 @@ export const updateItem = async (req, res) => {
     // ตรวจสอบว่า item เป็นของ user นี้หรือไม่
     const itemCheck = await query('SELECT user_id FROM items WHERE id=$1', [itemId])
     if (!itemCheck.rowCount) {
-      return res.status(404).json({ message: 'Item not found' })
+      return res.status(404).json(notFound('Item not found'))
     }
 
     if (itemCheck.rows[0].user_id !== req.user.id) {
-      return res.status(403).json({ message: 'You can only update your own items' })
+      return res.status(403).json(forbidden('You can only update your own items'))
     }
 
     const result = await query(
@@ -125,14 +126,14 @@ export const updateItem = async (req, res) => {
     return res.json(result.rows[0])
   } catch (err) {
     console.error('Update item error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 
 // ลบ item
 export const deleteItem = async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' })
+    return res.status(401).json(unauthorized())
   }
 
   const { itemId } = req.params
@@ -141,11 +142,11 @@ export const deleteItem = async (req, res) => {
     // ตรวจสอบว่า item เป็นของ user นี้หรือไม่
     const itemCheck = await query('SELECT user_id FROM items WHERE id=$1', [itemId])
     if (!itemCheck.rowCount) {
-      return res.status(404).json({ message: 'Item not found' })
+      return res.status(404).json(notFound('Item not found'))
     }
 
     if (itemCheck.rows[0].user_id !== req.user.id) {
-      return res.status(403).json({ message: 'You can only delete your own items' })
+      return res.status(403).json(forbidden('You can only delete your own items'))
     }
 
     // ลบ item (CASCADE จะลบ exchange_requests ที่เกี่ยวข้องด้วย)
@@ -154,14 +155,14 @@ export const deleteItem = async (req, res) => {
     return res.json({ success: true, message: 'Item deleted successfully' })
   } catch (err) {
     console.error('Delete item error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 
 // ดึงประวัติการแลกเปลี่ยน
 export const getExchangeHistory = async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' })
+    return res.status(401).json(unauthorized())
   }
 
   try {
@@ -233,14 +234,14 @@ export const getExchangeHistory = async (req, res) => {
     return res.json(formattedResults)
   } catch (err) {
     console.error('Get exchange history error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 
 // อัปเดต profile
 export const updateProfile = async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' })
+    return res.status(401).json(unauthorized())
   }
 
   const { name, faculty, avatar_url } = req.body
@@ -270,7 +271,7 @@ export const updateProfile = async (req, res) => {
     }
 
     if (updateFields.length === 0) {
-      return res.status(400).json({ message: 'No fields to update' })
+      return res.status(400).json(badRequest('No fields to update'))
     }
 
     // เพิ่ม updated_at
@@ -289,13 +290,13 @@ export const updateProfile = async (req, res) => {
     )
 
     if (!result.rowCount) {
-      return res.status(404).json({ message: 'User not found' })
+      return res.status(404).json(notFound('User not found'))
     }
 
     return res.json(result.rows[0])
   } catch (err) {
     console.error('Update profile error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 

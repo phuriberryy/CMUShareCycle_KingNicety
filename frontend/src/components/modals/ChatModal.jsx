@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import { io } from 'socket.io-client'
 import { Link } from 'react-router-dom'
-import { Send, MessageCircle, Loader2, X, Trash2, Camera, ArrowLeft, Search, Plus, Image as ImageIcon } from 'lucide-react'
+import { MessageCircle, X, ArrowLeft, Search } from 'lucide-react'
 import Modal from '../ui/Modal'
 import { API_BASE, chatApi } from '../../lib/api'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
+import ChatInboxList from '../../features/chat/components/ChatInboxList'
+import DesktopChatPanel from '../../features/chat/components/DesktopChatPanel'
+import MobileChatPanel from '../../features/chat/components/MobileChatPanel'
 
 const SOCKET_URL = API_BASE.replace(/\/api$/, '')
 const CHAT_META_STORAGE_KEY = 'sharecycle_chat_meta_v1'
@@ -94,17 +97,6 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
     })
   }, [])
 
-  const getChatStatusLabel = (chat) => {
-    if (!chat) return ''
-    const { status } = chat
-    if (status === 'active') return chat.qrConfirmed ? 'ยืนยันแล้ว' : 'พร้อมแชท'
-    if (status === 'pending') return chat.ownerAccepted || chat.requesterAccepted ? 'รออีกฝ่ายยืนยัน' : 'รอยืนยัน'
-    if (status === 'declined') return 'ถูกปฏิเสธ'
-    if (status === 'closed') return 'ปิดแล้ว'
-    if (status === 'chatting') return 'กำลังสนทนา'
-    return typeof status === 'string' ? status : ''
-  }
-
   const isMobileChatDetail = isMobile && selectedChat !== null
   const activeChat = useMemo(() => chats.find((c) => c.id === selectedChat) || null, [chats, selectedChat])
   const isNearBottom = useCallback(() => {
@@ -187,7 +179,7 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
     })
 
     return () => socket.disconnect()
-  }, [token, open, toast, chatMeta, updateChatMeta, bumpChatToTop, scrollToBottom])
+  }, [token, open, toast, chatMeta, updateChatMeta, bumpChatToTop, scrollToBottom, isNearBottom])
 
   useEffect(() => {
     activeChatRef.current = selectedChat
@@ -221,7 +213,7 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
     if (socket?.connected) socket.emit('chat:join', { chatId: selectedChat })
 
     return () => { cancelled = true }
-  }, [open, selectedChat, token, updateChatMeta, scrollToBottom])
+  }, [open, selectedChat, token, updateChatMeta, scrollToBottom, isNearBottom])
 
   useEffect(() => {
     const updateViewport = () => setIsMobile(window.innerWidth < 768)
@@ -406,155 +398,48 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
         <div className="mb-1.5 px-0.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
           <span>กล่องขาเข้า</span>
         </div>
-        <div className="flex flex-col gap-2">
-          {loading ? (
-            <div className="flex items-center gap-2 rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-500 shadow-sm">
-              <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
-              กำลังโหลด...
-            </div>
-          ) : filteredChats.length > 0 ? (
-            filteredChats.map((chat) => {
-              const isDeleting = deletingChatId === chat.id
-              const isActive = selectedChat === chat.id
-              const lastText = chatMeta?.[chat.id]?.lastText || chat.participant_email || 'เริ่มแชท'
-              const lastTime = chatMeta?.[chat.id]?.lastAt ? formatMessageTime(new Date(chatMeta[chat.id].lastAt).toISOString()) : ''
-              const unread = chatMeta?.[chat.id]?.unread || 0
-              const initials = (chat.participant_name || 'CMU').split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase()
-              return (
-                <div key={chat.id} className="group flex items-stretch gap-1.5">
-                  <button
-                    type="button"
-                    className={`flex min-w-0 flex-1 items-start gap-3 rounded-2xl border bg-white p-3 text-left shadow-sm transition hover:shadow-md ${isActive ? 'border-primary/30 ring-1 ring-primary/15' : 'border-gray-200'} ${!isActive && unread > 0 ? 'border-l-[3px] border-l-primary' : ''}`}
-                    onClick={() => handleSelectChat(chat.id)}
-                  >
-                    <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-xs font-bold text-white shadow-sm">
-                      {initials}
-                      {unread > 0 && <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-primary" />}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="truncate text-sm font-semibold text-gray-900">{chat.participant_name || 'นักศึกษา CMU'}</p>
-                        {lastTime ? <span className="shrink-0 text-[10px] text-gray-400">{lastTime}</span> : null}
-                      </div>
-                      <p className="mt-0.5 truncate text-xs text-gray-600">{lastText}</p>
-                      <div className="mt-1.5 flex items-center justify-between gap-2">
-                        <p className="text-[11px] font-semibold text-primary">{getChatStatusLabel(chat)}</p>
-                        {unread > 0 ? (
-                          <span className="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-white">
-                            {unread > 99 ? '99+' : unread}
-                          </span>
-                        ) : null}
-                      </div>
-                    </div>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteChat(chat.id)}
-                    disabled={isDeleting}
-                    className="flex h-9 w-9 shrink-0 items-center justify-center self-center rounded-xl text-red-500 transition hover:bg-red-50 disabled:opacity-50"
-                    aria-label="ลบแชท"
-                  >
-                    {isDeleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
-                  </button>
-                </div>
-              )
-            })
-          ) : (
-            chatListEmpty
-          )}
-        </div>
+        <ChatInboxList
+          loading={loading}
+          filteredChats={filteredChats}
+          selectedChat={selectedChat}
+          deletingChatId={deletingChatId}
+          chatMeta={chatMeta}
+          onSelectChat={handleSelectChat}
+          onDeleteChat={handleDeleteChat}
+          chatListEmpty={chatListEmpty}
+          formatMessageTime={formatMessageTime}
+        />
       </div>
     </div>
   )
 
   const mobileDetail = (
-    <div className={`flex h-full min-h-0 flex-col bg-[#FBFCFB] md:hidden ${isMobileChatDetail ? 'flex' : 'hidden'}`}>
-      <div className="absolute inset-x-0 top-0 z-40 h-0" />
-      <div className="sticky top-0 z-30 shrink-0 border-b border-gray-200 bg-white/95 px-4 py-3 backdrop-blur-sm">
-        <div className="flex items-center gap-3">
-          <button type="button" onClick={handleBackToList} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-600" aria-label="กลับไปรายการแชท"><ArrowLeft size={18} /></button>
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white shadow-sm">{(activeChat?.participant_name || 'CMU').split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase()}</div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-base font-semibold text-gray-900">{activeChat?.participant_name || 'นักศึกษา CMU'}</p>
-            <p className="truncate text-xs text-gray-500">{activeChat?.participant_email || ''}</p>
-          </div>
-          <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold ${socketConnected ? 'bg-primary/10 text-primary-dark' : 'bg-amber-50 text-amber-700'}`}>{socketConnected ? 'ออนไลน์' : 'รอเชื่อมต่อ'}</span>
-        </div>
-      </div>
-
-      <div ref={messageScrollRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4" style={{ paddingBottom: `calc(${composerHeight}px + env(safe-area-inset-bottom) + 1rem)` }}>
-        {messagesLoading ? <div className="flex h-full items-center justify-center text-sm text-gray-500"><Loader2 className="mr-2 animate-spin" size={16} /> กำลังโหลดข้อความ...</div> : groupedMessages.length > 0 ? (
-          <div className="space-y-1.5">
-            {groupedMessages.map((message) => {
-              const mine = message._mine
-              return (
-                <div key={getMessageId(message)} className={`flex ${mine ? 'justify-end' : 'justify-start'} ${message._groupStart ? 'mt-3' : 'mt-0.5'}`}>
-                  <div className={`max-w-[82%] rounded-2xl px-3 py-2 text-sm shadow-sm transition-opacity ${mine ? 'bg-primary text-white' : 'bg-white text-gray-800 border border-gray-200'} ${message.pending ? 'opacity-70' : 'opacity-100'}`}>
-                    {message.image_url ? <img src={message.image_url} alt="รูปที่แนบ" className="mb-2 max-h-72 w-full rounded-xl object-cover" /> : null}
-                    {message.body ? <p className="whitespace-pre-wrap break-words">{message.body}</p> : null}
-                    {message.pending ? <p className={`mt-1 text-[10px] ${mine ? 'text-white/80' : 'text-gray-400'}`}>กำลังส่ง…</p> : null}
-                    {message._showTimestamp ? <p className={`mt-1 text-[10px] ${mine ? 'text-white/75' : 'text-gray-400'}`}>{formatMessageTime(message.created_at)}</p> : null}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        ) : (
-          <div className="flex h-full items-center justify-center text-center text-gray-500">
-            <div>
-              <p className="font-medium text-gray-700">ยังไม่มีข้อความ</p>
-              <p className="mt-1 text-sm text-gray-500">ส่งข้อความแรกได้เลย</p>
-            </div>
-          </div>
-        )}
-        <div ref={bottomRef} />
-      </div>
-
-      <div ref={composerRef} className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-100 bg-white px-4 pt-3 shadow-[0_-8px_24px_rgba(0,0,0,0.08)]" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.75rem)' }}>
-        <div className={`fixed inset-0 z-40 bg-black/30 transition-opacity ${sheetOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`} onClick={() => setSheetOpen(false)} />
-        <div className={`fixed inset-x-0 bottom-0 z-50 transition-transform duration-300 ease-out ${sheetOpen ? 'translate-y-0' : 'translate-y-full'}`}>
-          <div className="mx-auto max-w-2xl rounded-t-3xl border border-gray-200 bg-white p-4 shadow-2xl">
-            <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-gray-200" />
-            <button type="button" onClick={() => { handlePickImage(); setSheetOpen(false) }} className="flex min-h-12 w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-medium text-gray-800 transition active:scale-[0.98] hover:bg-gray-50">
-              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary"><ImageIcon size={18} /></span>
-              อัปโหลดรูป
-            </button>
-            <button type="button" onClick={() => { handlePickImage(); setSheetOpen(false) }} className="mt-2 flex min-h-12 w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-medium text-gray-800 transition active:scale-[0.98] hover:bg-gray-50">
-              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary"><Camera size={18} /></span>
-              เปิดกล้อง
-            </button>
-            <button type="button" onClick={() => setSheetOpen(false)} className="mt-2 flex min-h-12 w-full items-center justify-center rounded-2xl bg-gray-100 px-4 py-3 text-sm font-semibold text-gray-700 transition active:scale-[0.98]">ปิด</button>
-          </div>
-        </div>
-
-        {pendingImage ? <div className="mb-3 flex items-center gap-3 rounded-2xl border border-gray-200 bg-gray-50 p-2"><img src={pendingImage} alt="ตัวอย่างรูป" className="h-12 w-12 rounded-xl object-cover" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-medium text-gray-800">พร้อมส่งรูป</p><p className="text-xs text-gray-500">กดส่งเพื่ออัปโหลดรูป</p></div><button type="button" onClick={() => setPendingImage(null)} className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-gray-500"><X size={16} /></button></div> : null}
-
-        <div className="flex items-end gap-2">
-          <button type="button" onClick={() => setSheetOpen(true)} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-700 transition active:scale-95" aria-label="เปิดเมนูเพิ่มเติม">
-            <Plus size={18} />
-          </button>
-          <div className="min-w-0 flex-1 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-2.5 focus-within:border-primary focus-within:bg-white focus-within:ring-2 focus-within:ring-primary/10">
-            <input
-              type="text"
-              value={composerText}
-              onChange={(e) => setComposerText(e.target.value)}
-              placeholder="พิมพ์ข้อความ..."
-              className="w-full bg-transparent text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault()
-                  handleSendMessage()
-                }
-              }}
-            />
-          </div>
-          <button type="button" onClick={handleSendMessage} disabled={!composerText.trim() && !pendingImage} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-white transition active:scale-95 disabled:opacity-40" aria-label="ส่งข้อความ">
-            {uploadingImage || sendingMessage ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
-          </button>
-        </div>
-        <input ref={fileInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleImageSelected} />
-      </div>
-    </div>
+    <MobileChatPanel
+      isOpen={isMobileChatDetail}
+      activeChat={activeChat}
+      socketConnected={socketConnected}
+      handleBackToList={handleBackToList}
+      messageScrollRef={messageScrollRef}
+      composerHeight={composerHeight}
+      messagesLoading={messagesLoading}
+      groupedMessages={groupedMessages}
+      getMessageId={getMessageId}
+      formatMessageTime={formatMessageTime}
+      bottomRef={bottomRef}
+      composerRef={composerRef}
+      sheetOpen={sheetOpen}
+      setSheetOpen={setSheetOpen}
+      handlePickImage={handlePickImage}
+      pendingImage={pendingImage}
+      setPendingImage={setPendingImage}
+      composerText={composerText}
+      setComposerText={setComposerText}
+      handleSendMessage={handleSendMessage}
+      uploadingImage={uploadingImage}
+      sendingMessage={sendingMessage}
+      fileInputRef={fileInputRef}
+      handleImageSelected={handleImageSelected}
+    />
   )
 
   const desktopLayout = (
@@ -584,144 +469,46 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
           <div className="mb-1.5 px-0.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
             <span>กล่องขาเข้า</span>
           </div>
-          <div className="flex flex-col gap-2">
-            {loading ? (
-              <div className="flex items-center gap-2 rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-500 shadow-sm">
-                <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
-                กำลังโหลด...
-              </div>
-            ) : filteredChats.length > 0 ? (
-              filteredChats.map((chat) => {
-                const isDeleting = deletingChatId === chat.id
-                const isActive = selectedChat === chat.id
-                const lastText = chatMeta?.[chat.id]?.lastText || chat.participant_email || 'เริ่มแชท'
-                const lastTime = chatMeta?.[chat.id]?.lastAt ? formatMessageTime(new Date(chatMeta[chat.id].lastAt).toISOString()) : ''
-                const unread = chatMeta?.[chat.id]?.unread || 0
-                const initials = (chat.participant_name || 'CMU').split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase()
-                return (
-                  <div key={chat.id} className="group flex items-stretch gap-1.5">
-                    <button
-                      type="button"
-                      className={`flex min-w-0 flex-1 items-start gap-3 rounded-2xl border bg-white p-3 text-left shadow-sm transition hover:shadow-md ${isActive ? 'border-primary/30 ring-1 ring-primary/15' : 'border-gray-200'} ${!isActive && unread > 0 ? 'border-l-[3px] border-l-primary' : ''}`}
-                      onClick={() => handleSelectChat(chat.id)}
-                    >
-                      <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-xs font-bold text-white shadow-sm">
-                        {initials}
-                        {unread > 0 && <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-primary" />}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-start justify-between gap-2">
-                          <p className="truncate text-sm font-semibold text-gray-900">{chat.participant_name || 'นักศึกษา CMU'}</p>
-                          {lastTime ? <span className="shrink-0 text-[10px] text-gray-400">{lastTime}</span> : null}
-                        </div>
-                        <p className="mt-0.5 truncate text-xs text-gray-600">{lastText}</p>
-                        <div className="mt-1.5 flex items-center justify-between gap-2">
-                          <p className="text-[11px] font-semibold text-primary">{getChatStatusLabel(chat)}</p>
-                          {unread > 0 ? (
-                            <span className="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-white">
-                              {unread > 99 ? '99+' : unread}
-                            </span>
-                          ) : null}
-                        </div>
-                      </div>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteChat(chat.id)}
-                      disabled={isDeleting}
-                      className="flex h-9 w-9 shrink-0 items-center justify-center self-center rounded-xl text-red-500 transition hover:bg-red-50 disabled:opacity-50"
-                      aria-label="ลบแชท"
-                    >
-                      {isDeleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
-                    </button>
-                  </div>
-                )
-              })
-            ) : (
-              chatListEmpty
-            )}
-          </div>
+          <ChatInboxList
+            loading={loading}
+            filteredChats={filteredChats}
+            selectedChat={selectedChat}
+            deletingChatId={deletingChatId}
+            chatMeta={chatMeta}
+            onSelectChat={handleSelectChat}
+            onDeleteChat={handleDeleteChat}
+            chatListEmpty={chatListEmpty}
+            formatMessageTime={formatMessageTime}
+          />
         </div>
       </aside>
 
       <main className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#FBFCFB]">
-        {activeChat ? (
-          <>
-            <div className="shrink-0 border-b border-gray-200 bg-white/95 px-5 py-4 backdrop-blur-sm">
-              <div className="flex items-center gap-3">
-                <button type="button" onClick={handleBackToList} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition hover:bg-gray-200" aria-label="กลับไปรายการแชท">
-                  <ArrowLeft size={18} />
-                </button>
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white shadow-sm">{(activeChat?.participant_name || 'CMU').split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase()}</div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2"><p className="truncate text-lg font-semibold text-gray-900">{activeChat?.participant_name || 'นักศึกษา CMU'}</p><span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${socketConnected ? 'bg-primary/10 text-primary-dark' : 'bg-amber-50 text-amber-700'}`}>{socketConnected ? 'ออนไลน์' : 'รอเชื่อมต่อ'}</span></div>
-                  <p className="truncate text-xs text-gray-500">{activeChat?.participant_email || ''}</p>
-                </div>
-              </div>
-            </div>
-            <div ref={messageScrollRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5" style={{ paddingBottom: `calc(${composerHeight}px + 1rem)` }}>
-              {messagesLoading ? <div className="flex h-full items-center justify-center text-sm text-gray-500"><Loader2 className="mr-2 animate-spin" size={16} /> กำลังโหลดข้อความ...</div> : (
-                <div className="space-y-3">
-                  {groupedMessages.map((message) => {
-                    const mine = message._mine
-                    return (
-                      <div key={getMessageId(message)} className={`flex ${mine ? 'justify-end' : 'justify-start'} ${message._groupStart ? 'mt-3' : 'mt-0.5'}`}>
-                        <div className={`max-w-[72%] rounded-2xl px-3 py-2 text-sm shadow-sm transition-opacity ${mine ? 'bg-primary text-white' : 'bg-white text-gray-800 border border-gray-200'} ${message.pending ? 'opacity-70' : 'opacity-100'}`}>
-                          {message.image_url ? <img src={message.image_url} alt="รูปที่แนบ" className="mb-2 max-h-72 w-full rounded-xl object-cover" /> : null}
-                          {message.body ? <p className="whitespace-pre-wrap break-words">{message.body}</p> : null}
-                          {message.pending ? <p className={`mt-1 text-[10px] ${mine ? 'text-white/80' : 'text-gray-400'}`}>กำลังส่ง…</p> : null}
-                          {message._showTimestamp ? <p className={`mt-1 text-[10px] ${mine ? 'text-white/75' : 'text-gray-400'}`}>{formatMessageTime(message.created_at)}</p> : null}
-                        </div>
-                      </div>
-                    )
-                  })}
-                  <div ref={bottomRef} />
-                </div>
-              )}
-            </div>
-            <div ref={composerRef} className="relative shrink-0 border-t border-gray-100 bg-white px-5 py-3 shadow-[0_-8px_24px_rgba(0,0,0,0.04)]">
-              {pendingImage ? <div className="mb-3 flex items-center gap-3 rounded-2xl border border-gray-200 bg-gray-50 p-2"><img src={pendingImage} alt="ตัวอย่างรูป" className="h-12 w-12 rounded-xl object-cover" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-medium text-gray-800">พร้อมส่งรูป</p><p className="text-xs text-gray-500">กดส่งเพื่ออัปโหลดรูป</p></div><button type="button" onClick={() => setPendingImage(null)} className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-gray-500"><X size={16} /></button></div> : null}
-              <div className="flex items-end gap-2">
-                <button type="button" onClick={() => setShowActions((v) => !v)} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-700" aria-label="เปิดเมนูเพิ่มเติม"><Plus size={18} className={showActions ? 'rotate-45 transition-transform' : 'transition-transform'} /></button>
-                <div className="min-w-0 flex-1 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-2.5 focus-within:border-primary focus-within:bg-white focus-within:ring-2 focus-within:ring-primary/10">
-                  <input type="text" value={composerText} onChange={(e) => setComposerText(e.target.value)} placeholder="พิมพ์ข้อความ..." className="w-full bg-transparent text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none" onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage() } }} />
-                </div>
-                <button type="button" onClick={handleSendMessage} disabled={!composerText.trim() && !pendingImage} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-white disabled:opacity-40" aria-label="ส่งข้อความ">{uploadingImage ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}</button>
-              </div>
-              {showActions ? (
-                <>
-                  <div className="fixed inset-0 z-40 bg-black/30" onClick={() => setShowActions(false)} />
-                  <div className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-4 sm:px-6 sm:pb-6">
-                    <div className="w-full max-w-[400px] translate-y-0 transform rounded-t-3xl border border-gray-200 bg-white p-4 shadow-2xl transition-all duration-300 ease-out sm:rounded-3xl">
-                      <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-gray-200" />
-                      <button type="button" onClick={() => { handlePickImage(); setShowActions(false) }} className="flex min-h-12 w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-medium text-gray-800 transition active:scale-[0.98] hover:bg-gray-50">
-                        <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary"><ImageIcon size={18} /></span>
-                        อัปโหลดรูป
-                      </button>
-                      <button type="button" onClick={() => { handlePickImage(); setShowActions(false) }} className="mt-2 flex min-h-12 w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-medium text-gray-800 transition active:scale-[0.98] hover:bg-gray-50">
-                        <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary"><Camera size={18} /></span>
-                        เปิดกล้อง
-                      </button>
-                    </div>
-                  </div>
-                </>
-              ) : null}
-              <input ref={fileInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleImageSelected} />
-            </div>
-          </>
-        ) : (
-          <div className="grid min-h-0 w-full flex-1 place-content-center px-4 py-8 sm:px-8">
-            <div className="mx-auto flex w-full max-w-md gap-3 rounded-2xl border border-gray-200 bg-white p-4 text-left shadow-sm">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100 sm:h-11 sm:w-11">
-                <MessageCircle className="text-primary/80" size={20} strokeWidth={2} />
-              </div>
-              <div className="min-w-0 py-0.5">
-                <p className="text-sm font-semibold text-gray-900">เลือกการสนทนา</p>
-                <p className="mt-0.5 text-xs leading-snug text-gray-500">แตะรายการซ้าย หรือเริ่มแชทด้วยอีเมล @cmu.ac.th</p>
-              </div>
-            </div>
-          </div>
-        )}
+        <DesktopChatPanel
+          activeChat={activeChat}
+          socketConnected={socketConnected}
+          handleBackToList={handleBackToList}
+          messageScrollRef={messageScrollRef}
+          composerHeight={composerHeight}
+          messagesLoading={messagesLoading}
+          groupedMessages={groupedMessages}
+          getMessageId={getMessageId}
+          formatMessageTime={formatMessageTime}
+          bottomRef={bottomRef}
+          composerRef={composerRef}
+          pendingImage={pendingImage}
+          setPendingImage={setPendingImage}
+          setShowActions={setShowActions}
+          showActions={showActions}
+          handlePickImage={handlePickImage}
+          composerText={composerText}
+          setComposerText={setComposerText}
+          handleSendMessage={handleSendMessage}
+          uploadingImage={uploadingImage}
+          pendingImageUploading={sendingMessage}
+          fileInputRef={fileInputRef}
+          handleImageSelected={handleImageSelected}
+        />
       </main>
     </div>
   )

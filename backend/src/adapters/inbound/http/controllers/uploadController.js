@@ -1,6 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import { randomBytes } from 'crypto'
+import { badRequest, unauthorized } from '../../../../shared/http/apiError.js'
 
 const UPLOAD_DIR = path.resolve(process.cwd(), 'uploads/chat')
 const MAX_SIZE_BYTES = 5 * 1024 * 1024 // 5MB
@@ -14,25 +15,25 @@ function ensureUploadDir() {
 
 export const uploadChatImage = async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' })
+    return res.status(401).json(unauthorized())
   }
   const { image: dataUrl } = req.body
   if (!dataUrl || typeof dataUrl !== 'string' || !dataUrl.startsWith('data:image/')) {
-    return res.status(400).json({ message: 'Invalid image data' })
+    return res.status(400).json(badRequest('Invalid image data'))
   }
   const match = dataUrl.match(/^data:(image\/\w+);base64,(.+)$/)
   if (!match) {
-    return res.status(400).json({ message: 'Invalid base64 image' })
+    return res.status(400).json(badRequest('Invalid base64 image'))
   }
   const mime = match[1]
   const ext = mime.replace('image/', '') === 'jpeg' ? 'jpg' : mime.replace('image/', '')
   if (!ALLOWED_TYPES.includes(mime)) {
-    return res.status(400).json({ message: 'Allowed types: JPEG, PNG, GIF, WebP' })
+    return res.status(400).json(badRequest('Allowed types: JPEG, PNG, GIF, WebP'))
   }
   const base64 = match[2]
   const buffer = Buffer.from(base64, 'base64')
   if (buffer.length > MAX_SIZE_BYTES) {
-    return res.status(400).json({ message: 'Image must be under 5MB' })
+    return res.status(400).json(badRequest('Image must be under 5MB'))
   }
   ensureUploadDir()
   const filename = `${randomBytes(12).toString('hex')}.${ext}`

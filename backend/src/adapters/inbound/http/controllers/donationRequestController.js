@@ -3,18 +3,19 @@ import { query } from '../../../outbound/persistence/pool.js'
 import { sendEmail } from '../../../../shared/utils/email.js'
 import { calculateItemCO2 } from '../../../../shared/utils/co2Calculator.js'
 import { getChatServer } from '../../../../application/services/chatService.js'
+import { badRequest, forbidden, internalError, notFound, unauthorized } from '../../../../shared/http/apiError.js'
 
 // สร้างคำขอรับบริจาค
 export const createDonationRequest = async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' })
+    return res.status(401).json(unauthorized())
   }
 
   const errors = validationResult(req)
   if (!errors.isEmpty()) {
-    return res.status(400).json({ 
-      message: 'Validation failed',
-      errors: errors.array() 
+    return res.status(400).json({
+      ...badRequest('Validation failed'),
+      errors: errors.array(),
     })
   }
 
@@ -31,24 +32,24 @@ export const createDonationRequest = async (req, res) => {
     )
 
     if (!itemResult.rowCount) {
-      return res.status(404).json({ message: 'Item not found' })
+      return res.status(404).json(notFound('Item not found'))
     }
 
     const item = itemResult.rows[0]
     
     // ตรวจสอบว่าเป็น donation item
     if (item.listing_type !== 'donation') {
-      return res.status(400).json({ message: 'This item is not available for donation' })
+      return res.status(400).json(badRequest('This item is not available for donation'))
     }
 
     // ตรวจสอบว่า item ยัง active อยู่
     if (item.status !== 'active') {
-      return res.status(400).json({ message: 'This item is no longer available' })
+      return res.status(400).json(badRequest('This item is no longer available'))
     }
 
     // ตรวจสอบว่าไม่ใช่เจ้าของโพสต์
     if (item.user_id === req.user.id) {
-      return res.status(400).json({ message: 'You cannot request your own donation item' })
+      return res.status(400).json(badRequest('You cannot request your own donation item'))
     }
 
     // ตรวจสอบว่ามีคำขอรับบริจาคอยู่แล้วหรือไม่ (pending, chatting, in_progress)
@@ -73,10 +74,10 @@ export const createDonationRequest = async (req, res) => {
 
     // Validate required fields
     if (!recipientName || !recipientName.trim()) {
-      return res.status(400).json({ message: 'กรุณากรอกชื่อผู้รับบริจาค' })
+      return res.status(400).json(badRequest('กรุณากรอกชื่อผู้รับบริจาค'))
     }
     if (!recipientContact || !recipientContact.trim()) {
-      return res.status(400).json({ message: 'กรุณากรอกข้อมูลติดต่อผู้รับบริจาค' })
+      return res.status(400).json(badRequest('กรุณากรอกข้อมูลติดต่อผู้รับบริจาค'))
     }
 
     // สร้าง donation request
@@ -153,14 +154,14 @@ export const createDonationRequest = async (req, res) => {
     return res.status(201).json({ ...donationRequest, chatId })
   } catch (err) {
     console.error('Create donation request error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 
 // ดึงรายละเอียดคำขอรับบริจาค
 export const getDonationRequest = async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' })
+    return res.status(401).json(unauthorized())
   }
 
   const { requestId } = req.params
@@ -202,27 +203,27 @@ export const getDonationRequest = async (req, res) => {
     )
 
     if (!result.rowCount) {
-      return res.status(404).json({ message: 'Donation request not found' })
+      return res.status(404).json(notFound('Donation request not found'))
     }
 
     const donationRequest = result.rows[0]
 
     // ตรวจสอบสิทธิ์ (เจ้าของโพสต์หรือผู้ขอรับบริจาคเท่านั้นที่ดูได้)
     if (donationRequest.item_owner_id !== req.user.id && donationRequest.requester_id !== req.user.id) {
-      return res.status(403).json({ message: 'You do not have permission to view this donation request' })
+      return res.status(403).json(forbidden('You do not have permission to view this donation request'))
     }
 
     return res.json(donationRequest)
   } catch (err) {
     console.error('Get donation request error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 
 // เจ้าของโพสต์ยอมรับคำขอรับบริจาค
 export const acceptDonationRequestByOwner = async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' })
+    return res.status(401).json(unauthorized())
   }
 
   const { requestId } = req.params
@@ -242,19 +243,19 @@ export const acceptDonationRequestByOwner = async (req, res) => {
     )
 
     if (!requestResult.rowCount) {
-      return res.status(404).json({ message: 'Donation request not found' })
+      return res.status(404).json(notFound('Donation request not found'))
     }
 
     const donationRequest = requestResult.rows[0]
 
     // ตรวจสอบว่าเป็นเจ้าของโพสต์หรือไม่
     if (donationRequest.owner_id !== req.user.id) {
-      return res.status(403).json({ message: 'You can only accept requests for your own items' })
+      return res.status(403).json(forbidden('You can only accept requests for your own items'))
     }
 
     // ตรวจสอบว่ายัง pending อยู่หรือไม่
     if (donationRequest.status !== 'pending') {
-      return res.status(400).json({ message: 'Donation request is not pending' })
+      return res.status(400).json(badRequest('Donation request is not pending'))
     }
 
     // อัปเดต owner_accepted เป็น true
@@ -358,14 +359,14 @@ export const acceptDonationRequestByOwner = async (req, res) => {
     })
   } catch (err) {
     console.error('Accept donation request error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 
 // ผู้ขอรับบริจาคยอมรับคำขอ
 export const acceptDonationRequestByRequester = async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' })
+    return res.status(401).json(unauthorized())
   }
 
   const { requestId } = req.params
@@ -385,24 +386,24 @@ export const acceptDonationRequestByRequester = async (req, res) => {
     )
 
     if (!requestResult.rowCount) {
-      return res.status(404).json({ message: 'Donation request not found' })
+      return res.status(404).json(notFound('Donation request not found'))
     }
 
     const donationRequest = requestResult.rows[0]
 
     // ตรวจสอบว่าเป็นผู้ขอรับบริจาคหรือไม่
     if (donationRequest.requester_id !== req.user.id) {
-      return res.status(403).json({ message: 'You can only accept your own donation requests' })
+      return res.status(403).json(forbidden('You can only accept your own donation requests'))
     }
 
     // ตรวจสอบว่า owner accept แล้วหรือยัง
     if (!donationRequest.owner_accepted) {
-      return res.status(400).json({ message: 'Owner has not accepted the request yet' })
+      return res.status(400).json(badRequest('Owner has not accepted the request yet'))
     }
 
     // ตรวจสอบว่ายัง pending อยู่หรือไม่
     if (donationRequest.status !== 'pending') {
-      return res.status(400).json({ message: 'Donation request is not pending' })
+      return res.status(400).json(badRequest('Donation request is not pending'))
     }
 
     // อัปเดต requester_accepted เป็น true
@@ -471,14 +472,14 @@ export const acceptDonationRequestByRequester = async (req, res) => {
     })
   } catch (err) {
     console.error('Accept donation request by requester error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 
 // ปฏิเสธคำขอรับบริจาค
 export const rejectDonationRequest = async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' })
+    return res.status(401).json(unauthorized())
   }
 
   const { requestId } = req.params
@@ -498,7 +499,7 @@ export const rejectDonationRequest = async (req, res) => {
     )
 
     if (!requestResult.rowCount) {
-      return res.status(404).json({ message: 'Donation request not found' })
+      return res.status(404).json(notFound('Donation request not found'))
     }
 
     const donationRequest = requestResult.rows[0]
@@ -508,7 +509,7 @@ export const rejectDonationRequest = async (req, res) => {
     const isRequester = donationRequest.requester_id === req.user.id
 
     if (!isOwner && !isRequester) {
-      return res.status(403).json({ message: 'You can only reject your own donation requests' })
+      return res.status(403).json(forbidden('You can only reject your own donation requests'))
     }
 
     // อัปเดต status เป็น rejected
@@ -561,14 +562,14 @@ export const rejectDonationRequest = async (req, res) => {
     return res.json({ success: true, message: 'Donation request rejected' })
   } catch (err) {
     console.error('Reject donation request error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 
 // ดึงคำขอรับบริจาคที่เกี่ยวข้องกับผู้ใช้
 export const getMyDonationRequests = async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' })
+    return res.status(401).json(unauthorized())
   }
 
   try {
@@ -598,7 +599,7 @@ export const getMyDonationRequests = async (req, res) => {
     return res.json(result.rows)
   } catch (err) {
     console.error('Get my donation requests error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 

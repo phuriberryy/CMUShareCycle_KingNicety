@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { body, param } from 'express-validator'
 import { authenticate } from '../middleware/auth.js'
+import { validateRequest } from '../middleware/validateRequest.js'
 import {
   createChat,
   getChatMessages,
@@ -17,7 +18,7 @@ router.use(authenticate)
 
 router.get('/', getChats)
 router.post('/upload-image', uploadChatImage)
-router.get('/:chatId/messages', [param('chatId').isUUID()], getChatMessages)
+router.get('/:chatId/messages', [param('chatId').isUUID()], validateRequest, getChatMessages)
 router.post(
   '/',
   [
@@ -33,15 +34,18 @@ router.post(
     body('participantEmail').optional().isEmail(),
     body('itemId').optional().isUUID(),
     body('exchangeRequestId').optional().isUUID(),
+    body('initialMessage').optional().isString().isLength({ max: 1000 }),
   ],
+  validateRequest,
   createChat
 )
 
-router.patch('/:chatId/accept', [param('chatId').isUUID()], acceptChat)
-router.patch('/:chatId/decline', [param('chatId').isUUID()], declineChat)
+router.patch('/:chatId/accept', [param('chatId').isUUID()], validateRequest, acceptChat)
+router.patch('/:chatId/decline', [param('chatId').isUUID()], validateRequest, declineChat)
 router.post(
   '/:chatId/confirm',
-  [param('chatId').isUUID(), body('code').isString().notEmpty()],
+  [param('chatId').isUUID(), body('code').isString().trim().isLength({ min: 1, max: 128 })],
+  validateRequest,
   confirmChatQr
 )
 

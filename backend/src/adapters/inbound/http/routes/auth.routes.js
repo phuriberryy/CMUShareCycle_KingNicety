@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { body } from 'express-validator'
 import { login, register, forgotPassword, resetPassword } from '../controllers/authController.js'
+import { validateRequest } from '../middleware/validateRequest.js'
 
 const router = Router()
 
@@ -12,6 +13,7 @@ router.post(
     body('password').isLength({ min: 6 }),
     body('faculty').optional().isString(),
   ],
+  validateRequest,
   register
 )
 
@@ -21,6 +23,7 @@ router.post(
     body('email').isEmail(),
     body('password').notEmpty(),
   ],
+  validateRequest,
   login
 )
 
@@ -29,6 +32,7 @@ router.post(
   [
     body('email').isEmail().withMessage('Valid email required'),
   ],
+  validateRequest,
   forgotPassword
 )
 
@@ -38,6 +42,7 @@ router.post(
     body('token').notEmpty().withMessage('Token is required'),
     body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
   ],
+  validateRequest,
   resetPassword
 )
 

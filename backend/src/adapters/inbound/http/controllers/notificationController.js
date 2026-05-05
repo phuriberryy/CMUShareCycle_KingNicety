@@ -1,9 +1,10 @@
 import { query } from '../../../outbound/persistence/pool.js'
+import { forbidden, internalError, notFound, unauthorized } from '../../../../shared/http/apiError.js'
 
 // ดึง notifications ทั้งหมด
 export const getNotifications = async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' })
+    return res.status(401).json(unauthorized())
   }
 
   try {
@@ -18,14 +19,14 @@ export const getNotifications = async (req, res) => {
     return res.json(result.rows)
   } catch (err) {
     console.error('Get notifications error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 
 // ทำเครื่องหมายว่าอ่านแล้ว
 export const markNotificationsRead = async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' })
+    return res.status(401).json(unauthorized())
   }
 
   try {
@@ -36,14 +37,14 @@ export const markNotificationsRead = async (req, res) => {
     return res.json({ success: true })
   } catch (err) {
     console.error('Mark notifications read error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 
 // ทำเครื่องหมาย notification เดียวว่าอ่านแล้ว
 export const markNotificationRead = async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' })
+    return res.status(401).json(unauthorized())
   }
 
   const { notificationId } = req.params
@@ -56,11 +57,11 @@ export const markNotificationRead = async (req, res) => {
     )
 
     if (!notificationCheck.rowCount) {
-      return res.status(404).json({ message: 'Notification not found' })
+      return res.status(404).json(notFound('Notification not found'))
     }
 
     if (notificationCheck.rows[0].user_id !== req.user.id) {
-      return res.status(403).json({ message: 'You can only mark your own notifications as read' })
+      return res.status(403).json(forbidden('You can only mark your own notifications as read'))
     }
 
     await query(
@@ -71,14 +72,14 @@ export const markNotificationRead = async (req, res) => {
     return res.json({ success: true })
   } catch (err) {
     console.error('Mark notification read error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }
 
 // ดึงจำนวน notifications ที่ยังไม่อ่าน
 export const getUnreadCount = async (req, res) => {
   if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' })
+    return res.status(401).json(unauthorized())
   }
 
   try {
@@ -90,6 +91,6 @@ export const getUnreadCount = async (req, res) => {
     return res.json({ count: parseInt(result.rows[0].count) || 0 })
   } catch (err) {
     console.error('Get unread count error:', err)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json(internalError())
   }
 }

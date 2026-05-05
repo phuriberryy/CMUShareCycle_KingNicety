@@ -7,9 +7,9 @@ function Footer() {
         {/* CMU ShareCycle Info */}
         <div className="mx-auto max-w-md text-center">
           <div className="mb-4 flex items-center justify-center gap-3">
-            <ShareCycleLogo className="h-12 w-12 overflow-hidden rounded-xl shadow-sm ring-1 ring-primary/10" />
+            <ShareCycleLogo className="h-12 w-12" />
             <div>
-              <p className="text-lg text-primary">
+              <p className="text-lg text-primary-dark">
                 <span className="font-bold">CMU</span>
                 <span className="font-semibold"> ShareCycle</span>
               </p>

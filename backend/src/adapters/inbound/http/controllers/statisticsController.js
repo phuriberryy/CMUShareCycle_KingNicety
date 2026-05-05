@@ -1,4 +1,5 @@
 import { query } from '../../../outbound/persistence/pool.js'
+import { internalError } from '../../../../shared/http/apiError.js'
 
 // ดึงสถิติภาพรวมของเว็บ
 export const getStatistics = async (req, res) => {
@@ -47,7 +48,7 @@ export const getStatistics = async (req, res) => {
     })
   } catch (err) {
     console.error('Get statistics error:', err)
-    res.status(500).json({ message: 'Failed to fetch statistics' })
+    res.status(500).json(internalError('Failed to fetch statistics'))
   }
 }
 
