@@ -37,7 +37,7 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
   const toast = useToast()
   const [chats, setChats] = useState([])
   const [chatMeta, setChatMeta] = useState({})
-  const [selectedChat, setSelectedChat] = useState(initialChatId ?? null)
+  const [activeChat, setActiveChat] = useState(initialChatId ?? null)
   const [messages, setMessages] = useState([])
   const [composerText, setComposerText] = useState('')
   const [chatSearch, setChatSearch] = useState('')
@@ -54,7 +54,6 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
   const [isMobile, setIsMobile] = useState(false)
   const socketRef = useRef(null)
   const activeChatRef = useRef(null)
-  const bottomRef = useRef(null)
   const messagesEndRef = useRef(null)
   const messageScrollRef = useRef(null)
   const composerRef = useRef(null)
@@ -98,8 +97,9 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
     })
   }, [])
 
-  const isMobileChatDetail = isMobile && selectedChat !== null
-  const activeChat = useMemo(() => chats.find((c) => c.id === selectedChat) || null, [chats, selectedChat])
+  const isMobileChatDetail = isMobile && activeChat !== null
+  const selectedChat = activeChat
+  const activeChatData = useMemo(() => chats.find((c) => c.id === selectedChat) || null, [chats, selectedChat])
   const isNearBottom = useCallback(() => {
     const el = messageScrollRef.current
     if (!el) return true
@@ -137,7 +137,7 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
         const meta = readChatMeta()
         const sorted = [...list].sort((a, b) => ((b?.id ? meta[b.id]?.lastAt : null) || 0) - ((a?.id ? meta[a.id]?.lastAt : null) || 0))
         setChats(sorted)
-        setSelectedChat((current) => current ?? initialChatId ?? (sorted[0]?.id ?? null))
+        setActiveChat((current) => current ?? initialChatId ?? (sorted[0]?.id ?? null))
       })
       .catch(() => setChats([]))
       .finally(() => setLoading(false))
@@ -272,7 +272,7 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
   }, [chats, chatSearch, chatMeta])
 
   const handleSelectChat = (chatId) => {
-    setSelectedChat(chatId)
+    setActiveChat(chatId)
     setShowActions(false)
     setSheetOpen(false)
     setPendingImage(null)
@@ -280,7 +280,7 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
   }
 
   const handleBackToList = () => {
-    setSelectedChat(null)
+    setActiveChat(null)
     setMessages([])
     setShowActions(false)
     setSheetOpen(false)
@@ -295,7 +295,7 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
     try {
       await chatApi.delete(token, chatId)
       setChats((prev) => prev.filter((chat) => chat.id !== chatId))
-      if (selectedChat === chatId) setSelectedChat(null)
+      if (selectedChat === chatId) setActiveChat(null)
       toast.success('ลบแชทแล้ว')
     } catch (err) {
       toast.error(err.message || 'ลบแชทไม่สำเร็จ')
@@ -433,7 +433,7 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
   const mobileDetail = (
     <MobileChatPanel
       isOpen={isMobileChatDetail}
-      activeChat={activeChat}
+      activeChat={activeChatData}
       socketConnected={socketConnected}
       handleBackToList={handleBackToList}
       messageScrollRef={messageScrollRef}
@@ -511,7 +511,7 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
           groupedMessages={groupedMessages}
           getMessageId={getMessageId}
           formatMessageTime={formatMessageTime}
-          bottomRef={bottomRef}
+          bottomRef={messagesEndRef}
           composerRef={composerRef}
           pendingImage={pendingImage}
           setPendingImage={setPendingImage}
