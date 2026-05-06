@@ -43,6 +43,7 @@ const fetchItems = ({ setItems, setLoading, setLoadError }) => {
 export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, refreshKey }) {
   const navigate = useNavigate()
   const { token } = useAuth()
+  const [isMobile, setIsMobile] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('All Categories')
   const [selectedCondition, setSelectedCondition] = useState('All Conditions')
@@ -59,6 +60,14 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
   useEffect(() => {
     fetchItems({ setItems, setLoading, setLoadError })
   }, [refreshKey])
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 768px)')
+    const update = () => setIsMobile(mediaQuery.matches)
+    update()
+    mediaQuery.addEventListener('change', update)
+    return () => mediaQuery.removeEventListener('change', update)
+  }, [])
 
   useEffect(() => {
     if (!token) return
@@ -118,22 +127,22 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
 
   return (
     <div className="sc-page w-full min-w-0 overflow-x-hidden">
-      <div className="sc-container w-full min-w-0 space-y-8 sm:space-y-10 lg:space-y-12">
+      <div className="sc-container w-full min-w-0 space-y-5 sm:space-y-10 lg:space-y-12">
         <section className="relative overflow-hidden rounded-2xl border border-gray-200 bg-gradient-to-br from-white via-surface-light to-primary-light/35 shadow-md shadow-primary/[0.07] ring-1 ring-primary/10 sm:rounded-2xl">
           <div className="pointer-events-none absolute -right-24 -top-24 h-48 w-48 rounded-full bg-primary/[0.08] blur-3xl" aria-hidden />
           <div className="pointer-events-none absolute -bottom-24 -left-20 h-44 w-44 rounded-full bg-primary/[0.06] blur-3xl" aria-hidden />
 
-          <div className="relative z-10 flex flex-col gap-5 px-4 py-5 sm:gap-7 sm:px-7 sm:py-8 lg:flex-row lg:items-center lg:justify-between lg:gap-12 lg:px-10 lg:py-9">
-            <div className="max-w-xl space-y-3 sm:space-y-5">
+          <div className="relative z-10 flex flex-col gap-4 px-4 py-4 sm:gap-7 sm:px-7 sm:py-8 lg:flex-row lg:items-center lg:justify-between lg:gap-12 lg:px-10 lg:py-9">
+            <div className="max-w-xl space-y-2.5 sm:space-y-5">
               <div className="space-y-2 sm:space-y-2.5">
-                <h1 className="text-balance text-lg font-bold leading-[1.45] tracking-[0.02em] text-primary-dark sm:text-3xl sm:leading-[1.5] sm:tracking-[0.04em] lg:text-[2rem] lg:leading-[1.48] [text-rendering:optimizeLegibility]">
+                <h1 className="text-balance text-lg font-bold leading-[1.35] tracking-[0.02em] text-primary-dark sm:text-3xl sm:leading-[1.5] sm:tracking-[0.04em] lg:text-[2rem] lg:leading-[1.48] [text-rendering:optimizeLegibility]">
                   ของที่มี แลกของที่ต้องการ
                 </h1>
                 <p className="max-w-lg text-sm font-normal leading-relaxed text-gray-700 sm:text-base">
                   แลกเปลี่ยนและบริจาคภายใน มช. — ปลอดภัย ไม่มีค่าใช้จ่าย
                 </p>
               </div>
-              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
+              <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
                 <button
                   type="button"
                   onClick={() => document.getElementById('items-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
@@ -142,32 +151,42 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
                   ดูรายการ
                   <ArrowRight size={16} strokeWidth={2.5} className="shrink-0" />
                 </button>
+                <button
+                  type="button"
+                  onClick={onPostItem}
+                  className="sc-btn-secondary min-h-11 justify-center px-4 py-2.5 text-sm font-semibold sm:min-h-10 sm:px-5"
+                >
+                  <Plus size={16} className="shrink-0" />
+                  โพสต์สินค้า
+                </button>
                 <span className="hidden min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition hover:border-gray-300 hover:bg-gray-50/80 sm:inline-flex sm:w-auto sm:justify-start sm:text-sm sm:py-2">
                   <Zap size={15} className="shrink-0 text-primary" aria-hidden />
                   <span className="text-center sm:text-left">มุ่งสู่มหาวิทยาลัยไร้ขยะ</span>
                 </span>
               </div>
             </div>
-            <div className="mt-1 flex gap-3 overflow-x-auto pb-1 pr-1 sm:mt-0 sm:grid sm:w-full sm:grid-cols-2 sm:gap-3 lg:mt-0 lg:max-w-sm lg:shrink-0 lg:overflow-visible lg:pb-0 lg:pr-0">
-              {benefitCards.map((benefit) => (
-                <div
-                  key={benefit.title}
-                  className={`min-w-[190px] flex-1 items-center gap-2.5 rounded-xl border p-3 transition duration-200 hover:border-gray-200/90 hover:shadow-sm sm:min-w-0 sm:gap-3 sm:p-3.5 ${benefitToneClasses[benefit.tone]}`}
-                >
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-black/[0.06] [color:inherit] sm:h-9 sm:w-9 sm:rounded-xl">
-                    <benefit.icon className="h-4 w-4 sm:h-[17px] sm:w-[17px]" strokeWidth={2} />
+            {!isMobile ? (
+              <div className="mt-1 flex gap-3 overflow-x-auto pb-1 pr-1 sm:mt-0 sm:grid sm:w-full sm:grid-cols-2 sm:gap-3 lg:mt-0 lg:max-w-sm lg:shrink-0 lg:overflow-visible lg:pb-0 lg:pr-0">
+                {benefitCards.map((benefit) => (
+                  <div
+                    key={benefit.title}
+                    className={`min-w-[190px] flex-1 items-center gap-2.5 rounded-xl border p-3 transition duration-200 hover:border-gray-200/90 hover:shadow-sm sm:min-w-0 sm:gap-3 sm:p-3.5 ${benefitToneClasses[benefit.tone]}`}
+                  >
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-black/[0.06] [color:inherit] sm:h-9 sm:w-9 sm:rounded-xl">
+                      <benefit.icon className="h-4 w-4 sm:h-[17px] sm:w-[17px]" strokeWidth={2} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[12px] font-bold leading-snug text-gray-900 sm:text-[13px]">{benefit.title}</p>
+                      <p className="benefit-desc mt-0.5 text-[10px] leading-snug sm:text-[11px]">{benefit.description}</p>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-[12px] font-bold leading-snug text-gray-900 sm:text-[13px]">{benefit.title}</p>
-                    <p className="benefit-desc mt-0.5 text-[10px] leading-snug sm:text-[11px]">{benefit.description}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : null}
           </div>
         </section>
 
-        {statistics ? (
+        {!isMobile && statistics ? (
           <section>
             <div className="mb-4 flex items-end justify-between gap-3 sm:mb-5">
               <h2 className="text-lg font-bold text-gray-900 sm:text-xl">ผลกระทบต่อชุมชน</h2>
