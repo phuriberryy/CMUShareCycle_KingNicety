@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ArrowLeft, Camera, Image as ImageIcon, Loader2, MessageCircle, Plus, Send, X } from 'lucide-react'
 
 export default function ChatRoom({
@@ -27,7 +27,8 @@ export default function ChatRoom({
   const composerRef = useRef(null)
   const [composerHeight, setComposerHeight] = useState(88)
 
-  const groupedMessages = useMemo(() => Array.isArray(messages) ? messages : [], [messages])
+  const safeMessages = Array.isArray(messages) ? messages : []
+  const groupedMessages = safeMessages
 
   useEffect(() => {
     const container = messagesContainerRef.current
@@ -93,7 +94,7 @@ export default function ChatRoom({
       </header>
 
       <div ref={messagesContainerRef} className="chat-messages min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-2" style={{ paddingBottom: `calc(${composerHeight}px + env(safe-area-inset-bottom) + 0.5rem)` }}>
-        {messagesLoading ? (
+        {!chat ? null : messagesLoading ? (
           <div className="flex h-full items-center justify-center text-sm text-gray-500">
             <Loader2 className="mr-2 animate-spin" size={16} /> กำลังโหลดข้อความ...
           </div>

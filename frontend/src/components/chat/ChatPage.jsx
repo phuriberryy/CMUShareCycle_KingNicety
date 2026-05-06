@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import ChatInbox from './ChatInbox'
 import ChatRoom from './ChatRoom'
 
@@ -31,12 +31,13 @@ export default function ChatPage({
 }) {
   const [isMobile, setIsMobile] = useState(isMobileInitially)
   const [chatSearch, setChatSearch] = useState('')
-  const activeChat = useMemo(() => chats.find((c) => c.id === selectedChat) || null, [chats, selectedChat])
-  const filteredChats = useMemo(() => {
+  const conversations = Array.isArray(chats) ? chats : []
+  const activeChat = conversations.find((c) => c?.id === selectedChat) || null
+  const filteredChats = (() => {
     const query = chatSearch.trim().toLowerCase()
-    if (!query) return chats
-    return chats.filter((chat) => ((chat.participant_name || '').toLowerCase().includes(query) || (chat.participant_email || '').toLowerCase().includes(query) || (chatMeta?.[chat.id]?.lastText || '').toLowerCase().includes(query)))
-  }, [chats, chatSearch, chatMeta])
+    if (!query) return conversations
+    return conversations.filter((chat) => ((chat?.participant_name || '').toLowerCase().includes(query) || (chat?.participant_email || '').toLowerCase().includes(query) || (chatMeta?.[chat.id]?.lastText || '').toLowerCase().includes(query)))
+  })()
 
   useEffect(() => {
     const updateViewport = () => setIsMobile(window.innerWidth < 768)
