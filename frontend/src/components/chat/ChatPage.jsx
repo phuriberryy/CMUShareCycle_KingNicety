@@ -27,6 +27,7 @@ export default function ChatPage({
   setShowActions,
   showActions,
   onDeleteChat,
+  onNewChat,
   isMobileInitially = false,
 }) {
   const [isMobile, setIsMobile] = useState(isMobileInitially)
@@ -69,6 +70,7 @@ export default function ChatPage({
           chatMeta={chatMeta}
           onSelect={setSelectedChat}
           onDelete={onDeleteChat}
+          onNewChat={onNewChat}
           searchValue={chatSearch}
           onSearchChange={setChatSearch}
           formatMessageTime={formatMessageTime}
