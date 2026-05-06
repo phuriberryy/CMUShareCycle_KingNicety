@@ -11,7 +11,11 @@ export default function ChatInbox({
   onDelete,
   searchValue,
   onSearchChange,
-  onNewChat,
+  startChatEmail,
+  onStartChatEmailChange,
+  onStartChat,
+  startingChat,
+  startChatError,
   formatMessageTime,
 }) {
   return (
@@ -24,11 +28,11 @@ export default function ChatInbox({
           </div>
           <button
             type="button"
-            onClick={onNewChat}
+            onClick={onStartChat}
             className="inline-flex h-10 items-center gap-2 rounded-full border border-gray-200 bg-white px-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
           >
             <Plus size={16} />
-            New Chat
+            Start Chat
           </button>
         </div>
         <div className="mt-2.5 flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 focus-within:border-primary focus-within:bg-white focus-within:ring-2 focus-within:ring-primary/10">
@@ -41,6 +45,26 @@ export default function ChatInbox({
             className="w-full bg-transparent text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none"
           />
         </div>
+        <div className="mt-2.5 flex gap-2">
+          <input
+            type="email"
+            value={startChatEmail}
+            onChange={(e) => onStartChatEmailChange(e.target.value)}
+            placeholder="เริ่มแชทด้วยอีเมล"
+            className="min-w-0 flex-1 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/10"
+          />
+          <button
+            type="button"
+            onClick={onStartChat}
+            disabled={startingChat || !startChatEmail.trim()}
+            className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-3 text-sm font-semibold text-white transition hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {startingChat ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
+            Start Chat
+          </button>
+        </div>
+        {startChatError ? <p className="mt-2 text-xs text-red-600">{startChatError}</p> : null}
+      </div>
       </div>
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-2.5">
         {loading ? (

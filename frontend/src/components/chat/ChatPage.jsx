@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
+import { useAuth } from '../../context/AuthContext'
+import { chatApi } from '../../lib/api'
 import ChatInbox from './ChatInbox'
 import ChatRoom from './ChatRoom'
 
 export default function ChatPage({
   open,
-  chats,
+  chats = [],
   loading,
   deletingChatId,
   chatMeta,
@@ -30,8 +32,12 @@ export default function ChatPage({
   onNewChat,
   isMobileInitially = false,
 }) {
+  const { token } = useAuth()
   const [isMobile, setIsMobile] = useState(isMobileInitially)
   const [chatSearch, setChatSearch] = useState('')
+  const [startChatEmail, setStartChatEmail] = useState('')
+  const [startingChat, setStartingChat] = useState(false)
+  const [startChatError, setStartChatError] = useState('')
   const conversations = Array.isArray(chats) ? chats : []
   const activeChat = conversations.find((c) => c?.id === selectedChat) || null
   const filteredChats = (() => {
@@ -39,6 +45,24 @@ export default function ChatPage({
     if (!query) return conversations
     return conversations.filter((chat) => ((chat?.participant_name || '').toLowerCase().includes(query) || (chat?.participant_email || '').toLowerCase().includes(query) || (chatMeta?.[chat.id]?.lastText || '').toLowerCase().includes(query)))
   })()
+
+  const handleStartChat = async () => {
+    const email = startChatEmail.trim()
+    if (!email || !token || startingChat) return
+    setStartChatError('')
+    setStartingChat(true)
+    try {
+      const response = await chatApi.start(token, { email })
+      const newChat = response?.chat || response?.data || response
+      if (typeof onNewChat === 'function') onNewChat(newChat)
+      if (newChat?.id) setSelectedChat(newChat.id)
+      setStartChatEmail('')
+    } catch (err) {
+      setStartChatError(err?.message || 'ไม่สามารถเริ่มแชทได้')
+    } finally {
+      setStartingChat(false)
+    }
+  }
 
   useEffect(() => {
     const updateViewport = () => setIsMobile(window.innerWidth < 768)
@@ -73,6 +97,11 @@ export default function ChatPage({
           onNewChat={onNewChat}
           searchValue={chatSearch}
           onSearchChange={setChatSearch}
+          startChatEmail={startChatEmail}
+          onStartChatEmailChange={setStartChatEmail}
+          onStartChat={handleStartChat}
+          startingChat={startingChat}
+          startChatError={startChatError}
           formatMessageTime={formatMessageTime}
         />
       </div>
