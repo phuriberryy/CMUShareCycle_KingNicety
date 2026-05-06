@@ -22,7 +22,7 @@ function formatExpiryShort(iso) {
 
 export default function ItemCardGrid({ items, navigate, onExchangeItem, onDonationItem }) {
   return (
-    <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:auto-rows-fr lg:grid-cols-3 lg:justify-items-center lg:gap-6 xl:grid-cols-4 xl:gap-6">
+    <div className="mx-auto grid w-full max-w-6xl grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:auto-rows-fr lg:grid-cols-2 lg:justify-items-center lg:gap-6 xl:gap-7">
       {items.map((item) => {
         const isInProgress = item.status === 'in_progress'
         const isDonated = item.status === 'donated'
@@ -46,7 +46,7 @@ export default function ItemCardGrid({ items, navigate, onExchangeItem, onDonati
         return (
           <article
             key={item.id}
-            className={`group flex h-full min-h-[520px] w-full max-w-[360px] flex-col overflow-hidden rounded-[1.75rem] border border-gray-100/90 bg-white shadow-elevated ring-1 ring-black/[0.03] transition duration-200 sm:rounded-[1.9rem] lg:min-h-[540px] ${
+            className={`group flex h-full min-h-[520px] w-full max-w-[420px] flex-col overflow-hidden rounded-[1.75rem] border border-gray-100/90 bg-white shadow-elevated ring-1 ring-black/[0.03] transition duration-200 sm:rounded-[1.9rem] lg:min-h-[540px] ${
               isInProgress ? 'cursor-not-allowed opacity-75' : 'hover:-translate-y-0.5 hover:border-primary/15 hover:shadow-elevated-hover'
             }`}
           >
@@ -68,7 +68,7 @@ export default function ItemCardGrid({ items, navigate, onExchangeItem, onDonati
               </button>
             </div>
 
-            <div className="relative aspect-[4/3] min-h-[200px] w-full overflow-hidden bg-gray-100 lg:min-h-[210px]">
+            <div className="relative aspect-[4/3] min-h-[220px] w-full overflow-hidden bg-gray-100 lg:min-h-[230px]">
               <img
                 src={itemCoverUrl(item) || 'https://images.unsplash.com/photo-1503602642458-232111445657?auto=format&fit=crop&w=800&q=80'}
                 alt={item.title}
@@ -93,7 +93,7 @@ export default function ItemCardGrid({ items, navigate, onExchangeItem, onDonati
               </div>
             </div>
 
-            <div className="flex min-h-0 flex-1 flex-col gap-2.5 p-3 pt-2.5 sm:gap-3 sm:p-4 sm:pt-3 lg:gap-3">
+            <div className="flex min-h-0 flex-1 flex-col gap-2.5 p-3 pt-2.5 sm:gap-3 sm:p-4 sm:pt-3 lg:gap-3 lg:p-5 lg:pt-4">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="inline-flex max-w-full truncate rounded-full bg-primary-light/70 px-2.5 py-0.5 text-[11px] font-semibold text-primary-dark ring-1 ring-primary/10">
                   #{item.category}
@@ -129,7 +129,7 @@ export default function ItemCardGrid({ items, navigate, onExchangeItem, onDonati
                     <span className="truncate font-medium text-gray-600">{owner}</span>
                   </p>
                 </div>
-                <div className="mt-auto grid shrink-0 grid-cols-1 gap-1.5 pt-2.5 sm:gap-2 sm:pt-3 lg:pt-3.5">
+                <div className="mt-auto grid shrink-0 grid-cols-1 gap-2 pt-2.5 sm:gap-2 sm:pt-3 lg:gap-2 lg:pt-4">
                   <button
                     type="button"
                     onClick={() => navigate(`/items/${item.id}`)}
@@ -142,7 +142,7 @@ export default function ItemCardGrid({ items, navigate, onExchangeItem, onDonati
                     <button
                       type="button"
                       onClick={() => onDonationItem(item.id)}
-                      className="hidden min-h-10 w-full rounded-xl bg-rose-500 px-3 text-sm font-semibold text-white shadow-md transition hover:bg-rose-600 sm:inline-flex"
+                      className="hidden min-h-11 w-full rounded-xl bg-rose-500 px-3 text-sm font-semibold text-white shadow-md transition hover:bg-rose-600 sm:inline-flex"
                     >
                       <Heart size={18} />
                       ขอรับบริจาค
@@ -151,20 +151,20 @@ export default function ItemCardGrid({ items, navigate, onExchangeItem, onDonati
                     <button
                       type="button"
                       onClick={() => onExchangeItem(item.id)}
-                      className="hidden min-h-10 w-full rounded-xl bg-primary px-3 text-sm font-semibold text-white shadow-md ring-1 ring-white/20 transition hover:bg-primary-dark sm:inline-flex"
+                      className="hidden min-h-11 w-full rounded-xl bg-primary px-3 text-sm font-semibold text-white shadow-md ring-1 ring-white/20 transition hover:bg-primary-dark sm:inline-flex"
                     >
                       <RefreshCcw size={18} />
                       ขอแลกเปลี่ยน
                     </button>
                   ) : (
-                    <div className="hidden min-h-10 w-full cursor-default items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50 px-3 text-sm font-medium text-gray-500 sm:flex">
+                    <div className="hidden min-h-11 w-full cursor-default items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50 px-3 text-sm font-medium text-gray-500 sm:flex">
                       {primaryActionLabel}
                     </div>
                   )}
                   <button
                     type="button"
                     onClick={() => navigate(`/items/${item.id}`)}
-                    className="sc-btn-secondary hidden min-h-10 w-full rounded-xl px-3 text-sm font-semibold sm:mt-0 sm:inline-flex"
+                    className="sc-btn-secondary hidden min-h-11 w-full rounded-xl px-3 text-sm font-semibold sm:mt-0 sm:inline-flex"
                   >
                     <Eye size={18} />
                     ดูรายละเอียด
