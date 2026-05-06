@@ -22,7 +22,7 @@ function formatExpiryShort(iso) {
 
 export default function ItemCardGrid({ items, navigate, onExchangeItem, onDonationItem }) {
   return (
-    <div className="mx-auto grid w-full max-w-6xl grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:auto-rows-fr lg:grid-cols-2 lg:justify-items-center lg:gap-6 xl:gap-7">
+    <div className="mx-auto grid w-full max-w-5xl grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:auto-rows-fr lg:grid-cols-2 lg:justify-items-center lg:gap-6 xl:gap-6">
       {items.map((item) => {
         const isInProgress = item.status === 'in_progress'
         const isDonated = item.status === 'donated'
@@ -46,7 +46,7 @@ export default function ItemCardGrid({ items, navigate, onExchangeItem, onDonati
         return (
           <article
             key={item.id}
-            className={`group flex h-full min-h-[520px] w-full max-w-[420px] flex-col overflow-hidden rounded-[1.75rem] border border-gray-100/90 bg-white shadow-elevated ring-1 ring-black/[0.03] transition duration-200 sm:rounded-[1.9rem] lg:min-h-[540px] ${
+            className={`group flex h-full min-h-[520px] w-full max-w-[400px] flex-col overflow-hidden rounded-[1.75rem] border border-gray-100/90 bg-white shadow-elevated ring-1 ring-black/[0.03] transition duration-200 sm:rounded-[1.9rem] lg:min-h-[540px] lg:rounded-[20px] lg:p-4 ${
               isInProgress ? 'cursor-not-allowed opacity-75' : 'hover:-translate-y-0.5 hover:border-primary/15 hover:shadow-elevated-hover'
             }`}
           >
