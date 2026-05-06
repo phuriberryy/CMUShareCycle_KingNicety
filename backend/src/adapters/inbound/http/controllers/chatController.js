@@ -239,6 +239,64 @@ export const createChat = async (req, res) => {
   return res.status(201).json(chatForCurrentUser)
 }
 
+export const startChatByEmail = async (req, res) => {
+  if (!req.user) {
+    return res.status(401).json(unauthorized())
+  }
+
+  const errors = validationResult(req)
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() })
+  }
+
+  const email = String(req.body.email || '').trim().toLowerCase()
+  if (!email) {
+    return res.status(400).json(badRequest('Email is required'))
+  }
+
+  const targetUserResult = await query('SELECT id, name, email, avatar_url FROM users WHERE lower(email) = $1 LIMIT 1', [email])
+  if (!targetUserResult.rowCount) {
+    return res.status(404).json(notFound('User not found'))
+  }
+
+  const targetUser = targetUserResult.rows[0]
+  if (targetUser.id === req.user.id) {
+    return res.status(400).json(badRequest('Cannot chat with yourself'))
+  }
+
+  const existing = await query(
+    `SELECT id FROM chats
+     WHERE ((creator_id=$1 AND participant_id=$2) OR (creator_id=$2 AND participant_id=$1))
+       AND deleted_at IS NULL
+     ORDER BY created_at DESC
+     LIMIT 1`,
+    [req.user.id, targetUser.id]
+  )
+
+  let chatId = existing.rows[0]?.id
+  if (!chatId) {
+    const insertResult = await query(
+      `INSERT INTO chats (creator_id, participant_id, status, owner_accepted, requester_accepted)
+       VALUES ($1, $2, 'active', true, true)
+       RETURNING id`,
+      [req.user.id, targetUser.id]
+    )
+    chatId = insertResult.rows[0].id
+  }
+
+  const chatRow = await fetchChatById(chatId)
+  const chatForCurrentUser = mapChatRow(chatRow, req.user.id)
+  const chatForParticipant = mapChatRow(chatRow, targetUser.id)
+
+  const io = getChatServer()
+  if (io) {
+    io.to(targetUser.id).emit('chat:created', chatForParticipant)
+    io.to(targetUser.id).emit('notification:new')
+  }
+
+  return res.status(existing.rowCount ? 200 : 201).json(chatForCurrentUser)
+}
+
 export const acceptChat = async (req, res) => {
   try {
     if (!req.user) {
@@ -983,6 +1041,16 @@ function mapChatRow(row, currentUserId) {
           created_at: row.last_message_created_at,
         }
       : null,
+    messages: [],
+    participants: [
+      {
+        id: row.creator_id,
+        name: row.creator_name,
+        email: row.creator_email,
+        avatar_url: row.creator_avatar_url,
+      },
+      participant,
+    ],
     updatedAt: row.updated_at,
   }
 }

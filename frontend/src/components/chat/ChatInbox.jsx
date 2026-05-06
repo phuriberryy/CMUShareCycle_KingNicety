@@ -1,4 +1,4 @@
-import { Loader2, Plus, Search, Trash2 } from 'lucide-react'
+import { Loader2, Plus, Trash2 } from 'lucide-react'
 import { getChatStatusLabel } from '../../features/chat/utils/chatStatus'
 
 export default function ChatInbox({
@@ -34,16 +34,6 @@ export default function ChatInbox({
             <Plus size={16} />
             Start Chat
           </button>
-        </div>
-        <div className="mt-2.5 flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 focus-within:border-primary focus-within:bg-white focus-within:ring-2 focus-within:ring-primary/10">
-          <Search size={15} className="shrink-0 text-gray-400" />
-          <input
-            type="text"
-            value={searchValue}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="ค้นหาชื่อหรืออีเมล"
-            className="w-full bg-transparent text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none"
-          />
         </div>
         <div className="mt-2.5 flex gap-2">
           <input

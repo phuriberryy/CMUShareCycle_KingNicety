@@ -4,6 +4,7 @@ import { authenticate } from '../middleware/auth.js'
 import { validateRequest } from '../middleware/validateRequest.js'
 import {
   createChat,
+  startChatByEmail,
   getChatMessages,
   getChats,
   acceptChat,
@@ -18,6 +19,7 @@ router.use(authenticate)
 
 router.get('/', getChats)
 router.post('/upload-image', uploadChatImage)
+router.post('/start', [body('email').isEmail()], validateRequest, startChatByEmail)
 router.get('/:chatId/messages', [param('chatId').isUUID()], validateRequest, getChatMessages)
 router.post(
   '/',
