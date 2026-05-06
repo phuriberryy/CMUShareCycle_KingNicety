@@ -123,10 +123,10 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
           <div className="pointer-events-none absolute -right-24 -top-24 h-48 w-48 rounded-full bg-primary/[0.08] blur-3xl" aria-hidden />
           <div className="pointer-events-none absolute -bottom-24 -left-20 h-44 w-44 rounded-full bg-primary/[0.06] blur-3xl" aria-hidden />
 
-          <div className="relative z-10 flex flex-col gap-6 px-5 py-6 sm:gap-7 sm:px-7 sm:py-8 lg:flex-row lg:items-center lg:justify-between lg:gap-12 lg:px-10 lg:py-9">
-            <div className="max-w-xl space-y-4 sm:space-y-5">
+          <div className="relative z-10 flex flex-col gap-5 px-4 py-5 sm:gap-7 sm:px-7 sm:py-8 lg:flex-row lg:items-center lg:justify-between lg:gap-12 lg:px-10 lg:py-9">
+            <div className="max-w-xl space-y-3 sm:space-y-5">
               <div className="space-y-2 sm:space-y-2.5">
-                <h1 className="text-balance text-xl font-bold leading-[1.55] tracking-[0.03em] text-primary-dark sm:text-3xl sm:leading-[1.5] sm:tracking-[0.04em] lg:text-[2rem] lg:leading-[1.48] [text-rendering:optimizeLegibility]">
+                <h1 className="text-balance text-lg font-bold leading-[1.45] tracking-[0.02em] text-primary-dark sm:text-3xl sm:leading-[1.5] sm:tracking-[0.04em] lg:text-[2rem] lg:leading-[1.48] [text-rendering:optimizeLegibility]">
                   ของที่มี แลกของที่ต้องการ
                 </h1>
                 <p className="max-w-lg text-sm font-normal leading-relaxed text-gray-700 sm:text-base">
@@ -137,22 +137,22 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
                 <button
                   type="button"
                   onClick={() => document.getElementById('items-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-                  className="sc-btn-primary min-h-10 justify-center px-4 py-2.5 text-sm font-semibold sm:min-h-10 sm:px-5"
+                  className="sc-btn-primary min-h-11 justify-center px-4 py-2.5 text-sm font-semibold sm:min-h-10 sm:px-5"
                 >
                   ดูรายการ
                   <ArrowRight size={16} strokeWidth={2.5} className="shrink-0" />
                 </button>
-                <span className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition hover:border-gray-300 hover:bg-gray-50/80 sm:w-auto sm:justify-start sm:text-sm sm:py-2">
+                <span className="hidden min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition hover:border-gray-300 hover:bg-gray-50/80 sm:inline-flex sm:w-auto sm:justify-start sm:text-sm sm:py-2">
                   <Zap size={15} className="shrink-0 text-primary" aria-hidden />
                   <span className="text-center sm:text-left">มุ่งสู่มหาวิทยาลัยไร้ขยะ</span>
                 </span>
               </div>
             </div>
-            <div className="mt-1 grid w-full grid-cols-2 gap-3 sm:mt-0 sm:gap-3 lg:mt-0 lg:max-w-sm lg:shrink-0">
+            <div className="mt-1 flex gap-3 overflow-x-auto pb-1 pr-1 sm:mt-0 sm:grid sm:w-full sm:grid-cols-2 sm:gap-3 lg:mt-0 lg:max-w-sm lg:shrink-0 lg:overflow-visible lg:pb-0 lg:pr-0">
               {benefitCards.map((benefit) => (
                 <div
                   key={benefit.title}
-                  className={`flex items-center gap-2.5 rounded-xl border p-3 transition duration-200 hover:border-gray-200/90 hover:shadow-sm sm:gap-3 sm:p-3.5 ${benefitToneClasses[benefit.tone]}`}
+                  className={`min-w-[190px] flex-1 items-center gap-2.5 rounded-xl border p-3 transition duration-200 hover:border-gray-200/90 hover:shadow-sm sm:min-w-0 sm:gap-3 sm:p-3.5 ${benefitToneClasses[benefit.tone]}`}
                 >
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-black/[0.06] [color:inherit] sm:h-9 sm:w-9 sm:rounded-xl">
                     <benefit.icon className="h-4 w-4 sm:h-[17px] sm:w-[17px]" strokeWidth={2} />
@@ -168,38 +168,39 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
         </section>
 
         {statistics ? (
-          <section className="hidden sm:block">
-            <div className="mb-4 sm:mb-5">
+          <section>
+            <div className="mb-4 flex items-end justify-between gap-3 sm:mb-5">
               <h2 className="text-lg font-bold text-gray-900 sm:text-xl">ผลกระทบต่อชุมชน</h2>
+              <p className="hidden text-sm text-gray-500 sm:block">สรุปการใช้งานล่าสุด</p>
             </div>
             <div className="-mx-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:overflow-visible sm:px-0">
-              <div className="grid min-w-[720px] grid-cols-6 gap-2 sm:min-w-0 sm:grid-cols-3 sm:gap-3">
-                <div className="rounded-xl border border-blue-200/60 bg-gradient-to-br from-blue-50/80 to-white p-3 shadow-elevated transition hover:shadow-elevated-hover sm:rounded-2xl sm:p-4">
+              <div className="flex min-w-max gap-3 sm:grid sm:min-w-0 sm:grid-cols-3 sm:gap-3 lg:grid-cols-6">
+                <div className="sc-card min-w-[160px] flex-1 rounded-xl p-3 shadow-elevated transition hover:shadow-elevated-hover sm:rounded-2xl sm:p-4">
                   <div className="flex items-center justify-between"><span className="text-xs font-medium text-gray-500">ผู้ใช้ทั้งหมด</span><Users size={18} className="text-blue-500" /></div>
                   <p className="mt-2 text-xl font-bold tabular-nums text-blue-600">{statistics.totalUsers.toLocaleString()}</p>
                   <p className="mt-0.5 text-xs text-gray-500">บัญชีที่ลงทะเบียน</p>
                 </div>
-                <div className="rounded-xl border border-primary/25 bg-gradient-to-br from-primary-light/80 to-white p-3 shadow-elevated transition hover:shadow-elevated-hover sm:rounded-2xl sm:p-4">
+                <div className="sc-card min-w-[160px] flex-1 rounded-xl p-3 shadow-elevated transition hover:shadow-elevated-hover sm:rounded-2xl sm:p-4">
                   <div className="flex items-center justify-between"><span className="text-xs font-medium text-gray-500">รายการสินค้า</span><Package size={18} className="text-primary" /></div>
                   <p className="mt-2 text-xl font-bold tabular-nums text-primary">{statistics.totalItems.toLocaleString()}</p>
                   <p className="mt-0.5 text-xs text-gray-500">{statistics.activeItems} พร้อมแลก</p>
                 </div>
-                <div className="rounded-xl border border-purple-200/60 bg-gradient-to-br from-purple-50/80 to-white p-3 shadow-elevated transition hover:shadow-elevated-hover sm:rounded-2xl sm:p-4">
+                <div className="sc-card min-w-[160px] flex-1 rounded-xl p-3 shadow-elevated transition hover:shadow-elevated-hover sm:rounded-2xl sm:p-4">
                   <div className="flex items-center justify-between"><span className="text-xs font-medium text-gray-500">การแลกเปลี่ยน</span><CheckCircle size={18} className="text-purple-500" /></div>
                   <p className="mt-2 text-xl font-bold tabular-nums text-purple-600">{statistics.totalExchanges.toLocaleString()}</p>
                   <p className="mt-0.5 text-xs text-gray-500">สำเร็จ</p>
                 </div>
-                <div className="rounded-xl border border-primary/25 bg-gradient-to-br from-primary-light/80 to-white p-3 shadow-elevated transition hover:shadow-elevated-hover sm:rounded-2xl sm:p-4">
+                <div className="sc-card min-w-[160px] flex-1 rounded-xl p-3 shadow-elevated transition hover:shadow-elevated-hover sm:rounded-2xl sm:p-4">
                   <div className="flex items-center justify-between"><span className="text-xs font-medium text-gray-500">CO₂ ลดได้</span><Leaf size={18} className="text-primary" /></div>
                   <p className="mt-2 text-xl font-bold tabular-nums text-primary">{statistics.totalCO2Reduced.toLocaleString()} kg</p>
                   <p className="mt-0.5 text-xs text-gray-500">ลดได้</p>
                 </div>
-                <div className="rounded-xl border border-orange-200/60 bg-gradient-to-br from-orange-50/80 to-white p-3 shadow-elevated transition hover:shadow-elevated-hover sm:rounded-2xl sm:p-4">
+                <div className="sc-card min-w-[160px] flex-1 rounded-xl p-3 shadow-elevated transition hover:shadow-elevated-hover sm:rounded-2xl sm:p-4">
                   <div className="flex items-center justify-between"><span className="text-xs font-medium text-gray-500">คำขอ</span><RefreshCcw size={18} className="text-orange-500" /></div>
                   <p className="mt-2 text-xl font-bold tabular-nums text-orange-600">{statistics.totalRequests.toLocaleString()}</p>
                   <p className="mt-0.5 text-xs text-gray-500">{statistics.pendingRequests} รอ</p>
                 </div>
-                <div className="rounded-xl border border-teal-200/60 bg-gradient-to-br from-teal-50/80 to-white p-3 shadow-elevated transition hover:shadow-elevated-hover sm:rounded-2xl sm:p-4">
+                <div className="sc-card min-w-[160px] flex-1 rounded-xl p-3 shadow-elevated transition hover:shadow-elevated-hover sm:rounded-2xl sm:p-4">
                   <div className="flex items-center justify-between"><span className="text-xs font-medium text-gray-500">อัตราแลกเปลี่ยน</span><Zap size={18} className="text-teal-500" /></div>
                   <p className="mt-2 text-xl font-bold tabular-nums text-teal-600">{statistics.totalExchanges > 0 ? ((statistics.totalExchanges / statistics.totalUsers) * 100).toFixed(1) : '0'}%</p>
                   <p className="mt-0.5 text-xs text-gray-500">อัตราแลกเปลี่ยน</p>
