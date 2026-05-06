@@ -1,0 +1,102 @@
+import { useEffect, useMemo, useState } from 'react'
+import ChatInbox from './ChatInbox'
+import ChatRoom from './ChatRoom'
+
+export default function ChatPage({
+  open,
+  chats,
+  loading,
+  deletingChatId,
+  chatMeta,
+  formatMessageTime,
+  messages,
+  messagesLoading,
+  selectedChat,
+  setSelectedChat,
+  socketConnected,
+  composerText,
+  setComposerText,
+  handleSendMessage,
+  pendingImage,
+  setPendingImage,
+  handlePickImage,
+  fileInputRef,
+  handleImageSelected,
+  uploadingImage,
+  sendingMessage,
+  setShowActions,
+  showActions,
+  onDeleteChat,
+  isMobileInitially = false,
+}) {
+  const [isMobile, setIsMobile] = useState(isMobileInitially)
+  const [chatSearch, setChatSearch] = useState('')
+  const activeChat = useMemo(() => chats.find((c) => c.id === selectedChat) || null, [chats, selectedChat])
+  const filteredChats = useMemo(() => {
+    const query = chatSearch.trim().toLowerCase()
+    if (!query) return chats
+    return chats.filter((chat) => ((chat.participant_name || '').toLowerCase().includes(query) || (chat.participant_email || '').toLowerCase().includes(query) || (chatMeta?.[chat.id]?.lastText || '').toLowerCase().includes(query)))
+  }, [chats, chatSearch, chatMeta])
+
+  useEffect(() => {
+    const updateViewport = () => setIsMobile(window.innerWidth < 768)
+    updateViewport()
+    window.addEventListener('resize', updateViewport)
+    return () => window.removeEventListener('resize', updateViewport)
+  }, [])
+
+  useEffect(() => {
+    if (open && isMobile) {
+      const prev = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+      return () => {
+        document.body.style.overflow = prev
+      }
+    }
+  }, [open, isMobile])
+
+  if (!open) return null
+
+  return (
+    <div className="chat-root flex h-[100dvh] w-screen flex-col bg-white md:h-auto md:w-full md:flex-row md:overflow-hidden">
+      <div className={`${isMobile && activeChat ? 'hidden' : 'flex'} h-full min-h-0 w-full flex-col md:w-[320px] md:flex-none md:border-r md:border-gray-200`}>
+        <ChatInbox
+          loading={loading}
+          chats={filteredChats}
+          activeChat={selectedChat}
+          deletingChatId={deletingChatId}
+          chatMeta={chatMeta}
+          onSelect={setSelectedChat}
+          onDelete={onDeleteChat}
+          searchValue={chatSearch}
+          onSearchChange={setChatSearch}
+          formatMessageTime={formatMessageTime}
+        />
+      </div>
+
+      <div className={`${isMobile ? (activeChat ? 'flex' : 'hidden') : 'flex'} h-full min-h-0 flex-1 flex-col`}>
+        <ChatRoom
+          chat={activeChat}
+          socketConnected={socketConnected}
+          onBack={isMobile ? () => setSelectedChat(null) : null}
+          messages={messages}
+          messagesLoading={messagesLoading}
+          formatMessageTime={formatMessageTime}
+          getMessageId={(m) => m?.id ?? `${m?.created_at || ''}-${m?.sender_id || ''}`}
+          composerText={composerText}
+          setComposerText={setComposerText}
+          handleSendMessage={handleSendMessage}
+          pendingImage={pendingImage}
+          setPendingImage={setPendingImage}
+          handlePickImage={handlePickImage}
+          fileInputRef={fileInputRef}
+          handleImageSelected={handleImageSelected}
+          uploadingImage={uploadingImage}
+          sendingMessage={sendingMessage}
+          setShowActions={setShowActions}
+          showActions={showActions}
+        />
+      </div>
+    </div>
+  )
+}
