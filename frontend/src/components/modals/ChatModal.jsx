@@ -55,6 +55,7 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
   const socketRef = useRef(null)
   const activeChatRef = useRef(null)
   const bottomRef = useRef(null)
+  const messagesEndRef = useRef(null)
   const messageScrollRef = useRef(null)
   const composerRef = useRef(null)
   const fileInputRef = useRef(null)
@@ -105,7 +106,7 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
     return el.scrollHeight - el.scrollTop - el.clientHeight < 120
   }, [])
   const scrollToBottom = useCallback((behavior = 'auto') => {
-    requestAnimationFrame(() => bottomRef.current?.scrollIntoView({ behavior, block: 'end' }))
+    requestAnimationFrame(() => messagesEndRef.current?.scrollIntoView({ behavior, block: 'end' }))
   }, [])
   const groupedMessages = useMemo(() => {
     const list = Array.isArray(messages) ? messages : []
@@ -184,6 +185,12 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
   useEffect(() => {
     activeChatRef.current = selectedChat
   }, [selectedChat])
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      scrollToBottom(messagesLoading ? 'auto' : 'smooth')
+    }
+  }, [messages, scrollToBottom, messagesLoading])
 
   useEffect(() => {
     if (!open || !selectedChat || !token) {
@@ -435,7 +442,7 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
       groupedMessages={groupedMessages}
       getMessageId={getMessageId}
       formatMessageTime={formatMessageTime}
-      bottomRef={bottomRef}
+      bottomRef={messagesEndRef}
       composerRef={composerRef}
       sheetOpen={sheetOpen}
       setSheetOpen={setSheetOpen}

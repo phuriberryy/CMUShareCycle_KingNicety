@@ -11,7 +11,7 @@ export default function MobileChatPanel({
   groupedMessages,
   getMessageId,
   formatMessageTime,
-  bottomRef,
+  messagesEndRef,
   composerRef,
   sheetOpen,
   setSheetOpen,
@@ -28,7 +28,6 @@ export default function MobileChatPanel({
 }) {
   return (
     <div className={`flex h-full min-h-0 flex-col bg-[#FBFCFB] md:hidden ${isOpen ? 'flex' : 'hidden'}`}>
-      <div className="absolute inset-x-0 top-0 z-40 h-0" />
       <div className="sticky top-0 z-30 shrink-0 border-b border-gray-200 bg-white/95 px-4 py-3 backdrop-blur-sm">
         <div className="flex items-center gap-3">
           <button
@@ -121,7 +120,7 @@ export default function MobileChatPanel({
             </div>
           </div>
         )}
-        <div ref={bottomRef} />
+        <div ref={messagesEndRef} />
       </div>
 
       <div
