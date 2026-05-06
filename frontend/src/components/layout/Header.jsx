@@ -37,7 +37,7 @@ function Header({ unread, onNotificationsClick }) {
           to={APP_ROUTES.home}
           className="flex min-h-11 min-w-0 flex-1 items-center gap-2 sm:flex-initial sm:gap-2.5"
         >
-          <ShareCycleLogo className="h-8 w-8 shrink-0 overflow-hidden rounded-xl shadow-sm ring-1 ring-primary/10 sm:h-10 sm:w-10 sm:rounded-2xl" />
+          <ShareCycleLogo className="h-7 w-auto shrink-0 overflow-hidden rounded-xl shadow-sm ring-1 ring-primary/10 sm:h-9 sm:w-auto sm:rounded-2xl lg:h-9" />
           <div className="min-w-0 leading-tight">
             <p className="truncate text-[0.92rem] font-semibold text-primary-dark sm:text-base">
               <span className="font-bold">CMU</span>
