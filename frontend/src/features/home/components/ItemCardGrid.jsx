@@ -22,7 +22,7 @@ function formatExpiryShort(iso) {
 
 export default function ItemCardGrid({ items, navigate, onExchangeItem, onDonationItem }) {
   return (
-    <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">
+    <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:auto-rows-fr lg:grid-cols-3 lg:gap-6 xl:grid-cols-4 xl:gap-6">
       {items.map((item) => {
         const isInProgress = item.status === 'in_progress'
         const isDonated = item.status === 'donated'
@@ -46,7 +46,7 @@ export default function ItemCardGrid({ items, navigate, onExchangeItem, onDonati
         return (
           <article
             key={item.id}
-            className={`group flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-gray-100/90 bg-white shadow-elevated ring-1 ring-black/[0.03] transition duration-200 sm:rounded-3xl ${
+            className={`group flex h-full min-h-[520px] flex-col overflow-hidden rounded-2xl border border-gray-100/90 bg-white shadow-elevated ring-1 ring-black/[0.03] transition duration-200 sm:rounded-3xl lg:min-h-[540px] ${
               isInProgress ? 'cursor-not-allowed opacity-75' : 'hover:-translate-y-0.5 hover:border-primary/15 hover:shadow-elevated-hover'
             }`}
           >
@@ -68,7 +68,7 @@ export default function ItemCardGrid({ items, navigate, onExchangeItem, onDonati
               </button>
             </div>
 
-            <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-100">
+            <div className="relative aspect-[4/3] min-h-[220px] w-full overflow-hidden bg-gray-100 lg:min-h-[240px]">
               <img
                 src={itemCoverUrl(item) || 'https://images.unsplash.com/photo-1503602642458-232111445657?auto=format&fit=crop&w=800&q=80'}
                 alt={item.title}
@@ -93,7 +93,7 @@ export default function ItemCardGrid({ items, navigate, onExchangeItem, onDonati
               </div>
             </div>
 
-            <div className="flex min-h-0 flex-1 flex-col gap-2 p-3 pt-2.5 sm:gap-3 sm:p-4 sm:pt-3">
+            <div className="flex min-h-0 flex-1 flex-col gap-3 p-3 pt-2.5 sm:gap-3 sm:p-4 sm:pt-3 lg:gap-4">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="inline-flex max-w-full truncate rounded-full bg-primary-light/70 px-2.5 py-0.5 text-[11px] font-semibold text-primary-dark ring-1 ring-primary/10">
                   #{item.category}
@@ -105,13 +105,13 @@ export default function ItemCardGrid({ items, navigate, onExchangeItem, onDonati
 
               <h3
                 onClick={() => navigate(`/items/${item.id}`)}
-                className="line-clamp-2 shrink-0 cursor-pointer text-sm font-bold leading-snug tracking-tight text-gray-900 transition hover:text-primary sm:text-base"
+                className="line-clamp-2 min-h-[3.25rem] cursor-pointer text-sm font-bold leading-snug tracking-tight text-gray-900 transition hover:text-primary sm:min-h-[3.5rem] sm:text-base"
               >
                 {item.title}
               </h3>
 
-              <div className="flex min-h-0 flex-1 flex-col space-y-1 border-t border-gray-50 pt-2 text-xs text-gray-500 sm:space-y-1.5 sm:pt-3">
-                <div className="min-h-0 space-y-1 sm:space-y-1.5">
+              <div className="flex min-h-0 flex-1 flex-col border-t border-gray-50 pt-2 text-xs text-gray-500 sm:pt-3">
+                <div className="min-h-0 space-y-1 sm:space-y-1.5 lg:space-y-2">
                   {expiryLine ? (
                     <p className="flex items-center gap-2 font-medium text-gray-600">
                       <Clock3 size={14} className="shrink-0 text-primary/70" />
@@ -129,7 +129,7 @@ export default function ItemCardGrid({ items, navigate, onExchangeItem, onDonati
                     <span className="truncate font-medium text-gray-600">{owner}</span>
                   </p>
                 </div>
-                <div className="mt-auto grid shrink-0 grid-cols-1 gap-1.5 pt-2 sm:gap-2 sm:pt-2.5">
+                <div className="mt-auto grid shrink-0 grid-cols-1 gap-1.5 pt-3 sm:gap-2 sm:pt-3 lg:pt-4">
                   <button
                     type="button"
                     onClick={() => navigate(`/items/${item.id}`)}
@@ -164,7 +164,7 @@ export default function ItemCardGrid({ items, navigate, onExchangeItem, onDonati
                   <button
                     type="button"
                     onClick={() => navigate(`/items/${item.id}`)}
-                    className="sc-btn-secondary hidden min-h-10 w-full rounded-xl px-3 text-sm font-semibold sm:inline-flex"
+                    className="sc-btn-secondary hidden min-h-10 w-full rounded-xl px-3 text-sm font-semibold sm:mt-0 sm:inline-flex"
                   >
                     <Eye size={18} />
                     ดูรายละเอียด
