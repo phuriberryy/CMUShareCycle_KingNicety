@@ -223,6 +223,16 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
   }, [])
 
   useEffect(() => {
+    if (open && isMobile) {
+      const prevOverflow = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+      return () => {
+        document.body.style.overflow = prevOverflow
+      }
+    }
+  }, [open, isMobile])
+
+  useEffect(() => {
     if (!composerRef.current) return
     const updateHeight = () => {
       const el = composerRef.current
@@ -514,7 +524,7 @@ export default function ChatModal({ open, onClose, initialChatId, asPage = false
   )
 
   const chatContent = (
-    <div className="h-[100vh] min-h-0 overflow-hidden bg-[#F4F7F5] md:h-[min(92dvh,920px)] md:max-h-[92dvh] md:rounded-3xl">
+    <div className="h-[100dvh] min-h-0 w-full overflow-hidden bg-[#F4F7F5] md:h-[min(92dvh,920px)] md:max-h-[92dvh] md:rounded-3xl">
       {mobileList}
       {mobileDetail}
       {desktopLayout}
