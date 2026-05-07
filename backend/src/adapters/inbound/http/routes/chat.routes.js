@@ -15,6 +15,11 @@ import { uploadChatImage } from '../controllers/uploadController.js'
 
 const router = Router()
 
+router.use((req, _res, next) => {
+  console.log('[chat:request]', req.method, req.originalUrl)
+  next()
+})
+
 router.use(authenticate)
 
 router.get('/', getChats)
