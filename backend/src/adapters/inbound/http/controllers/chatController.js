@@ -74,76 +74,19 @@ export const getChatMessages = async (req, res) => {
     return res.status(403).json(forbidden('You do not have access to this chat'))
   }
 
-  // ดึงข้อความพร้อมข้อมูลสถานะการอ่าน
-  // ตรวจสอบว่า column read_at มีอยู่หรือไม่
-  let hasReadAtColumn = false
-  try {
-    const columnCheck = await query(
-      `SELECT 1 FROM information_schema.columns 
-       WHERE table_name = 'messages' AND column_name = 'read_at'`
-    )
-    hasReadAtColumn = columnCheck.rowCount > 0
-  } catch (err) {
-    console.warn('Could not check for read_at column:', err)
-  }
-
   const result = await query(
-    hasReadAtColumn
-      ? `SELECT 
-          m.*,
-          CASE WHEN m.sender_id = $2 THEN true ELSE false END as is_sent_by_me,
-          CASE WHEN m.read_at IS NOT NULL THEN true ELSE false END as is_read
-         FROM messages m
-         WHERE m.chat_id=$1 
-           AND (m.deleted_at IS NULL)
-         ORDER BY m.created_at ASC`
-      : `SELECT 
-          m.*,
-          CASE WHEN m.sender_id = $2 THEN true ELSE false END as is_sent_by_me,
-          false as is_read
-         FROM messages m
-         WHERE m.chat_id=$1 
-           AND (m.deleted_at IS NULL)
-         ORDER BY m.created_at ASC`,
+    `SELECT 
+      m.id,
+      m.chat_id,
+      m.sender_id,
+      m.body,
+      m.created_at,
+      CASE WHEN m.sender_id = $2 THEN true ELSE false END as is_sent_by_me
+     FROM messages m
+     WHERE m.chat_id = $1
+     ORDER BY m.created_at ASC`,
     [chatId, req.user.id]
   )
-
-  // Mark messages as read when user opens the chat (ถ้ามี column read_at)
-  let updateResult = { rows: [] }
-  if (hasReadAtColumn) {
-    try {
-      updateResult = await query(
-        `UPDATE messages 
-         SET read_at = NOW()
-         WHERE chat_id = $1 
-           AND sender_id != $2 
-           AND read_at IS NULL
-         RETURNING id, sender_id`,
-        [chatId, req.user.id]
-      )
-    } catch (err) {
-      console.warn('Could not update read_at:', err)
-    }
-  }
-
-  // Emit event to notify senders that their messages were read
-  const io = getChatServer()
-  if (io && updateResult.rows.length > 0) {
-    const readMessages = updateResult.rows
-    const readAt = new Date().toISOString()
-    
-    // Group by sender to emit once per sender
-    const senderIds = [...new Set(readMessages.map(m => m.sender_id))]
-    senderIds.forEach(senderId => {
-      const messageIds = readMessages
-        .filter(m => m.sender_id === senderId)
-        .map(m => m.id)
-      
-      messageIds.forEach(messageId => {
-        io.to(senderId).emit('message:read', { messageId, readAt })
-      })
-    })
-  }
 
   return res.json(result.rows)
 }

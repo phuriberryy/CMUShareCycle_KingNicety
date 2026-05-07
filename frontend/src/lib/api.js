@@ -271,7 +271,7 @@ export const chatApi = {
   create: (token, payload) =>
     request('/chats', { method: 'POST', body: JSON.stringify(payload), token, timeoutMs: CHAT_TIMEOUT_MS }),
   start: (token, payload) =>
-    request('/chats/start', { method: 'POST', body: JSON.stringify(payload), token, timeoutMs: CHAT_TIMEOUT_MS }),
+    request('/chat/start', { method: 'POST', body: JSON.stringify(payload), token, timeoutMs: CHAT_TIMEOUT_MS }),
   list: (token) => request('/chats', { token, timeoutMs: CHAT_TIMEOUT_MS }),
   messages: (token, chatId) => request(`/chats/${chatId}/messages`, { token, timeoutMs: CHAT_TIMEOUT_MS }),
   uploadImage: (token, dataUrl) =>
