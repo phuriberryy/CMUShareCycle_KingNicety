@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Home } from 'lucide-react'
 import ChatPageView from '../components/chat/ChatPage'
@@ -6,6 +7,10 @@ export default function ChatPage() {
   const location = useLocation()
   const navigate = useNavigate()
   const initialChatId = location.state?.chatId ?? null
+
+  useEffect(() => {
+    console.log('CHAT BUILD VERSION 2026-05-07-A')
+  }, [])
 
   return (
     <div className="flex h-[100dvh] flex-col">
