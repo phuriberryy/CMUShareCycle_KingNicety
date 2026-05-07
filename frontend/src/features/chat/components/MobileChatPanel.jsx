@@ -39,7 +39,7 @@ export default function MobileChatPanel({
             <ArrowLeft size={18} />
           </button>
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white shadow-sm">
-            {(activeChat?.participant_name || 'CMU')
+            {(activeChat?.participant_name || activeChat?.other_user_name || 'CMU')
               .split(' ')
               .map((p) => p[0])
               .join('')
@@ -48,9 +48,9 @@ export default function MobileChatPanel({
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-base font-semibold text-gray-900">
-              {activeChat?.participant_name || 'นักศึกษา CMU'}
+              {activeChat?.participant_name || activeChat?.other_user_name || 'นักศึกษา CMU'}
             </p>
-            <p className="truncate text-xs text-gray-500">{activeChat?.participant_email || ''}</p>
+            <p className="truncate text-xs text-gray-500">{activeChat?.participant_email || activeChat?.other_user_email || ''}</p>
           </div>
           <span
             className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold ${

@@ -32,7 +32,7 @@ export default function ChatPage({
   onNewChat,
   isMobileInitially = false,
 }) {
-  const { token } = useAuth()
+  const { token, user } = useAuth()
   const [isMobile, setIsMobile] = useState(isMobileInitially)
   const [chatSearch, setChatSearch] = useState('')
   const [startChatEmail, setStartChatEmail] = useState('')
@@ -40,10 +40,19 @@ export default function ChatPage({
   const [startChatError, setStartChatError] = useState('')
   const conversations = Array.isArray(chats) ? chats : []
   const activeChat = conversations.find((c) => c?.id === selectedChat) || null
+  const getDisplayUser = (chat) => ({
+    id: chat?.participant_id ?? chat?.creator_id ?? null,
+    name: chat?.participant_name ?? chat?.other_user_name ?? 'นักศึกษา CMU',
+    email: chat?.participant_email ?? chat?.other_user_email ?? '',
+    avatar_url: chat?.participant_avatar_url ?? chat?.other_user_avatar_url ?? null,
+  })
   const filteredChats = (() => {
     const query = chatSearch.trim().toLowerCase()
     if (!query) return conversations
-    return conversations.filter((chat) => ((chat?.participant_name || '').toLowerCase().includes(query) || (chat?.participant_email || '').toLowerCase().includes(query) || (chatMeta?.[chat.id]?.lastText || '').toLowerCase().includes(query)))
+    return conversations.filter((chat) => {
+      const other = getDisplayUser(chat)
+      return ((other?.name || '').toLowerCase().includes(query) || (other?.email || '').toLowerCase().includes(query) || (chatMeta?.[chat.id]?.lastText || '').toLowerCase().includes(query))
+    })
   })()
 
   const handleStartChat = async () => {

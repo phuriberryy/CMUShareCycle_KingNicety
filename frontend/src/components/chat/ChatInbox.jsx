@@ -21,19 +21,11 @@ export default function ChatInbox({
   return (
     <div className="flex h-full min-h-0 flex-col bg-white">
       <div className="shrink-0 border-b border-gray-200 bg-white px-4 py-3">
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
             <p className="text-base font-bold text-gray-900">ข้อความ</p>
             <p className="text-xs text-gray-500">แชทจากคำขอแลกหรือบริจาค</p>
           </div>
-          <button
-            type="button"
-            onClick={onStartChat}
-            className="inline-flex h-10 items-center gap-2 rounded-full border border-gray-200 bg-white px-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
-          >
-            <Plus size={16} />
-            Start Chat
-          </button>
         </div>
         <div className="mt-2.5 flex gap-2">
           <input
@@ -66,9 +58,11 @@ export default function ChatInbox({
             {chats.map((chat) => {
               const isDeleting = deletingChatId === chat.id
               const unread = chatMeta?.[chat.id]?.unread || 0
-              const lastText = chatMeta?.[chat.id]?.lastText || chat.participant_email || 'เริ่มแชท'
+              const displayName = chat.participant_name || chat.other_user_name || 'นักศึกษา CMU'
+              const displayEmail = chat.participant_email || chat.other_user_email || ''
+              const lastText = chatMeta?.[chat.id]?.lastText || displayEmail || 'เริ่มแชท'
               const lastTime = chatMeta?.[chat.id]?.lastAt ? formatMessageTime(new Date(chatMeta[chat.id].lastAt).toISOString()) : ''
-              const initials = (chat.participant_name || 'CMU').split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase()
+              const initials = displayName.split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase()
               const isActive = activeChat === chat.id
               return (
                 <div key={chat.id} className="group flex items-stretch gap-1.5">
@@ -83,7 +77,7 @@ export default function ChatInbox({
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
-                        <p className="truncate text-sm font-semibold text-gray-900">{chat.participant_name || 'นักศึกษา CMU'}</p>
+                        <p className="truncate text-sm font-semibold text-gray-900">{displayName}</p>
                         {lastTime ? <span className="shrink-0 text-[10px] text-gray-400">{lastTime}</span> : null}
                       </div>
                       <p className="mt-0.5 truncate text-xs text-gray-600">{lastText}</p>
