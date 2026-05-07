@@ -18,6 +18,26 @@ export default function ChatInbox({
   startChatError,
   formatMessageTime,
 }) {
+  const handleStartClick = async () => {
+    const email = startChatEmail
+    console.log('START BUTTON CLICKED')
+    console.log('CHAT INBOX onStartChat typeof', typeof onStartChat)
+    if (!onStartChat) {
+      console.error('onStartChat missing')
+      return
+    }
+    if (!email?.trim()) {
+      console.error('email empty')
+      return
+    }
+    try {
+      await onStartChat(email.trim())
+      console.log('START CHAT CALLBACK FINISHED')
+    } catch (err) {
+      console.error('START CHAT CLICK FAILED', err)
+    }
+  }
+
   return (
     <div className="flex h-full min-h-0 flex-col bg-white">
       <div className="shrink-0 border-b border-gray-200 bg-white px-4 py-3">
@@ -37,7 +57,7 @@ export default function ChatInbox({
           />
           <button
             type="button"
-            onClick={onStartChat}
+            onClick={handleStartClick}
             disabled={startingChat || !startChatEmail.trim()}
             className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-3 text-sm font-semibold text-white transition hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50"
           >

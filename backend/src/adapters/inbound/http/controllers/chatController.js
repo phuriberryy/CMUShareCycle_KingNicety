@@ -192,72 +192,77 @@ export const createChat = async (req, res) => {
 }
 
 export const startChatByEmail = async (req, res) => {
-  console.log('[chat:startChatByEmail] enter', { originalUrl: req.originalUrl, body: req.body, userId: req.user?.id })
+  console.log('START CHAT REQUEST', { originalUrl: req.originalUrl, body: req.body, userId: req.user?.id })
   try {
     if (!req.user) {
       return res.status(401).json(unauthorized())
     }
 
     const errors = validationResult(req)
-    console.log('[chat:startChatByEmail] validation errors', errors.array())
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() })
     }
 
     const email = String(req.body.email || '').trim().toLowerCase()
-    console.log('[chat:startChatByEmail] email', email)
     if (!email) {
       return res.status(400).json(badRequest('Email is required'))
     }
 
     const targetUserResult = await query('SELECT id, name, email, avatar_url FROM users WHERE lower(email) = $1 LIMIT 1', [email])
-    console.log('[chat:startChatByEmail] targetUserResult.rowCount', targetUserResult.rowCount, targetUserResult.rows[0])
+    const targetUser = targetUserResult.rows[0]
+    console.log('TARGET USER', targetUser)
     if (!targetUserResult.rowCount) {
       return res.status(404).json(notFound('User not found'))
     }
 
-    const targetUser = targetUserResult.rows[0]
     if (targetUser.id === req.user.id) {
       return res.status(400).json(badRequest('Cannot chat with yourself'))
     }
 
-    const existing = await query(
-    `SELECT id FROM chats
-     WHERE ((creator_id=$1 AND participant_id=$2) OR (creator_id=$2 AND participant_id=$1))
-       AND deleted_at IS NULL
-     ORDER BY created_at DESC
-     LIMIT 1`,
-    [req.user.id, targetUser.id]
-  )
-
-    let chatId = existing.rows[0]?.id
-    console.log('[chat:startChatByEmail] existing.rowCount', existing.rowCount, existing.rows[0])
-    if (!chatId) {
-      const insertResult = await query(
-        `INSERT INTO chats (creator_id, participant_id, status, owner_accepted, requester_accepted)
-         VALUES ($1, $2, 'active', true, true)
-         RETURNING id`,
+    const client = await query('BEGIN')
+    try {
+      const existing = await query(
+        `SELECT id FROM chats
+         WHERE ((creator_id=$1 AND participant_id=$2) OR (creator_id=$2 AND participant_id=$1))
+           AND deleted_at IS NULL
+         ORDER BY created_at DESC
+         LIMIT 1`,
         [req.user.id, targetUser.id]
       )
-      console.log('[chat:startChatByEmail] insertResult', insertResult.rowCount, insertResult.rows[0])
-      chatId = insertResult.rows[0].id
+      console.log('EXISTING CHAT', existing.rows[0] || null)
+
+      let chatId = existing.rows[0]?.id
+      if (!chatId) {
+        const insertResult = await query(
+          `INSERT INTO chats (creator_id, participant_id, status, owner_accepted, requester_accepted)
+           VALUES ($1, $2, 'active', true, true)
+           RETURNING id`,
+          [req.user.id, targetUser.id]
+        )
+        console.log('CREATED CHAT', insertResult.rows[0] || null)
+        chatId = insertResult.rows[0].id
+      }
+
+      await query('COMMIT')
+
+      const chatRow = await fetchChatById(chatId)
+      const chatForCurrentUser = mapChatRow(chatRow, req.user.id)
+      const chatForParticipant = mapChatRow(chatRow, targetUser.id)
+      console.log('RESPONSE SENT', chatForCurrentUser)
+
+      const io = getChatServer()
+      if (io) {
+        io.to(targetUser.id).emit('chat:created', chatForParticipant)
+        io.to(targetUser.id).emit('notification:new')
+      }
+
+      return res.status(existing.rowCount ? 200 : 201).json(chatForCurrentUser)
+    } catch (txErr) {
+      await query('ROLLBACK')
+      throw txErr
     }
-
-    const chatRow = await fetchChatById(chatId)
-    console.log('[chat:startChatByEmail] chatRow', chatRow)
-    const chatForCurrentUser = mapChatRow(chatRow, req.user.id)
-    const chatForParticipant = mapChatRow(chatRow, targetUser.id)
-    console.log('[chat:startChatByEmail] chatForCurrentUser', chatForCurrentUser)
-
-    const io = getChatServer()
-    if (io) {
-      io.to(targetUser.id).emit('chat:created', chatForParticipant)
-      io.to(targetUser.id).emit('notification:new')
-    }
-
-    return res.status(existing.rowCount ? 200 : 201).json(chatForCurrentUser)
   } catch (err) {
-    console.error('[chat:startChatByEmail] error', err)
+    console.error('START CHAT ERROR', err)
     return res.status(500).json(internalError(err.message || 'Failed to start chat'))
   }
 }
@@ -509,6 +514,29 @@ export const acceptChat = async (req, res) => {
     console.error('Accept chat error:', err)
     return res.status(500).json(internalError())
   }
+}
+
+export const deleteChat = async (req, res) => {
+  if (!req.user) {
+    return res.status(401).json(unauthorized())
+  }
+
+  const { chatId } = req.params
+  const membership = await query(
+    `SELECT id FROM chats WHERE id=$1 AND (creator_id=$2 OR participant_id=$2) AND deleted_at IS NULL`,
+    [chatId, req.user.id]
+  )
+
+  if (!membership.rowCount) {
+    return res.status(404).json(notFound('Chat not found'))
+  }
+
+  await query(
+    `UPDATE chats SET deleted_at=NOW(), updated_at=NOW() WHERE id=$1`,
+    [chatId]
+  )
+
+  return res.json({ success: true, chatId })
 }
 
 export const declineChat = async (req, res) => {

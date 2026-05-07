@@ -26,25 +26,51 @@ export default function ChatRoom({
   const messagesContainerRef = useRef(null)
   const composerRef = useRef(null)
   const [composerHeight, setComposerHeight] = useState(88)
+  const [userScrolledUp, setUserScrolledUp] = useState(false)
 
   const safeMessages = Array.isArray(messages) ? messages : []
   const groupedMessages = safeMessages
 
+  const scrollToBottom = (behavior = 'smooth') => {
+    if (!chat) return
+    if (userScrolledUp) return
+    setTimeout(() => {
+      bottomRef.current?.scrollIntoView({ behavior, block: 'end' })
+    }, 0)
+  }
+
   useEffect(() => {
     const container = messagesContainerRef.current
     if (!container) return
-    const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100
-    if (isNearBottom) {
-      bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+    const onScroll = () => {
+      const distance = container.scrollHeight - container.scrollTop - container.clientHeight
+      setUserScrolledUp(distance > 140)
     }
-  }, [messages])
+    container.addEventListener('scroll', onScroll, { passive: true })
+    onScroll()
+    return () => container.removeEventListener('scroll', onScroll)
+  }, [chat?.id])
 
   useEffect(() => {
-    if (!composerRef.current) return
-    const updateHeight = () => setComposerHeight(Math.ceil(composerRef.current.getBoundingClientRect().height))
+    scrollToBottom('smooth')
+  }, [chat?.id, safeMessages.length])
+
+  useEffect(() => {
+    const element = composerRef.current
+    if (!element) return
+
+    const updateHeight = () => {
+      const currentElement = composerRef.current
+      if (!currentElement) return
+      setComposerHeight(Math.ceil(currentElement.getBoundingClientRect().height))
+    }
+
     updateHeight()
-    const ro = new ResizeObserver(updateHeight)
-    ro.observe(composerRef.current)
+    const ro = new ResizeObserver(() => {
+      if (!composerRef.current) return
+      updateHeight()
+    })
+    ro.observe(element)
     window.addEventListener('resize', updateHeight)
     return () => {
       ro.disconnect()
@@ -101,13 +127,13 @@ export default function ChatRoom({
         ) : groupedMessages.length > 0 ? (
           <div className="space-y-1.5">
             {groupedMessages.map((message) => {
-              const mine = message._mine
+              const mine = message.sender_id && String(message.sender_id) === String(chat?.my_user_id || message?.my_user_id || '') ? true : Boolean(message._mine)
               return (
                 <div key={getMessageId(message)} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-[78%] rounded-2xl px-3 py-2 text-sm shadow-sm ${mine ? 'bg-primary text-white' : 'border border-gray-200 bg-white text-gray-800'} ${message.pending ? 'opacity-70' : 'opacity-100'}`}>
                     {message.image_url ? <img src={message.image_url} alt="รูปที่แนบ" className="mb-2 max-h-72 w-full rounded-xl object-cover" /> : null}
                     {message.body ? <p className="whitespace-pre-wrap break-words">{message.body}</p> : null}
-                    {message.pending ? <p className={`mt-1 text-[10px] ${mine ? 'text-white/80' : 'text-gray-400'}`}>กำลังส่ง…</p> : null}
+                    {message.pending ? null : null}
                     {message._showTimestamp ? <p className={`mt-1 text-[10px] ${mine ? 'text-white/75' : 'text-gray-400'}`}>{formatMessageTime(message.created_at)}</p> : null}
                   </div>
                 </div>

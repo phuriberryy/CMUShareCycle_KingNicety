@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { io } from 'socket.io-client'
+import { ArrowLeft } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { API_BASE, chatApi } from '../lib/api'
 import ChatPageView from '../components/chat/ChatPage'
@@ -17,12 +18,12 @@ function toDataUrl(file) {
 const SOCKET_URL = (API_BASE || '').replace(/\/api$/, '')
 
 export default function ChatPage() {
-  const location = useLocation()
+  const navigate = useNavigate()
   const { token, loading: authLoading, user } = useAuth()
-  const initialChatId = location.state?.chatId ?? null
+  const initialChatId = null
 
   const [chats, setChats] = useState([])
-  const [selectedChat, setSelectedChat] = useState(initialChatId ? String(initialChatId) : null)
+  const [selectedChat, setSelectedChat] = useState(initialChatId)
   const [loading, setLoading] = useState(false)
   const [messages, setMessages] = useState([])
   const [messagesLoading, setMessagesLoading] = useState(false)
@@ -36,7 +37,7 @@ export default function ChatPage() {
   const [socketConnected, setSocketConnected] = useState(false)
   const fileInputRef = useRef(null)
   const socketRef = useRef(null)
-  const selectedChatRef = useRef(selectedChat)
+  const selectedChatRef = useRef(null)
   const messagesRef = useRef([])
 
   useEffect(() => {
@@ -49,6 +50,18 @@ export default function ChatPage() {
 
   const normalizedChats = useMemo(() => (Array.isArray(chats) ? chats : []), [chats])
   const activeChat = normalizedChats.find((c) => String(c?.id) === String(selectedChat)) || null
+
+  const normalizeMessage = (message, fallbackChatId) => ({
+    ...message,
+    chat_id: message?.chat_id || message?.chatId || fallbackChatId || null,
+    body: message?.body || '',
+    image_url: message?.image_url || null,
+    sender_id: message?.sender_id || null,
+    created_at: message?.created_at || new Date().toISOString(),
+    _mine: String(message?.sender_id || '') === String(user?.id || '') || Boolean(message?._mine),
+    pending: Boolean(message?.pending),
+    client_id: message?.client_id || message?.temp_id || null,
+  })
 
   const updateChatMeta = (chatId, messageRows) => {
     const rows = Array.isArray(messageRows) ? messageRows : []
@@ -83,42 +96,33 @@ export default function ChatPage() {
     )
   }
 
-  const normalizeMessage = (message, fallbackChatId) => ({
-    ...message,
-    id: message?.id ?? message?.client_id ?? `temp-${Date.now()}`,
-    chat_id: message?.chat_id || message?.chatId || fallbackChatId || selectedChatRef.current || null,
-    image_url: message?.image_url || null,
-    body: message?.body || '',
-    sender_id: message?.sender_id || null,
-    created_at: message?.created_at || new Date().toISOString(),
-    pending: Boolean(message?.pending),
-    _mine: message?.sender_id ? String(message.sender_id) === String(user?.id) : Boolean(message?._mine),
-  })
-
   const mergeMessages = (nextMessages, fallbackChatId) => {
     const incoming = Array.isArray(nextMessages) ? nextMessages.map((m) => normalizeMessage(m, fallbackChatId)) : []
     const current = messagesRef.current.map((m) => normalizeMessage(m, fallbackChatId))
-    const replaced = []
+    const merged = []
 
     for (const existing of current) {
       const shouldDrop = incoming.some((inc) => {
         if (existing.id && inc.id && String(existing.id) === String(inc.id)) return true
-        if (existing.pending && (inc.id || inc.client_id)) {
-          if (sameMessageSignature(existing, inc)) return true
-        }
+        if (existing.client_id && inc.client_id && String(existing.client_id) === String(inc.client_id)) return true
+        if (existing.pending && sameMessageSignature(existing, inc)) return true
         return sameMessageSignature(existing, inc)
       })
-      if (!shouldDrop) replaced.push(existing)
+      if (!shouldDrop) merged.push(existing)
     }
 
-    const merged = [...replaced]
     for (const inc of incoming) {
-      const exists = merged.some((msg) => {
+      const idx = merged.findIndex((msg) => {
         if (msg.id && inc.id && String(msg.id) === String(inc.id)) return true
-        if (msg.pending || inc.pending) return sameMessageSignature(msg, inc)
+        if (msg.client_id && inc.client_id && String(msg.client_id) === String(inc.client_id)) return true
+        if (msg.pending && sameMessageSignature(msg, inc)) return true
         return sameMessageSignature(msg, inc)
       })
-      if (!exists) merged.push(inc)
+      if (idx >= 0) {
+        merged[idx] = { ...merged[idx], ...inc, pending: false }
+      } else {
+        merged.push(inc)
+      }
     }
 
     merged.sort((a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0))
@@ -154,7 +158,6 @@ export default function ChatPage() {
         if (!alive) return
         const rows = Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : []
         setChats(rows)
-        if (!selectedChat && rows[0]?.id) setSelectedChat(String(rows[0].id))
       })
       .catch(() => {
         if (alive) setChats([])
@@ -205,26 +208,66 @@ export default function ChatPage() {
     const current = socketRef.current
     if (!current || !selectedChat) return
     current.emit('chat:join', { chatId: String(selectedChat) })
-    loadMessages(selectedChat)
+    setTimeout(() => loadMessages(selectedChat), 0)
   }, [selectedChat, token])
 
   const handleSetSelectedChat = (chatId) => {
     const nextId = typeof chatId === 'string' ? chatId : chatId?.id ? String(chatId.id) : null
-    if (!nextId) return
     setSelectedChat(nextId)
   }
 
-  const handleNewChat = (newChat) => {
-    if (!newChat?.id) return
-    setChats((prev) => [newChat, ...prev.filter((chat) => String(chat.id) !== String(newChat.id))])
-    setSelectedChat(String(newChat.id))
+  const normalizeChat = (chat) => {
+    if (!chat) return null
+    const id = chat?.id || chat?.chat?.id || chat?.data?.id || chat?.data?.chat?.id || null
+    if (!id) return null
+    return {
+      ...chat,
+      ...chat?.chat,
+      ...chat?.data,
+      id,
+      participant_id: chat?.participant_id || chat?.other_user?.id || chat?.recipient?.id || chat?.participant?.id || chat?.chat?.participant_id || chat?.data?.participant_id || null,
+      participant_name: chat?.participant_name || chat?.other_user?.name || chat?.recipient?.name || chat?.participant?.name || chat?.chat?.participant_name || chat?.data?.participant_name || '',
+      participant_email: chat?.participant_email || chat?.other_user?.email || chat?.recipient?.email || chat?.participant?.email || chat?.chat?.participant_email || chat?.data?.participant_email || '',
+      participant_avatar_url: chat?.participant_avatar_url || chat?.other_user?.avatar_url || chat?.recipient?.avatar_url || chat?.participant?.avatar_url || chat?.chat?.participant_avatar_url || chat?.data?.participant_avatar_url || null,
+    }
   }
 
-  const handleStartChat = async (email) => {
-    const response = await chatApi.start(token, { email })
-    const newChat = response?.chat || response?.data || response
-    handleNewChat(newChat)
+  const handleNewChat = (incomingChat) => {
+    const newChat = normalizeChat(incomingChat)
+    if (!newChat?.id) return null
+    setChats((prev) => {
+      const exists = prev.some((c) => String(c.id) === String(newChat.id))
+      if (exists) return prev.map((c) => (String(c.id) === String(newChat.id) ? { ...c, ...newChat } : c))
+      return [newChat, ...prev]
+    })
+    setSelectedChat(String(newChat.id))
     return newChat
+  }
+
+  const handleStartChat = async ({ email }) => {
+    console.log('HANDLE START CHAT ENTER')
+    console.log('START CHAT EMAIL', email)
+    try {
+      const response = await chatApi.start(token, { email })
+      console.log('START CHAT RESPONSE RAW', response)
+      const candidate = response?.chat || response?.data?.chat || response?.data || response
+      const newChat = normalizeChat(candidate)
+      console.log('NORMALIZED CHAT', newChat)
+      if (!newChat?.id) {
+        console.log('START CHAT INVALID RESPONSE', candidate)
+        return null
+      }
+      const selectedId = String(newChat.id)
+      console.log('FINAL SELECTED CHAT ID', selectedId)
+      handleNewChat(newChat)
+      setSelectedChat(selectedId)
+      setTimeout(() => loadMessages(selectedId), 0)
+      console.log('CHAT OPEN SUCCESS')
+      return newChat
+    } catch (err) {
+      console.error('START CHAT FAILED', err)
+      throw err
+    }
   }
 
   const handleSendMessage = async () => {
@@ -233,9 +276,10 @@ export default function ChatPage() {
     const imageUrl = pendingImage ? String(pendingImage) : ''
     if (!body && !imageUrl) return
 
+    const tempId = `temp-${Date.now()}`
     const optimistic = {
-      id: `temp-${Date.now()}`,
-      client_id: `temp-${Date.now()}`,
+      id: tempId,
+      client_id: tempId,
       chat_id: String(selectedChat),
       sender_id: user?.id || null,
       body,
@@ -255,6 +299,7 @@ export default function ChatPage() {
         body,
         imageUrl: imageUrl || null,
       })
+      setTimeout(() => loadMessages(selectedChat), 0)
     } finally {
       setSendingMessage(false)
     }
@@ -277,14 +322,22 @@ export default function ChatPage() {
       await chatApi.delete(token, nextId)
       setChats((prev) => prev.filter((chat) => String(chat.id) !== nextId))
       if (String(selectedChat) === nextId) {
-        const remaining = chats.filter((chat) => String(chat.id) !== nextId)
-        setSelectedChat(remaining[0]?.id ? String(remaining[0].id) : null)
+        setSelectedChat(null)
         messagesRef.current = []
         setMessages([])
       }
     } finally {
       setDeletingChatId(null)
     }
+  }
+
+  const handleInboxBack = () => {
+    navigate(-1)
+    setTimeout(() => {
+      if (window.location.pathname === '/chat') {
+        navigate('/home')
+      }
+    }, 0)
   }
 
   return (
@@ -313,8 +366,9 @@ export default function ChatPage() {
       setShowActions={setShowActions}
       showActions={showActions}
       onDeleteChat={handleDeleteChat}
-      onNewChat={handleNewChat}
+      onNewChat={handleStartChat}
       isMobileInitially={false}
+      onInboxBack={handleInboxBack}
     />
   )
 }

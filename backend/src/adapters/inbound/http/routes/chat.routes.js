@@ -10,6 +10,7 @@ import {
   acceptChat,
   declineChat,
   confirmChatQr,
+  deleteChat,
 } from '../controllers/chatController.js'
 import { uploadChatImage } from '../controllers/uploadController.js'
 
@@ -47,6 +48,7 @@ router.post(
   createChat
 )
 
+router.delete('/:chatId', [param('chatId').isUUID()], validateRequest, deleteChat)
 router.patch('/:chatId/accept', [param('chatId').isUUID()], validateRequest, acceptChat)
 router.patch('/:chatId/decline', [param('chatId').isUUID()], validateRequest, declineChat)
 router.post(

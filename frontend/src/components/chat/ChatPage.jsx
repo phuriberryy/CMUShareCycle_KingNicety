@@ -30,13 +30,16 @@ export default function ChatPage({
   onDeleteChat,
   onNewChat,
   isMobileInitially = false,
+  onInboxBack,
 }) {
-  const { user } = useAuth()
+  useAuth()
   const [isMobile, setIsMobile] = useState(isMobileInitially)
   const [chatSearch, setChatSearch] = useState('')
   const [startChatEmail, setStartChatEmail] = useState('')
   const [startingChat, setStartingChat] = useState(false)
   const [startChatError, setStartChatError] = useState('')
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [pendingDeleteChatId, setPendingDeleteChatId] = useState(null)
   const conversations = Array.isArray(chats) ? chats : []
   const activeChat = conversations.find((c) => String(c?.id) === String(selectedChat)) || null
   const displayUser = (chat) => ({
@@ -58,26 +61,42 @@ export default function ChatPage({
     })
   })()
 
-  const handleStartChat = async () => {
-    const email = startChatEmail.trim()
-    if (!email || !startingChat) {
-      if (!email) return
+  console.log('CHAT PAGE PROP onStartChat typeof', typeof onNewChat)
+
+  const handleStartChat = async (email) => {
+    const nextEmail = typeof email === 'string' ? email.trim() : startChatEmail.trim()
+    if (!nextEmail || startingChat) return
+    if (typeof onNewChat !== 'function') {
+      setStartChatError('ไม่สามารถเริ่มแชทได้')
+      return
     }
-    if (!email || startingChat) return
     setStartChatError('')
     setStartingChat(true)
     try {
-      const newChat = await onNewChat?.(await Promise.resolve())
-      if (typeof onNewChat === 'function') {
-        const created = await onNewChat({ email })
-        if (created?.id) setSelectedChat(String(created.id))
-      }
+      const created = await onNewChat(nextEmail)
+      if (created?.id) setSelectedChat(String(created.id))
       setStartChatEmail('')
     } catch (err) {
       setStartChatError(err?.message || 'ไม่สามารถเริ่มแชทได้')
     } finally {
       setStartingChat(false)
     }
+  }
+
+  const openDeleteModal = (chatId) => {
+    setPendingDeleteChatId(chatId)
+    setShowDeleteModal(true)
+  }
+
+  const closeDeleteModal = () => {
+    setShowDeleteModal(false)
+    setPendingDeleteChatId(null)
+  }
+
+  const confirmDelete = async () => {
+    if (!pendingDeleteChatId) return
+    await onDeleteChat?.(pendingDeleteChatId)
+    closeDeleteModal()
   }
 
   useEffect(() => {
@@ -102,6 +121,15 @@ export default function ChatPage({
   return (
     <div className="chat-root flex h-[100dvh] w-screen flex-col bg-white md:h-auto md:w-full md:flex-row md:overflow-hidden">
       <div className={`${isMobile && activeChat ? 'hidden' : 'flex'} h-full min-h-0 w-full flex-col md:w-[320px] md:flex-none md:border-r md:border-gray-200`}>
+        <div className="flex shrink-0 items-center gap-2 border-b border-gray-200 bg-white px-3 py-2">
+          <button
+            type="button"
+            onClick={onInboxBack || (() => window.history.back())}
+            className="inline-flex h-10 items-center gap-2 rounded-full border border-gray-200 bg-white px-3 text-sm font-semibold text-gray-700"
+          >
+            ← Back
+          </button>
+        </div>
         <ChatInbox
           loading={loading}
           chats={filteredChats}
@@ -109,7 +137,7 @@ export default function ChatPage({
           deletingChatId={deletingChatId}
           chatMeta={chatMeta}
           onSelect={setSelectedChat}
-          onDelete={onDeleteChat}
+          onDelete={openDeleteModal}
           onNewChat={onNewChat}
           searchValue={chatSearch}
           onSearchChange={setChatSearch}
@@ -145,6 +173,37 @@ export default function ChatPage({
           showActions={showActions}
         />
       </div>
+
+      {showDeleteModal ? (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 px-4" role="dialog" aria-modal="true" aria-labelledby="delete-chat-title">
+          <div className="w-full max-w-md rounded-3xl bg-white p-5 shadow-2xl">
+            <h2 id="delete-chat-title" className="text-lg font-bold text-gray-900">Delete chat?</h2>
+            <p className="mt-2 text-sm leading-6 text-gray-600">
+              Are you sure you want to delete this chat?
+              <br />
+              This action cannot be undone.
+            </p>
+            <div className="mt-5 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={closeDeleteModal}
+                className="inline-flex h-10 items-center rounded-full border border-gray-200 bg-white px-4 text-sm font-semibold text-gray-700"
+                disabled={Boolean(deletingChatId)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDelete}
+                className="inline-flex h-10 items-center rounded-full bg-red-600 px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={Boolean(deletingChatId)}
+              >
+                {deletingChatId ? 'Deleting…' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }
