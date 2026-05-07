@@ -56,7 +56,7 @@ export default function DesktopChatPanel({
             <ArrowLeft size={18} />
           </button>
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white shadow-sm">
-            {(activeChat?.participant_name || 'CMU')
+            {(activeChat?.participant_name || activeChat?.other_user_name || 'CMU')
               .split(' ')
               .map((p) => p[0])
               .join('')
@@ -66,7 +66,7 @@ export default function DesktopChatPanel({
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <p className="truncate text-lg font-semibold text-gray-900">
-                {activeChat?.participant_name || 'นักศึกษา CMU'}
+                {activeChat?.participant_name || activeChat?.other_user_name || 'นักศึกษา CMU'}
               </p>
               <span
                 className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${
@@ -76,7 +76,7 @@ export default function DesktopChatPanel({
                 {socketConnected ? 'ออนไลน์' : 'รอเชื่อมต่อ'}
               </span>
             </div>
-            <p className="truncate text-xs text-gray-500">{activeChat?.participant_email || ''}</p>
+            <p className="truncate text-xs text-gray-500">{activeChat?.participant_email || activeChat?.other_user_email || ''}</p>
           </div>
         </div>
       </div>

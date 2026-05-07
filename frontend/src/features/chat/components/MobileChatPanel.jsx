@@ -11,7 +11,7 @@ export default function MobileChatPanel({
   groupedMessages,
   getMessageId,
   formatMessageTime,
-  bottomRef,
+  messagesEndRef,
   composerRef,
   sheetOpen,
   setSheetOpen,
@@ -28,7 +28,6 @@ export default function MobileChatPanel({
 }) {
   return (
     <div className={`flex h-full min-h-0 flex-col bg-[#FBFCFB] md:hidden ${isOpen ? 'flex' : 'hidden'}`}>
-      <div className="absolute inset-x-0 top-0 z-40 h-0" />
       <div className="sticky top-0 z-30 shrink-0 border-b border-gray-200 bg-white/95 px-4 py-3 backdrop-blur-sm">
         <div className="flex items-center gap-3">
           <button
@@ -40,7 +39,7 @@ export default function MobileChatPanel({
             <ArrowLeft size={18} />
           </button>
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white shadow-sm">
-            {(activeChat?.participant_name || 'CMU')
+            {(activeChat?.participant_name || activeChat?.other_user_name || 'CMU')
               .split(' ')
               .map((p) => p[0])
               .join('')
@@ -49,9 +48,9 @@ export default function MobileChatPanel({
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-base font-semibold text-gray-900">
-              {activeChat?.participant_name || 'นักศึกษา CMU'}
+              {activeChat?.participant_name || activeChat?.other_user_name || 'นักศึกษา CMU'}
             </p>
-            <p className="truncate text-xs text-gray-500">{activeChat?.participant_email || ''}</p>
+            <p className="truncate text-xs text-gray-500">{activeChat?.participant_email || activeChat?.other_user_email || ''}</p>
           </div>
           <span
             className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold ${
@@ -121,7 +120,7 @@ export default function MobileChatPanel({
             </div>
           </div>
         )}
-        <div ref={bottomRef} />
+        <div ref={messagesEndRef} />
       </div>
 
       <div

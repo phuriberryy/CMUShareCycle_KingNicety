@@ -4,6 +4,7 @@ import { authenticate } from '../middleware/auth.js'
 import { validateRequest } from '../middleware/validateRequest.js'
 import {
   createChat,
+  startChatByEmail,
   getChatMessages,
   getChats,
   acceptChat,
@@ -14,10 +15,16 @@ import { uploadChatImage } from '../controllers/uploadController.js'
 
 const router = Router()
 
+router.use((req, _res, next) => {
+  console.log('[chat:request]', req.method, req.originalUrl)
+  next()
+})
+
 router.use(authenticate)
 
 router.get('/', getChats)
 router.post('/upload-image', uploadChatImage)
+router.post('/start', [body('email').isEmail()], validateRequest, startChatByEmail)
 router.get('/:chatId/messages', [param('chatId').isUUID()], validateRequest, getChatMessages)
 router.post(
   '/',

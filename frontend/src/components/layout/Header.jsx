@@ -32,16 +32,16 @@ function Header({ unread, onNotificationsClick }) {
 
   return (
     <header className="sticky top-0 z-40 w-full min-w-0 border-b border-primary/10 bg-white/92 shadow-sm backdrop-blur-md supports-[backdrop-filter]:bg-white/85">
-      <div className="mx-auto flex w-full min-w-0 max-w-5xl items-center justify-between gap-2 py-2 pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))] sm:gap-3 sm:px-6 sm:py-2.5 lg:px-8">
+      <div className="mx-auto flex w-full min-w-0 max-w-5xl items-center justify-between gap-2 py-2 pl-[max(0.9rem,env(safe-area-inset-left,0px))] pr-[max(0.9rem,env(safe-area-inset-right,0px))] sm:gap-3 sm:px-6 sm:py-2.5 lg:px-8">
         <Link
           to={APP_ROUTES.home}
-          className="flex min-h-10 min-w-0 flex-1 items-center gap-2 sm:flex-initial sm:gap-2.5"
+          className="flex min-h-11 min-w-0 flex-1 items-center gap-2 sm:flex-initial sm:gap-2.5"
         >
-          <ShareCycleLogo className="h-9 w-9 shrink-0 overflow-hidden rounded-xl shadow-sm ring-1 ring-primary/10 sm:h-10 sm:w-10 sm:rounded-2xl" />
+          <ShareCycleLogo className="h-7 w-auto shrink-0 overflow-hidden rounded-xl shadow-sm ring-1 ring-primary/10 sm:h-9 sm:w-auto sm:rounded-2xl lg:h-9" />
           <div className="min-w-0 leading-tight">
-            <p className="truncate text-sm text-primary-dark sm:text-base">
+            <p className="truncate text-[0.92rem] font-semibold text-primary-dark sm:text-base">
               <span className="font-bold">CMU</span>
-              <span className="font-medium"> ShareCycle</span>
+              <span className="hidden font-medium sm:inline"> ShareCycle</span>
             </p>
           </div>
         </Link>
@@ -118,7 +118,7 @@ function Header({ unread, onNotificationsClick }) {
           )}
         </div>
 
-        <div className="flex items-center gap-2 sm:hidden">
+        <div className="flex items-center gap-1.5 sm:hidden">
           <Link
             to="/chat"
             className="flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 active:scale-95"
@@ -156,11 +156,11 @@ function Header({ unread, onNotificationsClick }) {
           <button
             type="button"
             aria-label="ปิดเมนูนำทาง"
-            className="fixed inset-0 z-30 cursor-default bg-black/20 sm:hidden"
+            className="fixed inset-0 z-30 cursor-default bg-black/25 sm:hidden"
             onClick={() => setOpen(false)}
           />
-          <div className="absolute left-0 right-0 top-full z-40 border-t border-gray-200 bg-white px-4 py-4 shadow-xl sm:hidden">
-            <div className="space-y-2">
+          <div className="fixed inset-x-0 top-[calc(100%+0px)] z-40 rounded-b-3xl border-t border-gray-200 bg-white px-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))] pt-4 shadow-2xl sm:hidden">
+            <div className="mx-auto max-w-md space-y-2">
               <Link
                 to="/chat"
                 onClick={() => setOpen(false)}
@@ -211,7 +211,7 @@ function Header({ unread, onNotificationsClick }) {
                 </NavLink>
               ))}
             </div>
-            <div className="mt-4 border-t border-gray-100 pt-4">
+            <div className="mx-auto mt-4 max-w-md border-t border-gray-100 pt-4">
               {user ? (
                 <div className="space-y-2">
                   <Link

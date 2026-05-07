@@ -20,7 +20,10 @@ export const getChats = async (req, res) => {
 
   try {
     const rows = await fetchChatsForUser(req.user.id)
+    console.log('[chat:getChats] rows.length =', rows.length)
+    console.log('[chat:getChats] raw rows sample =', rows[0])
     const allChats = rows.map((row) => mapChatRow(row, req.user.id))
+    console.log('[chat:getChats] mapped sample =', allChats[0])
 
   // กรองแชทที่มีอีเมลเดียวกันออก เหลือแค่แชทเดียว (ล่าสุด)
   const chatMap = new Map()
@@ -46,6 +49,8 @@ export const getChats = async (req, res) => {
     const timeB = new Date(b.last_message?.created_at || b.created_at)
     return timeB - timeA
   })
+  console.log('[chat:getChats] uniqueChats.length =', uniqueChats.length)
+  console.log('[chat:getChats] first unique chat =', uniqueChats[0])
 
   return res.json(uniqueChats)
   } catch (err) {
@@ -74,76 +79,23 @@ export const getChatMessages = async (req, res) => {
     return res.status(403).json(forbidden('You do not have access to this chat'))
   }
 
-  // ดึงข้อความพร้อมข้อมูลสถานะการอ่าน
-  // ตรวจสอบว่า column read_at มีอยู่หรือไม่
-  let hasReadAtColumn = false
-  try {
-    const columnCheck = await query(
-      `SELECT 1 FROM information_schema.columns 
-       WHERE table_name = 'messages' AND column_name = 'read_at'`
-    )
-    hasReadAtColumn = columnCheck.rowCount > 0
-  } catch (err) {
-    console.warn('Could not check for read_at column:', err)
-  }
-
   const result = await query(
-    hasReadAtColumn
-      ? `SELECT 
-          m.*,
-          CASE WHEN m.sender_id = $2 THEN true ELSE false END as is_sent_by_me,
-          CASE WHEN m.read_at IS NOT NULL THEN true ELSE false END as is_read
-         FROM messages m
-         WHERE m.chat_id=$1 
-           AND (m.deleted_at IS NULL)
-         ORDER BY m.created_at ASC`
-      : `SELECT 
-          m.*,
-          CASE WHEN m.sender_id = $2 THEN true ELSE false END as is_sent_by_me,
-          false as is_read
-         FROM messages m
-         WHERE m.chat_id=$1 
-           AND (m.deleted_at IS NULL)
-         ORDER BY m.created_at ASC`,
+    `SELECT 
+      m.id,
+      m.chat_id,
+      m.sender_id,
+      m.body,
+      m.image_url,
+      m.read_at,
+      m.created_at,
+      CASE WHEN m.sender_id = $2 THEN true ELSE false END as is_sent_by_me
+     FROM messages m
+     WHERE m.chat_id = $1 AND m.deleted_at IS NULL
+     ORDER BY m.created_at ASC`,
     [chatId, req.user.id]
   )
-
-  // Mark messages as read when user opens the chat (ถ้ามี column read_at)
-  let updateResult = { rows: [] }
-  if (hasReadAtColumn) {
-    try {
-      updateResult = await query(
-        `UPDATE messages 
-         SET read_at = NOW()
-         WHERE chat_id = $1 
-           AND sender_id != $2 
-           AND read_at IS NULL
-         RETURNING id, sender_id`,
-        [chatId, req.user.id]
-      )
-    } catch (err) {
-      console.warn('Could not update read_at:', err)
-    }
-  }
-
-  // Emit event to notify senders that their messages were read
-  const io = getChatServer()
-  if (io && updateResult.rows.length > 0) {
-    const readMessages = updateResult.rows
-    const readAt = new Date().toISOString()
-    
-    // Group by sender to emit once per sender
-    const senderIds = [...new Set(readMessages.map(m => m.sender_id))]
-    senderIds.forEach(senderId => {
-      const messageIds = readMessages
-        .filter(m => m.sender_id === senderId)
-        .map(m => m.id)
-      
-      messageIds.forEach(messageId => {
-        io.to(senderId).emit('message:read', { messageId, readAt })
-      })
-    })
-  }
+  console.log('[chat:getChatMessages] chatId =', chatId, 'rows.length =', result.rows.length)
+  console.log('[chat:getChatMessages] first row =', result.rows[0])
 
   return res.json(result.rows)
 }
@@ -237,6 +189,77 @@ export const createChat = async (req, res) => {
   }
 
   return res.status(201).json(chatForCurrentUser)
+}
+
+export const startChatByEmail = async (req, res) => {
+  console.log('[chat:startChatByEmail] enter', { originalUrl: req.originalUrl, body: req.body, userId: req.user?.id })
+  try {
+    if (!req.user) {
+      return res.status(401).json(unauthorized())
+    }
+
+    const errors = validationResult(req)
+    console.log('[chat:startChatByEmail] validation errors', errors.array())
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() })
+    }
+
+    const email = String(req.body.email || '').trim().toLowerCase()
+    console.log('[chat:startChatByEmail] email', email)
+    if (!email) {
+      return res.status(400).json(badRequest('Email is required'))
+    }
+
+    const targetUserResult = await query('SELECT id, name, email, avatar_url FROM users WHERE lower(email) = $1 LIMIT 1', [email])
+    console.log('[chat:startChatByEmail] targetUserResult.rowCount', targetUserResult.rowCount, targetUserResult.rows[0])
+    if (!targetUserResult.rowCount) {
+      return res.status(404).json(notFound('User not found'))
+    }
+
+    const targetUser = targetUserResult.rows[0]
+    if (targetUser.id === req.user.id) {
+      return res.status(400).json(badRequest('Cannot chat with yourself'))
+    }
+
+    const existing = await query(
+    `SELECT id FROM chats
+     WHERE ((creator_id=$1 AND participant_id=$2) OR (creator_id=$2 AND participant_id=$1))
+       AND deleted_at IS NULL
+     ORDER BY created_at DESC
+     LIMIT 1`,
+    [req.user.id, targetUser.id]
+  )
+
+    let chatId = existing.rows[0]?.id
+    console.log('[chat:startChatByEmail] existing.rowCount', existing.rowCount, existing.rows[0])
+    if (!chatId) {
+      const insertResult = await query(
+        `INSERT INTO chats (creator_id, participant_id, status, owner_accepted, requester_accepted)
+         VALUES ($1, $2, 'active', true, true)
+         RETURNING id`,
+        [req.user.id, targetUser.id]
+      )
+      console.log('[chat:startChatByEmail] insertResult', insertResult.rowCount, insertResult.rows[0])
+      chatId = insertResult.rows[0].id
+    }
+
+    const chatRow = await fetchChatById(chatId)
+    console.log('[chat:startChatByEmail] chatRow', chatRow)
+    const chatForCurrentUser = mapChatRow(chatRow, req.user.id)
+    const chatForParticipant = mapChatRow(chatRow, targetUser.id)
+    console.log('[chat:startChatByEmail] chatForCurrentUser', chatForCurrentUser)
+
+    const io = getChatServer()
+    if (io) {
+      io.to(targetUser.id).emit('chat:created', chatForParticipant)
+      io.to(targetUser.id).emit('notification:new')
+    }
+
+    return res.status(existing.rowCount ? 200 : 201).json(chatForCurrentUser)
+  } catch (err) {
+    console.error('[chat:startChatByEmail] error', err)
+    return res.status(500).json(internalError(err.message || 'Failed to start chat'))
+  }
 }
 
 export const acceptChat = async (req, res) => {
@@ -854,13 +877,15 @@ async function fetchChatById(chatId) {
     LEFT JOIN donation_requests dr ON c.donation_request_id = dr.id
     LEFT JOIN items item ON COALESCE(c.item_id, er.item_id, dr.item_id) = item.id
     LEFT JOIN LATERAL (
-      SELECT m.id, m.body, m.sender_id, m.created_at
+      SELECT m.id, m.body, m.sender_id, m.image_url, m.created_at
       FROM messages m
-      WHERE m.chat_id = c.id
+      WHERE m.chat_id = c.id AND m.deleted_at IS NULL
       ORDER BY m.created_at DESC
       LIMIT 1
     ) last_message ON TRUE
-    WHERE c.id = $1
+    WHERE c.id = $1 AND c.deleted_at IS NULL
+      AND creator.deleted_at IS NULL
+      AND participant.deleted_at IS NULL
     `,
     [chatId]
   )
@@ -897,13 +922,16 @@ async function fetchChatsForUser(userId) {
     LEFT JOIN donation_requests dr ON c.donation_request_id = dr.id
     LEFT JOIN items item ON COALESCE(c.item_id, er.item_id, dr.item_id) = item.id
     LEFT JOIN LATERAL (
-      SELECT m.id, m.body, m.sender_id, m.created_at
+      SELECT m.id, m.body, m.sender_id, m.image_url, m.created_at
       FROM messages m
-      WHERE m.chat_id = c.id
+      WHERE m.chat_id = c.id AND m.deleted_at IS NULL
       ORDER BY m.created_at DESC
       LIMIT 1
     ) last_message ON TRUE
-    WHERE c.creator_id = $1 OR c.participant_id = $1
+    WHERE (c.creator_id = $1 OR c.participant_id = $1)
+      AND c.deleted_at IS NULL
+      AND creator.deleted_at IS NULL
+      AND participant.deleted_at IS NULL
     ORDER BY COALESCE(last_message.created_at, c.created_at) DESC
     `,
     [userId]
@@ -979,10 +1007,12 @@ function mapChatRow(row, currentUserId) {
       ? {
           id: row.last_message_id,
           body: row.last_message_body,
+          image_url: row.last_message_image_url,
           sender_id: row.last_message_sender_id,
           created_at: row.last_message_created_at,
         }
       : null,
+    messages: [],
     updatedAt: row.updated_at,
   }
 }

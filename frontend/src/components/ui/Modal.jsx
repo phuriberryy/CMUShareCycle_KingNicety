@@ -34,7 +34,7 @@ export default function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4"
+      className={`fixed inset-0 z-50 flex items-end justify-center sm:items-center ${mobileFullScreen ? 'p-0 sm:p-4' : 'sm:p-4'}`}
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose()
@@ -43,7 +43,7 @@ export default function Modal({
     >
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity" />
       <div
-        className={`relative z-10 flex w-full flex-col bg-white shadow-2xl ${sizeClasses[size]} ${mobileFullScreen ? 'h-dvh max-h-dvh rounded-none sm:max-h-[90vh] sm:rounded-2xl' : 'max-h-[95vh] rounded-t-2xl sm:rounded-2xl sm:max-h-[90vh]'} overflow-hidden`}
+        className={`relative z-10 flex w-full flex-col bg-white shadow-2xl ${mobileFullScreen ? 'h-[100dvh] max-h-[100dvh] max-w-none rounded-none p-0 sm:max-h-[90vh] sm:max-w-5xl sm:rounded-2xl' : `max-h-[95vh] rounded-t-2xl sm:rounded-2xl sm:max-h-[90vh] ${sizeClasses[size]}`} overflow-hidden`}
         onClick={(e) => e.stopPropagation()}
       >
         {(title || showCloseButton) && (
