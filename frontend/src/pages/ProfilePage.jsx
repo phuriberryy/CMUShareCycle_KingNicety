@@ -304,13 +304,12 @@ export default function ProfilePage() {
     <div className="min-h-screen w-full min-w-0 bg-surface">
       <div className="mx-auto w-full min-w-0 max-w-5xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
       <section className="w-full overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-elevated ring-1 ring-black/[0.03]">
-        <div className="h-28 sm:h-40 bg-gradient-to-r from-primary-dark via-primary to-primary-bright" />
-        <div className="relative px-4 sm:px-8 pb-8 sm:pb-10 pt-4">
-          <div className="absolute -top-12 sm:-top-16 left-4 sm:left-10 flex h-24 w-24 sm:h-32 sm:w-32 items-center justify-center rounded-full border-4 sm:border-[6px] border-white bg-primary text-2xl sm:text-4xl font-bold text-white shadow-md">
+        <div className="relative px-4 pb-8 pt-6 sm:px-8 sm:pb-10 sm:pt-8">
+          <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-primary-light bg-primary text-2xl font-bold text-white shadow-md sm:h-28 sm:w-28 sm:text-3xl">
             {initials}
           </div>
 
-          <div className="mt-14 sm:mt-16 flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+          <div className="mt-5 flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
             <div className="flex-1">
               <h1 className="text-3xl font-bold text-gray-900">{displayUser.name || 'ชื่อผู้ใช้'}</h1>
               <div className="mt-4 space-y-3">
@@ -338,53 +337,53 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="mt-5 border-t border-gray-100 pt-5 sm:mt-6 sm:pt-6">
-            <div className="rounded-2xl border border-primary/10 bg-gradient-to-br from-primary-light/50 via-white/90 to-surface-light/80 p-3 shadow-sm sm:p-4">
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-5 sm:gap-3">
+          <div className="mt-5 border-t border-gray-100 pt-4 sm:mt-6 sm:pt-6">
+            <div className="space-y-2 rounded-2xl border border-gray-100 bg-white p-2 sm:space-y-3 sm:border-primary/10 sm:bg-gradient-to-br sm:from-primary-light/50 sm:via-white/90 sm:to-surface-light/80 sm:p-4 sm:shadow-sm">
+              <div className="grid grid-cols-5 gap-1.5 sm:gap-3">
                 {statCards.map((stat, idx) => (
                   <div
                     key={stat.key}
-                    className={`flex flex-col rounded-xl border border-gray-100/90 bg-white/95 px-3 py-2.5 shadow-sm transition hover:border-primary/20 hover:bg-white hover:shadow-md sm:min-w-0 sm:px-3 sm:py-3 ${idx === 4 ? 'col-span-2 sm:col-span-1' : ''}`}
+                    className={`flex min-w-0 flex-col items-center justify-center gap-1 rounded-xl bg-gray-50/80 px-1 py-2 text-center transition hover:bg-white sm:items-start sm:gap-2 sm:border sm:border-gray-100/90 sm:bg-white/95 sm:px-3 sm:py-3 sm:text-left sm:shadow-sm ${idx === 4 ? '' : ''}`}
                   >
                     <div
-                      className={`mb-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${stat.tone === 'primary' ? 'bg-primary/10 text-primary' : stat.tone === 'green' ? 'bg-primary/10 text-primary' : stat.tone === 'emerald' ? 'bg-primary/10 text-primary' : stat.tone === 'purple' ? 'bg-purple-100 text-purple-600' : 'bg-red-100 text-red-600'}`}
+                      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full sm:mb-2 sm:h-8 sm:w-8 ${stat.tone === 'primary' ? 'bg-primary/10 text-primary' : stat.tone === 'green' ? 'bg-primary/10 text-primary' : stat.tone === 'emerald' ? 'bg-primary/10 text-primary' : stat.tone === 'purple' ? 'bg-purple-100 text-purple-600' : 'bg-red-100 text-red-600'}`}
                     >
-                      <stat.icon size={16} strokeWidth={2} />
+                      <stat.icon size={15} strokeWidth={2} />
                     </div>
-                    <p className="text-lg font-bold tabular-nums tracking-tight text-gray-900 sm:text-xl">{stat.value}</p>
-                    <p className="mt-0.5 text-[11px] font-medium leading-snug text-gray-600 sm:text-xs">{stat.label}</p>
+                    <div className="min-w-0">
+                      <p className="truncate text-[13px] font-bold tabular-nums tracking-tight text-gray-900 sm:text-xl">{stat.value}</p>
+                      <p className="mt-0.5 line-clamp-2 text-[8.5px] font-medium leading-tight text-gray-600 sm:truncate sm:text-xs">{stat.label}</p>
+                    </div>
                   </div>
                 ))}
               </div>
+              <div className="border-t border-gray-100 pt-2 sm:border-t-0 sm:pt-0">
+                <div className="grid grid-cols-4 gap-1 rounded-2xl bg-gray-50/80 p-1 ring-1 ring-gray-100 sm:gap-2 sm:rounded-full sm:bg-primary-light/55 sm:p-2 sm:ring-0">
+                  {tabItems.map((tab) => {
+                    const Icon = tab.icon
+                    const isActive = activeTab === tab.id
+                    const badge = tab.id === 'expired' ? expiredItems.length : tab.id === 'donations' ? donationHistory.length : null
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        title={tab.label}
+                        aria-label={tab.label}
+                        className={`flex min-h-9 min-w-0 w-full flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1 text-[10px] font-semibold leading-tight transition active:scale-[0.98] sm:min-h-11 sm:flex-row sm:gap-2 sm:rounded-full sm:px-2 sm:py-2.5 sm:text-sm ${isActive ? 'bg-primary-light text-primary-dark ring-1 ring-primary/15 hover:bg-primary-light hover:text-primary-dark sm:bg-primary sm:text-white sm:hover:bg-primary-dark sm:hover:text-white' : 'bg-transparent text-gray-600 hover:bg-gray-50 hover:text-primary-dark sm:text-gray-700 sm:hover:bg-white/90'}`}
+                      >
+                        <Icon size={14} className="shrink-0 sm:h-4 sm:w-4" />
+                        <span className="max-w-full truncate text-center leading-tight sm:max-w-[8rem]">{tab.label}</span>
+                        {badge !== null ? (
+                          <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold tabular-nums sm:text-[10px] ${isActive ? 'bg-white text-primary-dark sm:bg-white/20 sm:text-white' : 'bg-gray-100 text-gray-700 sm:bg-white'}`}>
+                            {badge}
+                          </span>
+                        ) : null}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-
-        <div className="border-t border-gray-100 px-4 py-4 sm:px-8 sm:py-4">
-          {/* แบ่งพื้นที่เท่ากัน 4 ช่อง — ไม่ชิดซ้ายเหลือว่างขวาเหมือน flex + flex-initial */}
-          <div className="grid grid-cols-4 gap-1.5 rounded-full bg-primary-light p-1.5 sm:gap-2 sm:p-2">
-            {tabItems.map((tab) => {
-              const Icon = tab.icon
-              const isActive = activeTab === tab.id
-              const badge = tab.id === 'expired' ? expiredItems.length : tab.id === 'donations' ? donationHistory.length : null
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  title={tab.label}
-                  aria-label={tab.label}
-                  className={`flex min-h-11 min-w-0 w-full flex-row flex-wrap items-center justify-center gap-x-0.5 gap-y-0.5 rounded-full px-1 py-2 text-[9px] font-semibold leading-tight transition active:scale-[0.98] sm:gap-2 sm:px-2 sm:py-2.5 sm:text-sm ${isActive ? 'bg-primary text-white shadow-md ring-2 ring-primary/25 hover:bg-primary-dark hover:text-white' : 'bg-transparent text-gray-800 hover:bg-white/90 hover:text-primary-dark'}`}
-                >
-                  <Icon size={14} className="shrink-0 sm:h-4 sm:w-4" />
-                  <span className="max-w-full text-center leading-tight sm:max-w-[8rem] sm:truncate">{tab.label}</span>
-                  {badge !== null ? (
-                    <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold tabular-nums sm:text-[10px] ${isActive ? 'bg-white/20 text-white' : 'bg-white text-gray-700'}`}>
-                      {badge}
-                    </span>
-                  ) : null}
-                </button>
-              )
-            })}
           </div>
         </div>
       </section>
@@ -485,12 +484,12 @@ export default function ProfilePage() {
         )}
         {activeTab === 'expired' && (
           <div>
-            <div className="mb-6 rounded-2xl bg-yellow-50 border border-yellow-200 p-6">
+            <div className="mb-4 rounded-2xl border border-yellow-200 bg-yellow-50 p-4 sm:mb-6 sm:p-6">
               <div className="flex items-start gap-3">
-                <Clock3 size={24} className="text-yellow-600 flex-shrink-0 mt-1" />
+                <Clock3 size={20} className="mt-0.5 flex-shrink-0 text-yellow-600 sm:mt-1 sm:h-6 sm:w-6" />
                 <div>
-                  <h3 className="text-lg font-semibold text-yellow-900 mb-2">โพสต์หมดอายุ</h3>
-                  <p className="text-sm text-yellow-800">
+                  <h3 className="mb-1 text-base font-semibold text-yellow-900 sm:mb-2 sm:text-lg">โพสต์หมดอายุ</h3>
+                  <p className="text-xs leading-relaxed text-yellow-800 sm:text-sm">
                     โพสต์เหล่านี้หมดอายุแล้วและยังไม่ได้แลกเปลี่ยน คุณสามารถลบหรือแก้ไขได้
                   </p>
                 </div>
@@ -503,7 +502,7 @@ export default function ProfilePage() {
                 <p className="mt-2 text-sm text-gray-500">โพสต์หมดอายุจะแสดงที่นี่</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {expiredItems.map((item) => {
                   const views = getItemViews(item.id)
                   const canEdit = canEditItem(item)
@@ -512,10 +511,10 @@ export default function ProfilePage() {
                   return (
                     <div
                       key={item.id}
-                      className="group relative overflow-hidden rounded-2xl border-2 border-yellow-200 bg-white shadow-sm transition hover:shadow-md opacity-90"
+                      className="group relative overflow-hidden rounded-2xl border border-yellow-200 bg-white opacity-90 shadow-sm transition hover:shadow-md"
                     >
                       {/* Image with หมดอายุ Badge */}
-                      <div className="relative h-48 w-full overflow-hidden">
+                      <div className="relative h-36 w-full overflow-hidden sm:h-44">
                         {itemCoverUrl(item) ? (
                           <img
                             src={itemCoverUrl(item)}
@@ -524,46 +523,46 @@ export default function ProfilePage() {
                           />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center bg-gray-100">
-                            <ImageIcon size={48} className="text-gray-400" />
+                            <ImageIcon size={36} className="text-gray-400" />
                           </div>
                         )}
-                        <span className="absolute right-3 top-3 rounded-full bg-red-500 px-3 py-1 text-xs font-semibold text-white shadow-md">
+                        <span className="absolute right-2 top-2 rounded-full bg-red-500 px-2.5 py-0.5 text-[11px] font-semibold text-white shadow-md sm:right-3 sm:top-3">
                           หมดอายุ
                         </span>
-                        <div className="absolute left-3 top-3 rounded-full bg-yellow-100 px-3 py-1 text-xs font-semibold text-yellow-800">
+                        <div className="absolute left-2 top-2 rounded-full bg-yellow-100 px-2.5 py-0.5 text-[11px] font-semibold text-yellow-800 sm:left-3 sm:top-3">
                           <Clock3 size={12} className="inline mr-1" />
                           หมดอายุ: {expiredDate}
                         </div>
                       </div>
 
                       {/* Content */}
-                      <div className="p-5">
+                      <div className="p-3 sm:p-5">
                         <div className="mb-2 flex items-start justify-between">
-                          <h3 className="flex-1 text-lg font-semibold text-gray-900">{item.title}</h3>
+                          <h3 className="line-clamp-1 flex-1 text-sm font-semibold text-gray-900 sm:text-lg">{item.title}</h3>
                         </div>
 
                         {/* Category Tag */}
-                        <div className="mb-3 flex flex-wrap gap-2">
-                          <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700">
+                        <div className="mb-2 flex flex-wrap gap-2 sm:mb-3">
+                          <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-semibold text-gray-700 sm:px-3 sm:py-1 sm:text-xs">
                             {item.category}
                           </span>
                         </div>
 
                         {/* Info */}
-                        <div className="mb-4 space-y-2 text-sm text-gray-600">
+                        <div className="mb-3 space-y-1 text-xs text-gray-600 sm:mb-4 sm:space-y-2 sm:text-sm">
                           <p className="text-xs text-gray-500">Not exchanged</p>
                           <div className="flex items-center gap-1">
-                            <Eye size={16} className="text-gray-400" />
+                            <Eye size={14} className="text-gray-400 sm:h-4 sm:w-4" />
                             <span>{views} views</span>
                           </div>
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="flex gap-2">
+                        <div className="flex gap-1.5 sm:gap-2">
                           <button
                             onClick={() => handleManageItem(item)}
                             disabled={!canEdit}
-                            className="flex-1 rounded-full bg-yellow-100 px-4 py-2 text-sm font-semibold text-yellow-800 transition hover:bg-yellow-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex-1 rounded-full bg-yellow-100 px-3 py-1.5 text-xs font-semibold text-yellow-800 transition hover:bg-yellow-200 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:py-2 sm:text-sm"
                             title={!canEdit ? 'Cannot edit because there is an accepted exchange request' : ''}
                           >
                             Manage
@@ -571,7 +570,7 @@ export default function ProfilePage() {
                           <button
                             onClick={() => handleEditItem(item)}
                             disabled={!canEdit}
-                            className="flex-1 rounded-full bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex-1 rounded-full bg-gray-100 px-3 py-1.5 text-xs font-semibold text-gray-700 transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:py-2 sm:text-sm"
                             title={!canEdit ? 'Cannot edit because there is an accepted exchange request' : ''}
                           >
                             Edit
@@ -579,7 +578,7 @@ export default function ProfilePage() {
                           <button
                             onClick={() => handleDeleteItem(item)}
                             disabled={!canEdit}
-                            className="rounded-full bg-red-100 px-4 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="rounded-full bg-red-100 px-3 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-200 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:py-2 sm:text-sm"
                             title={!canEdit ? 'Cannot delete because there is an accepted exchange request' : 'Delete this post'}
                           >
                             <Trash2 size={16} />

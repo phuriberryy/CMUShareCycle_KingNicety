@@ -12,7 +12,7 @@ module.exports = {
           bright: '#3D9270',
         },
         muted: '#556B62',
-        surface: '#F0F6F3',
+        surface: '#F8FBF9',
         'surface-light': '#FAFCFB',
       },
       boxShadow: {

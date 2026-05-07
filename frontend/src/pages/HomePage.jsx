@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Plus,
-  ArrowRight,
   Leaf,
   Zap,
   Users,
@@ -127,39 +126,24 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
 
   return (
     <div className="sc-page w-full min-w-0 overflow-x-hidden">
-      <div className="sc-container w-full min-w-0 space-y-5 sm:space-y-10 lg:space-y-12">
-        <section className="relative overflow-hidden rounded-2xl border border-gray-200 bg-gradient-to-br from-white via-surface-light to-primary-light/35 shadow-md shadow-primary/[0.07] ring-1 ring-primary/10 sm:rounded-2xl">
-          <div className="pointer-events-none absolute -right-24 -top-24 h-48 w-48 rounded-full bg-primary/[0.08] blur-3xl" aria-hidden />
-          <div className="pointer-events-none absolute -bottom-24 -left-20 h-44 w-44 rounded-full bg-primary/[0.06] blur-3xl" aria-hidden />
+      <div className="sc-container w-full min-w-0 space-y-4 sm:space-y-10 lg:space-y-12">
+        <section className="relative overflow-hidden rounded-[26px] border border-primary/10 bg-gradient-to-br from-[#f8fcfa] via-[#edf8f1] to-[#dff1e7] shadow-[0_14px_40px_rgba(14,81,58,0.08)] sm:rounded-[28px]">
+          <div className="pointer-events-none absolute -right-20 -top-24 h-52 w-52 rounded-full bg-white/70 blur-3xl" aria-hidden />
+          <div className="pointer-events-none absolute -bottom-28 left-8 h-52 w-52 rounded-full bg-primary/10 blur-3xl" aria-hidden />
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_28%,rgba(255,255,255,0.86),transparent_34%)]" aria-hidden />
 
-          <div className="relative z-10 flex flex-col gap-4 px-4 py-4 sm:gap-7 sm:px-7 sm:py-8 lg:flex-row lg:items-center lg:justify-between lg:gap-12 lg:px-10 lg:py-9">
-            <div className="max-w-xl space-y-2.5 sm:space-y-5">
-              <div className="space-y-2 sm:space-y-2.5">
-                <h1 className="text-balance text-lg font-bold leading-[1.35] tracking-[0.02em] text-primary-dark sm:text-3xl sm:leading-[1.5] sm:tracking-[0.04em] lg:text-[2rem] lg:leading-[1.48] [text-rendering:optimizeLegibility]">
+          <div className="relative z-10 flex flex-col gap-3.5 px-4 py-4 sm:gap-7 sm:px-7 sm:py-8 lg:flex-row lg:items-center lg:justify-between lg:gap-12 lg:px-10 lg:py-9">
+            <div className="max-w-xl space-y-3 sm:space-y-5">
+              <div className="space-y-1.5 sm:space-y-2.5">
+                <h1 className="text-balance text-[1.22rem] font-bold leading-[1.45] tracking-[0.015em] text-primary-dark sm:text-3xl sm:leading-[1.5] sm:tracking-[0.04em] lg:text-[2rem] lg:leading-[1.48] [text-rendering:optimizeLegibility]">
                   ของที่มี แลกของที่ต้องการ
                 </h1>
-                <p className="max-w-lg text-sm font-normal leading-relaxed text-gray-700 sm:text-base">
+                <p className="max-w-lg text-[13px] font-normal leading-relaxed text-gray-600 sm:text-base">
                   แลกเปลี่ยนและบริจาคภายใน มช. — ปลอดภัย ไม่มีค่าใช้จ่าย
                 </p>
               </div>
               <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
-                <button
-                  type="button"
-                  onClick={() => document.getElementById('items-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-                  className="sc-btn-primary min-h-11 justify-center px-4 py-2.5 text-sm font-semibold sm:min-h-10 sm:px-5"
-                >
-                  ดูรายการ
-                  <ArrowRight size={16} strokeWidth={2.5} className="shrink-0" />
-                </button>
-                <button
-                  type="button"
-                  onClick={onPostItem}
-                  className="sc-btn-secondary min-h-11 justify-center px-4 py-2.5 text-sm font-semibold sm:min-h-10 sm:px-5"
-                >
-                  <Plus size={16} className="shrink-0" />
-                  โพสต์สินค้า
-                </button>
-                <span className="hidden min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition hover:border-gray-300 hover:bg-gray-50/80 sm:inline-flex sm:w-auto sm:justify-start sm:text-sm sm:py-2">
+                <span className="inline-flex min-h-8 w-fit items-center justify-center gap-2 rounded-full bg-white/82 px-3 py-1.5 text-xs font-semibold text-primary-dark shadow-sm ring-1 ring-white/70 transition sm:min-h-10 sm:rounded-xl sm:px-3 sm:py-2 sm:text-sm">
                   <Zap size={15} className="shrink-0 text-primary" aria-hidden />
                   <span className="text-center sm:text-left">มุ่งสู่มหาวิทยาลัยไร้ขยะ</span>
                 </span>
@@ -231,11 +215,11 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
 
         <section
           id="items-section"
-          className="space-y-6 pb-[max(5.5rem,calc(env(safe-area-inset-bottom,0px)+4.5rem))] sm:space-y-7 sm:pb-8"
+          className="space-y-2 pb-[max(5.5rem,calc(env(safe-area-inset-bottom,0px)+4.5rem))] sm:space-y-7 sm:pb-8"
         >
           <div className="space-y-2 sm:space-y-2.5">
             <h2 className="text-xl font-bold tracking-tight text-gray-900 sm:text-2xl">รายการสินค้า</h2>
-            <p className="max-w-2xl text-sm leading-relaxed text-gray-500">พิมพ์ค้นหาชื่อหรือรายละเอียด เลือกหมวดกับสภาพของ แล้วแตะรายการด้านล่างเพื่อแลกหรือบริจาค</p>
+            <p className="hidden max-w-2xl text-sm leading-relaxed text-gray-500 sm:block">พิมพ์ค้นหาชื่อหรือรายละเอียด เลือกหมวดกับสภาพของ แล้วแตะรายการด้านล่างเพื่อแลกหรือบริจาค</p>
           </div>
 
           <HomeFiltersPanel
@@ -263,25 +247,28 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
           />
 
           {!loading && !loadError && filteredItems.length > 0 ? (
-            <ItemCardGrid
-              items={filteredItems}
-              navigate={navigate}
-              onExchangeItem={onExchangeItem}
-              onDonationItem={onDonationItem}
-            />
+            <div className="pt-2 sm:pt-0">
+              <ItemCardGrid
+                items={filteredItems}
+                navigate={navigate}
+                onExchangeItem={onExchangeItem}
+                onDonationItem={onDonationItem}
+              />
+            </div>
           ) : null}
         </section>
       </div>
 
-      <button
-        type="button"
-        onClick={onPostItem}
-        className="fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/30 bg-primary px-4 py-2.5 text-sm font-bold text-white shadow-elevated-hover ring-2 ring-primary/20 transition active:scale-[0.98] sm:hidden"
-        aria-label="โพสต์สินค้าใหม่"
-      >
-        <Plus size={22} strokeWidth={2.5} />
-        โพสต์สินค้า
-      </button>
+      {!filtersOpen ? (
+        <button
+          type="button"
+          onClick={onPostItem}
+          className="fixed bottom-5 right-4 z-50 flex h-12 w-12 items-center justify-center rounded-full border border-white/40 bg-primary text-white shadow-elevated-hover ring-2 ring-primary/20 transition active:scale-[0.96] sm:hidden"
+          aria-label="โพสต์สินค้าใหม่"
+        >
+          <Plus size={24} strokeWidth={2.6} />
+        </button>
+      ) : null}
     </div>
   )
 }

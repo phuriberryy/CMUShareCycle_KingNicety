@@ -118,12 +118,8 @@ export default function LeaderboardPage() {
       <div className="mx-auto max-w-5xl px-4 py-6 sm:py-10 sm:px-6 lg:px-8">
       {/* Header */}
       <section className="mb-6 sm:mb-8">
-        <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-white px-4 py-1.5 text-xs font-semibold tracking-wide text-primary shadow-sm">
-          <Trophy size={14} />
-          กระดานคะแนน
-        </div>
-        <h1 className="text-2xl font-bold text-gray-900 sm:text-4xl">ผู้มีส่วนร่วมสูงสุด</h1>
-        <p className="mt-2 text-sm text-gray-600 sm:text-lg">ดูว่าใครสร้างผลกระทบเชิงบวกให้วิทยาเขต มช. มากที่สุด</p>
+        <h1 className="text-xl font-bold text-gray-900 sm:text-3xl">ผู้มีส่วนร่วมสูงสุด</h1>
+        <p className="mt-2 text-sm text-gray-600 sm:text-base">ดูสมาชิกที่ช่วยแลกเปลี่ยน แบ่งปัน และลดขยะในชุมชน มช. มากที่สุด</p>
       </section>
 
       {/* My Rank Card */}
@@ -142,14 +138,14 @@ export default function LeaderboardPage() {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">อันดับของคุณ</p>
-                  <p className="text-lg font-bold text-gray-900 sm:text-xl">{myRank.rank === 1 ? '🏆 ' : myRank.rank <= 3 ? '🏅 ' : ''}อันดับ {myRank.rank}</p>
+                  <p className="text-base font-bold text-gray-900 sm:text-lg">{myRank.rank === 1 ? '🏆 ' : myRank.rank <= 3 ? '🏅 ' : ''}อันดับ {myRank.rank}</p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3">
-                <div className="rounded-xl bg-white px-3 py-2 text-center shadow-sm"><p className="text-base font-bold text-primary sm:text-lg">{myRank.totalPoints.toLocaleString()}</p><p className="text-[10px] text-gray-500 sm:text-xs">คะแนน</p></div>
-                <div className="rounded-xl bg-white px-3 py-2 text-center shadow-sm"><p className="text-base font-bold text-primary sm:text-lg">{parseFloat(myRank.totalCO2Reduced).toFixed(1)}</p><p className="text-[10px] text-gray-500 sm:text-xs">กก. CO₂</p></div>
-                <div className="rounded-xl bg-white px-3 py-2 text-center shadow-sm"><p className="text-base font-bold text-purple-600 sm:text-lg">{myRank.totalExchanges}</p><p className="text-[10px] text-gray-500 sm:text-xs">ครั้งแลก</p></div>
-                <div className="rounded-xl bg-white px-3 py-2 text-center shadow-sm"><p className="text-base font-bold text-red-500 sm:text-lg">{myRank.totalDonations}</p><p className="text-[10px] text-gray-500 sm:text-xs">ครั้งบริจาค</p></div>
+                <div className="rounded-xl bg-white px-3 py-2 text-center shadow-sm"><p className="text-sm font-bold text-primary sm:text-base">{myRank.totalPoints.toLocaleString()}</p><p className="text-[10px] text-gray-500 sm:text-xs">คะแนน</p></div>
+                <div className="rounded-xl bg-white px-3 py-2 text-center shadow-sm"><p className="text-sm font-bold text-primary sm:text-base">{parseFloat(myRank.totalCO2Reduced).toFixed(1)}</p><p className="text-[10px] text-gray-500 sm:text-xs">กก. CO₂</p></div>
+                <div className="rounded-xl bg-white px-3 py-2 text-center shadow-sm"><p className="text-sm font-bold text-purple-600 sm:text-base">{myRank.totalExchanges}</p><p className="text-[10px] text-gray-500 sm:text-xs">ครั้งแลก</p></div>
+                <div className="rounded-xl bg-white px-3 py-2 text-center shadow-sm"><p className="text-sm font-bold text-red-500 sm:text-base">{myRank.totalDonations}</p><p className="text-[10px] text-gray-500 sm:text-xs">ครั้งบริจาค</p></div>
               </div>
             </div>
             {myRank.recentPoints && myRank.recentPoints.length > 0 && (
@@ -165,10 +161,10 @@ export default function LeaderboardPage() {
       )}
 
       {/* Tabs */}
-      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-8 flex flex-col gap-3 sm:mb-10 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex gap-1 overflow-x-auto rounded-full border border-gray-200 bg-white p-1.5 shadow-sm scrollbar-hide">
           {TABS.map((tab) => (
-            <button key={tab.key} onClick={() => setActiveTab(tab.key)} className={`flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition ${activeTab === tab.key ? 'bg-primary text-white shadow-md hover:bg-primary-dark hover:text-white' : 'text-gray-800 hover:bg-primary-light/80 hover:text-primary-dark'}`}>
+            <button key={tab.key} onClick={() => setActiveTab(tab.key)} className={`flex min-h-10 items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-2 text-xs font-semibold transition sm:text-sm ${activeTab === tab.key ? 'bg-primary text-white shadow-md hover:bg-primary-dark hover:text-white' : 'text-gray-800 hover:bg-primary-light/80 hover:text-primary-dark'}`}>
               <tab.icon size={16} />
               {tab.label}
             </button>
@@ -177,7 +173,7 @@ export default function LeaderboardPage() {
 
         {activeTab !== 'faculty' && (
           <div className="relative w-full sm:w-auto">
-            <select value={period} onChange={(e) => setPeriod(e.target.value)} className="w-full appearance-none rounded-full border border-primary/15 bg-white px-5 py-2.5 pr-10 text-sm font-semibold text-gray-700 shadow-sm focus:border-primary focus:ring-2 focus:ring-primary/20 sm:w-auto">
+            <select value={period} onChange={(e) => setPeriod(e.target.value)} className="w-full appearance-none rounded-full border border-primary/15 bg-white px-4 py-2 pr-9 text-xs font-semibold text-gray-700 shadow-sm focus:border-primary focus:ring-2 focus:ring-primary/20 sm:w-auto sm:text-sm">
               {PERIODS.map((p) => (<option key={p.key} value={p.key}>{p.label}</option>))}
             </select>
             <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
@@ -194,7 +190,7 @@ export default function LeaderboardPage() {
 
       {/* Individual Leaderboard */}
       {!loading && activeTab !== 'faculty' && (
-        <div className="space-y-3">
+        <div className="space-y-5">
           {leaders.length === 0 ? (
             <div className="rounded-2xl border border-gray-200 bg-white p-12 text-center shadow-sm">
               <Trophy size={48} className="mx-auto mb-4 text-gray-300" />
@@ -205,18 +201,18 @@ export default function LeaderboardPage() {
             <>
               {/* Top 3 Podium */}
               {leaders.length >= 3 && (
-                <div className="mb-6 grid gap-3 sm:grid-cols-3">
+                <div className="mb-8 grid gap-4 sm:grid-cols-3 sm:gap-5">
                   {[leaders[1], leaders[0], leaders[2]].map((leader, i) => {
                     const rank = [2, 1, 3][i]
                     const isFirst = rank === 1
                     return (
                       <div key={leader.id} className={`relative flex items-center gap-3 rounded-2xl border-2 border-gray-200 bg-white p-4 shadow-sm transition hover:shadow-md sm:flex-col sm:items-center sm:p-6 ${isFirst ? 'border-yellow-300 bg-gradient-to-b from-yellow-50 to-white sm:-mt-4' : rank === 2 ? 'border-gray-200 bg-gradient-to-b from-gray-50 to-white sm:mt-2' : 'border-orange-200 bg-gradient-to-b from-orange-50 to-white sm:mt-4'}`}>
                         {isFirst && <div className="absolute -top-3 left-1/2 -translate-x-1/2"><Crown size={24} className="text-yellow-500" /></div>}
-                        <div className={`flex h-12 w-12 items-center justify-center rounded-full text-sm font-bold text-white shadow-md sm:h-16 sm:w-16 sm:text-lg ${isFirst ? 'bg-yellow-500' : rank === 2 ? 'bg-gray-400' : 'bg-orange-400'}`}>{getInitials(leader.name)}</div>
+                        <div className={`flex h-12 w-12 items-center justify-center rounded-full text-sm font-bold text-white shadow-md sm:h-14 sm:w-14 sm:text-base ${isFirst ? 'bg-yellow-500' : rank === 2 ? 'bg-gray-400' : 'bg-orange-400'}`}>{getInitials(leader.name)}</div>
                         <div className="min-w-0 flex-1 sm:text-center">
                           <p className="truncate text-sm font-semibold text-gray-900">{leader.name}</p>
                           {leader.faculty && <p className="truncate text-xs text-gray-500">{leader.faculty}</p>}
-                          <p className={`mt-1 text-sm font-bold sm:mt-2 sm:text-lg ${isFirst ? 'text-yellow-600' : rank === 2 ? 'text-gray-600' : 'text-orange-600'}`}>{formatValue(leader.value, activeTab)}</p>
+                          <p className={`mt-1 text-sm font-bold sm:mt-2 sm:text-base ${isFirst ? 'text-yellow-600' : rank === 2 ? 'text-gray-600' : 'text-orange-600'}`}>{formatValue(leader.value, activeTab)}</p>
                         </div>
                         <div className="sm:hidden"><RankBadge rank={rank} /></div>
                       </div>
