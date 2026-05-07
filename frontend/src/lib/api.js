@@ -1,10 +1,16 @@
 const API_BASE =
   process.env.REACT_APP_API_URL ||
+  process.env.REACT_APP_API_BASE_URL ||
   (process.env.NODE_ENV === 'development' ? 'http://localhost:4000/api' : '')
 
 if (process.env.NODE_ENV === 'development') {
   // eslint-disable-next-line no-console
-  console.debug('[API]', process.env.REACT_APP_API_URL ? 'ใช้ REACT_APP_API_URL จากการตั้งค่า' : 'โหมดพัฒนา: ชี้ไปที่เซิร์ฟเวอร์เริ่มต้น')
+  console.debug(
+    '[API]',
+    process.env.REACT_APP_API_URL || process.env.REACT_APP_API_BASE_URL
+      ? 'ใช้ API URL จากการตั้งค่า'
+      : 'โหมดพัฒนา: ชี้ไปที่เซิร์ฟเวอร์เริ่มต้น'
+  )
 }
 
 export { API_BASE };
