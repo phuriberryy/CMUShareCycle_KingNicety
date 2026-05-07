@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
-import { chatApi } from '../../lib/api'
 import ChatInbox from './ChatInbox'
 import ChatRoom from './ChatRoom'
 
@@ -32,15 +31,15 @@ export default function ChatPage({
   onNewChat,
   isMobileInitially = false,
 }) {
-  const { token, user } = useAuth()
+  const { user } = useAuth()
   const [isMobile, setIsMobile] = useState(isMobileInitially)
   const [chatSearch, setChatSearch] = useState('')
   const [startChatEmail, setStartChatEmail] = useState('')
   const [startingChat, setStartingChat] = useState(false)
   const [startChatError, setStartChatError] = useState('')
   const conversations = Array.isArray(chats) ? chats : []
-  const activeChat = conversations.find((c) => c?.id === selectedChat) || null
-  const getDisplayUser = (chat) => ({
+  const activeChat = conversations.find((c) => String(c?.id) === String(selectedChat)) || null
+  const displayUser = (chat) => ({
     id: chat?.participant_id ?? chat?.creator_id ?? null,
     name: chat?.participant_name ?? chat?.other_user_name ?? 'นักศึกษา CMU',
     email: chat?.participant_email ?? chat?.other_user_email ?? '',
@@ -50,21 +49,29 @@ export default function ChatPage({
     const query = chatSearch.trim().toLowerCase()
     if (!query) return conversations
     return conversations.filter((chat) => {
-      const other = getDisplayUser(chat)
-      return ((other?.name || '').toLowerCase().includes(query) || (other?.email || '').toLowerCase().includes(query) || (chatMeta?.[chat.id]?.lastText || '').toLowerCase().includes(query))
+      const other = displayUser(chat)
+      return (
+        (other?.name || '').toLowerCase().includes(query) ||
+        (other?.email || '').toLowerCase().includes(query) ||
+        (chatMeta?.[chat.id]?.lastText || chat?.last_message?.body || '').toLowerCase().includes(query)
+      )
     })
   })()
 
   const handleStartChat = async () => {
     const email = startChatEmail.trim()
-    if (!email || !token || startingChat) return
+    if (!email || !startingChat) {
+      if (!email) return
+    }
+    if (!email || startingChat) return
     setStartChatError('')
     setStartingChat(true)
     try {
-      const response = await chatApi.start(token, { email })
-      const newChat = response?.chat || response?.data || response
-      if (typeof onNewChat === 'function') onNewChat(newChat)
-      if (newChat?.id) setSelectedChat(newChat.id)
+      const newChat = await onNewChat?.(await Promise.resolve())
+      if (typeof onNewChat === 'function') {
+        const created = await onNewChat({ email })
+        if (created?.id) setSelectedChat(String(created.id))
+      }
       setStartChatEmail('')
     } catch (err) {
       setStartChatError(err?.message || 'ไม่สามารถเริ่มแชทได้')
