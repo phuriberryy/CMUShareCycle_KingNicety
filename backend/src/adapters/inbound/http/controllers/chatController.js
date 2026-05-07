@@ -20,7 +20,10 @@ export const getChats = async (req, res) => {
 
   try {
     const rows = await fetchChatsForUser(req.user.id)
+    console.log('[chat:getChats] rows.length =', rows.length)
+    console.log('[chat:getChats] raw rows sample =', rows[0])
     const allChats = rows.map((row) => mapChatRow(row, req.user.id))
+    console.log('[chat:getChats] mapped sample =', allChats[0])
 
   // กรองแชทที่มีอีเมลเดียวกันออก เหลือแค่แชทเดียว (ล่าสุด)
   const chatMap = new Map()
@@ -46,6 +49,8 @@ export const getChats = async (req, res) => {
     const timeB = new Date(b.last_message?.created_at || b.created_at)
     return timeB - timeA
   })
+  console.log('[chat:getChats] uniqueChats.length =', uniqueChats.length)
+  console.log('[chat:getChats] first unique chat =', uniqueChats[0])
 
   return res.json(uniqueChats)
   } catch (err) {
@@ -80,13 +85,17 @@ export const getChatMessages = async (req, res) => {
       m.chat_id,
       m.sender_id,
       m.body,
+      m.image_url,
+      m.read_at,
       m.created_at,
       CASE WHEN m.sender_id = $2 THEN true ELSE false END as is_sent_by_me
      FROM messages m
-     WHERE m.chat_id = $1
+     WHERE m.chat_id = $1 AND m.deleted_at IS NULL
      ORDER BY m.created_at ASC`,
     [chatId, req.user.id]
   )
+  console.log('[chat:getChatMessages] chatId =', chatId, 'rows.length =', result.rows.length)
+  console.log('[chat:getChatMessages] first row =', result.rows[0])
 
   return res.json(result.rows)
 }
@@ -855,13 +864,15 @@ async function fetchChatById(chatId) {
     LEFT JOIN donation_requests dr ON c.donation_request_id = dr.id
     LEFT JOIN items item ON COALESCE(c.item_id, er.item_id, dr.item_id) = item.id
     LEFT JOIN LATERAL (
-      SELECT m.id, m.body, m.sender_id, m.created_at
+      SELECT m.id, m.body, m.sender_id, m.image_url, m.created_at
       FROM messages m
-      WHERE m.chat_id = c.id
+      WHERE m.chat_id = c.id AND m.deleted_at IS NULL
       ORDER BY m.created_at DESC
       LIMIT 1
     ) last_message ON TRUE
-    WHERE c.id = $1
+    WHERE c.id = $1 AND c.deleted_at IS NULL
+      AND creator.deleted_at IS NULL
+      AND participant.deleted_at IS NULL
     `,
     [chatId]
   )
@@ -898,13 +909,16 @@ async function fetchChatsForUser(userId) {
     LEFT JOIN donation_requests dr ON c.donation_request_id = dr.id
     LEFT JOIN items item ON COALESCE(c.item_id, er.item_id, dr.item_id) = item.id
     LEFT JOIN LATERAL (
-      SELECT m.id, m.body, m.sender_id, m.created_at
+      SELECT m.id, m.body, m.sender_id, m.image_url, m.created_at
       FROM messages m
-      WHERE m.chat_id = c.id
+      WHERE m.chat_id = c.id AND m.deleted_at IS NULL
       ORDER BY m.created_at DESC
       LIMIT 1
     ) last_message ON TRUE
-    WHERE c.creator_id = $1 OR c.participant_id = $1
+    WHERE (c.creator_id = $1 OR c.participant_id = $1)
+      AND c.deleted_at IS NULL
+      AND creator.deleted_at IS NULL
+      AND participant.deleted_at IS NULL
     ORDER BY COALESCE(last_message.created_at, c.created_at) DESC
     `,
     [userId]
@@ -980,20 +994,12 @@ function mapChatRow(row, currentUserId) {
       ? {
           id: row.last_message_id,
           body: row.last_message_body,
+          image_url: row.last_message_image_url,
           sender_id: row.last_message_sender_id,
           created_at: row.last_message_created_at,
         }
       : null,
     messages: [],
-    participants: [
-      {
-        id: row.creator_id,
-        name: row.creator_name,
-        email: row.creator_email,
-        avatar_url: row.creator_avatar_url,
-      },
-      participant,
-    ],
     updatedAt: row.updated_at,
   }
 }
