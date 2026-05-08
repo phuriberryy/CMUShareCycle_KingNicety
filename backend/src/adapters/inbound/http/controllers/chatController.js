@@ -1030,7 +1030,7 @@ function mapChatRow(row, currentUserId) {
   // สำหรับ exchange/donation chat ต้องทั้งสองฝ่ายยอมรับแล้วถึงจะแชทได้
   const bothAccepted = row.owner_accepted && row.requester_accepted
   // หลังจากยืนยัน QR แล้วไม่สามารถส่งข้อความได้อีก
-  const canSendMessages = status !== 'declined' && !row.closed_at && !row.qr_confirmed && (!isExchangeChat && !isDonationChat || bothAccepted)
+  const canSendMessages = status !== 'declined' && !row.closed_at && !row.qr_confirmed && (!isExchangeChat || bothAccepted)
 
   return {
     id: row.id,

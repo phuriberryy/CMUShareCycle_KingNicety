@@ -135,8 +135,8 @@ export const createDonationRequest = async (req, res) => {
         item.user_id, // ผู้เข้าร่วม (เจ้าของ)
         itemId,
         donationRequest.id,
-        'pending', // status เริ่มต้นเป็น pending
-        false, // owner_accepted เริ่มต้นเป็น false
+        'active', // เปิดให้แชทได้ทันที ไม่รอ accept
+        false, // owner_accepted เริ่มต้นเป็น false (ยังไม่ยืนยัน QR)
         false  // requester_accepted เริ่มต้นเป็น false
       ]
     )
