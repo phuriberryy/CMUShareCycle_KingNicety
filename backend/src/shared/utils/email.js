@@ -155,7 +155,12 @@ export const sendEmail = async ({ to, subject, html, text }) => {
       console.log('Email sent via SMTP:', info.messageId, '→', to)
       return info
     } catch (err) {
-      console.error('SMTP send failed:', err.message)
+      console.error('[SMTP] Send failed:')
+      console.error('  error.name      :', err.name)
+      console.error('  error.message   :', err.message)
+      console.error('  error.code      :', err.code ?? null)
+      console.error('  error.response  :', err.response ?? null)
+      console.error('  error.responseCode:', err.responseCode ?? null)
       return { messageId: null, accepted: [], rejected: [to], error: err.message }
     }
   }
@@ -173,13 +178,29 @@ export const sendEmail = async ({ to, subject, html, text }) => {
         text: plainText,
       })
       if (error) {
-        console.error('Resend send failed:', error.message)
-        return { messageId: null, accepted: [], rejected: [to], error: error.message }
+        console.error('[RESEND] Send failed:')
+        console.error('  error.name      :', error.name)
+        console.error('  error.message   :', error.message)
+        console.error('  error.statusCode:', error.statusCode ?? null)
+        if (process.env.NODE_ENV !== 'production') {
+          console.error('  raw error object:', JSON.stringify(error, null, 2))
+        }
+        return {
+          messageId: null,
+          accepted: [],
+          rejected: [to],
+          error: error.message,
+          providerError: { name: error.name, statusCode: error.statusCode ?? null },
+        }
       }
-      console.log('Email sent via Resend:', data?.id, '→', to)
+      console.log('[RESEND] Email sent:', data?.id, '→', to)
       return { messageId: data?.id, accepted: [to], rejected: [] }
     } catch (err) {
-      console.error('Resend error:', err.message)
+      console.error('[RESEND] Unexpected exception:')
+      console.error('  error.name      :', err.name)
+      console.error('  error.message   :', err.message)
+      console.error('  error.statusCode:', err.statusCode ?? err.status ?? null)
+      console.error('  error.code      :', err.code ?? null)
       return { messageId: null, accepted: [], rejected: [to], error: err.message }
     }
   }

@@ -19,8 +19,13 @@ export const testEmail = async (req, res) => {
     return res.status(400).json({ errors: errors.array() })
   }
 
-  const { to, subject, html } = req.body
+  const { to: rawTo, subject, html } = req.body
   const config = getEmailConfig()
+
+  // Normalize email: trim whitespace and lowercase
+  const to = rawTo?.trim().toLowerCase()
+  console.log('[EMAIL TEST] Normalized email:', to, '| Original:', rawTo)
+  console.log('[EMAIL TEST] Validation passed | mode:', config.mode, '| mock:', config.mock)
 
   try {
     const result = await sendEmail({
@@ -35,26 +40,60 @@ export const testEmail = async (req, res) => {
       `,
     })
 
-    const delivered = result.accepted?.length > 0 && result.rejected?.length === 0
-    return res.json({
-      success: true,
+    console.log('[EMAIL TEST] Provider response object:', JSON.stringify(result, null, 2))
+
+    const accepted = result.accepted || []
+    const rejected = result.rejected || []
+    const delivered = accepted.length > 0 && rejected.length === 0
+
+    if (rejected.length > 0) {
+      console.warn('[EMAIL TEST] Rejected recipients:', rejected)
+      console.warn('[EMAIL TEST] Rejection reason:', result.error || 'no reason provided by provider')
+    }
+
+    const response = {
+      success: delivered,
       delivered,
       mode: config.mode,
       messageId: result.messageId || null,
-      accepted: result.accepted || [],
-      rejected: result.rejected || [],
+      accepted,
+      rejected,
       mock: config.mock,
       to,
-    })
+    }
+
+    if (process.env.NODE_ENV !== 'production') {
+      response._providerResponse = result
+    }
+
+    return res.json(response)
   } catch (err) {
-    console.error('Test email error:', err)
-    return res.status(500).json({
+    console.error('[EMAIL TEST] Exception thrown:')
+    console.error('  error.name     :', err.name)
+    console.error('  error.message  :', err.message)
+    console.error('  error.statusCode:', err.statusCode || err.status || null)
+    console.error('  error.code     :', err.code || null)
+    console.error('  error stack    :', err.stack)
+
+    const errorResponse = {
       success: false,
       mode: config.mode,
       error: err.message,
       code: err.code || null,
+      statusCode: err.statusCode || err.status || null,
       to,
-    })
+    }
+
+    if (process.env.NODE_ENV !== 'production') {
+      errorResponse._rawError = {
+        name: err.name,
+        message: err.message,
+        statusCode: err.statusCode || err.status || null,
+        code: err.code || null,
+      }
+    }
+
+    return res.status(500).json(errorResponse)
   }
 }
 
