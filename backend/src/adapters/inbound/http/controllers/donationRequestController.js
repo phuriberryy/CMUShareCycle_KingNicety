@@ -8,7 +8,7 @@ import {
   donationRequestEmail,
   donationAcceptedEmail,
   donationRejectedEmail,
-  donationCompletedEmail,
+  donationMatchedEmail,
 } from '../../../../shared/utils/emailTemplates.js'
 
 // สร้างคำขอรับบริจาค
@@ -631,14 +631,16 @@ async function completeDonation(requestId, donationRequest) {
       io.to(donationRequest.requester_id).emit('notification:new')
     }
 
-    // ส่งอีเมลไปยังทั้งสองฝ่าย
+    // ส่งอีเมลแจ้งจับคู่สำเร็จ — ยังไม่ได้ส่งมอบจริง แค่ตกลงกันแล้ว
     try {
-      const ownerTpl = donationCompletedEmail({
+      const ownerTpl = donationMatchedEmail({
         recipientName: donationRequest.owner_name,
+        otherName: donationRequest.requester_name,
         itemTitle: donationRequest.item_title,
       })
-      const requesterTpl = donationCompletedEmail({
+      const requesterTpl = donationMatchedEmail({
         recipientName: donationRequest.requester_name,
+        otherName: donationRequest.owner_name,
         itemTitle: donationRequest.item_title,
       })
       await Promise.all([
@@ -646,7 +648,7 @@ async function completeDonation(requestId, donationRequest) {
         sendEmail({ to: donationRequest.requester_email, ...requesterTpl }),
       ])
     } catch (emailErr) {
-      console.error('Donation completed emails failed:', emailErr.message)
+      console.error('Donation matched emails failed:', emailErr.message)
     }
   } catch (err) {
     console.error('Complete donation error:', err)

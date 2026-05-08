@@ -5,7 +5,7 @@ import { getChatServer } from '../../../../application/services/chatService.js'
 import { calculateItemCO2, calculateExchangeCO2Reduction } from '../../../../shared/utils/co2Calculator.js'
 import { awardExchangePoints, awardDonationPoints } from '../../../../shared/utils/pointsService.js'
 import { sendEmail } from '../../../../shared/utils/email.js'
-import { exchangeCompletedEmail } from '../../../../shared/utils/emailTemplates.js'
+import { exchangeCompletedEmail, donationCompletedEmail } from '../../../../shared/utils/emailTemplates.js'
 import {
   badRequest,
   forbidden,
@@ -800,14 +800,21 @@ export const confirmChatQr = async (req, res) => {
       if (!existingHistory.rowCount) {
         // ดึงข้อมูล donation request และ item
         const donationRequestResult = await query(
-          `SELECT 
+          `SELECT
             dr.item_id,
             dr.requester_id,
             i.user_id as owner_id,
             i.category as item_category,
-            i.item_condition as item_condition
+            i.item_condition as item_condition,
+            i.title as item_title,
+            owner.name as owner_name,
+            owner.email as owner_email,
+            requester.name as requester_name,
+            requester.email as requester_email
            FROM donation_requests dr
            JOIN items i ON dr.item_id = i.id
+           JOIN users owner ON i.user_id = owner.id
+           JOIN users requester ON dr.requester_id = requester.id
            WHERE dr.id=$1`,
           [chatRow.donation_request_id]
         )
@@ -864,6 +871,24 @@ export const confirmChatQr = async (req, res) => {
                const io = getChatServer()
                if (io) {
                  io.emit('donation:completed')
+               }
+
+               // ส่งอีเมลแจ้งการบริจาคสำเร็จจริง (ยืนยันในแชทแล้ว)
+               try {
+                 const ownerTpl = donationCompletedEmail({
+                   recipientName: donationData.owner_name,
+                   itemTitle: donationData.item_title,
+                 })
+                 const requesterTpl = donationCompletedEmail({
+                   recipientName: donationData.requester_name,
+                   itemTitle: donationData.item_title,
+                 })
+                 await Promise.all([
+                   sendEmail({ to: donationData.owner_email, ...ownerTpl }),
+                   sendEmail({ to: donationData.requester_email, ...requesterTpl }),
+                 ])
+               } catch (emailErr) {
+                 console.error('Donation completed emails failed:', emailErr.message)
                }
              }
            }

@@ -537,6 +537,49 @@ export function donationRequestEmail({ ownerName, requesterName, requesterEmail,
   }
 }
 
+export function donationMatchedEmail({ recipientName, otherName, itemTitle }) {
+  const url = `${appUrl()}/chat`
+
+  const body = `
+    ${h1('พร้อมนัดหมาย<br>การรับสิ่งของ')}
+    ${para(`สวัสดี ${strong(recipientName)},`)}
+    ${para(`${strong(otherName)} และคุณตกลงกันแล้ว ตอนนี้สามารถพูดคุยเพื่อนัดหมายการรับสิ่งของได้เลย`)}
+
+    ${productCard({
+      title: itemTitle,
+      statusText: 'รอนัดหมายและยืนยันการส่งมอบ',
+      statusColor: '#3b82f6',
+    })}
+
+    ${ctaButton('เปิดแชท &nbsp;&#8594;', url)}
+
+    ${para('นัดหมายวัน เวลา และสถานที่ผ่านข้อความได้เลย<br>เมื่อส่งมอบเรียบร้อยแล้ว สามารถกดยืนยันในแชทได้', 'font-size:13px;color:#6b7280;')}
+  `
+
+  const text = [
+    `สวัสดี ${recipientName},`,
+    '',
+    `${otherName} และคุณตกลงกันแล้ว ตอนนี้สามารถพูดคุยเพื่อนัดหมายการรับ "${itemTitle}" ได้เลย`,
+    '',
+    `เปิดแชท: ${url}`,
+    '',
+    'นัดหมายวัน เวลา และสถานที่ผ่านข้อความได้เลย',
+    'เมื่อส่งมอบเรียบร้อยแล้ว สามารถกดยืนยันในแชทได้',
+    '',
+    'CMU ShareCycle — กรีนแคมปัส มหาวิทยาลัยเชียงใหม่',
+  ].join('\n')
+
+  return {
+    subject: `ตอบรับคำขอแล้ว ✓`,
+    html: shell({
+      pretext: `คุณและ${otherName}ตกลงกันแล้ว — ไปนัดหมายรับ "${itemTitle}" ในแชทได้เลย`,
+      badge: 'จับคู่แล้ว',
+      body,
+    }),
+    text,
+  }
+}
+
 export function donationAcceptedEmail({ requesterName, ownerName, itemTitle }) {
   const url = `${appUrl()}/chat`
 
