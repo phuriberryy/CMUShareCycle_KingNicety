@@ -31,16 +31,14 @@ export const uploadMulter = multer({
 })
 
 const buildImageUrl = (req, filename) => {
-  // Prefer an explicitly configured public URL so the returned link is always
-  // correct regardless of proxy chain or missing forwarded headers.
+  // Use /api/uploads path so it routes through Nginx's existing /api/ proxy.
+  // This avoids needing a separate Nginx /uploads/ location block.
   if (process.env.PUBLIC_URL) {
-    return `${process.env.PUBLIC_URL.replace(/\/$/, '')}/uploads/chat/${filename}`
+    return `${process.env.PUBLIC_URL.replace(/\/$/, '')}/api/uploads/chat/${filename}`
   }
-  // Fallback: derive from the incoming request (works locally, unreliable behind
-  // proxies that strip X-Forwarded-Proto — always set PUBLIC_URL in production).
   const proto = req.get('x-forwarded-proto') || req.protocol || 'http'
   const host = req.get('host') || 'localhost:4000'
-  return `${proto}://${host}/uploads/chat/${filename}`
+  return `${proto}://${host}/api/uploads/chat/${filename}`
 }
 
 export const uploadChatImage = async (req, res) => {

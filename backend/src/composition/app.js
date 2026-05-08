@@ -37,7 +37,10 @@ app.get('/health', (_req, res) => res.json({ ok: true }))
 app.options('*', cors(corsOptions))
 
 // Serve uploaded chat images (no auth - URLs are unguessable)
+// /uploads        — direct backend access (requires Nginx /uploads/ proxy)
+// /api/uploads    — works via Nginx's existing /api/ proxy without any config change
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')))
+app.use('/api/uploads', express.static(path.join(process.cwd(), 'uploads')))
 
 app.use('/api/auth', authRoutes)
 app.use('/api/items', itemRoutes)
