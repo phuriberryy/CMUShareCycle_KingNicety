@@ -80,8 +80,8 @@ function shell({ pretext = '', badge = '', body }) {
             <td valign="middle">
               <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                 <tr>
-                  <td valign="middle" bgcolor="#ffffff" style="background-color:#ffffff;border-radius:10px;padding:4px;width:36px;height:36px;text-align:center;overflow:hidden;" width="36" height="36" align="center">
-                    <img src="${logoUrl()}" width="28" height="28" alt="CMU ShareCycle" style="display:block;width:28px;height:28px;object-fit:contain;">
+                  <td valign="middle" style="padding:0;line-height:0;" width="36" height="36">
+                    <img src="${logoUrl()}" width="36" height="36" alt="CMU ShareCycle" style="display:block;width:36px;height:36px;object-fit:contain;border-radius:12px;border:1px solid rgba(255,255,255,0.10);box-shadow:0 2px 12px rgba(0,0,0,0.25);">
                   </td>
                   <td valign="middle" style="padding-left:12px;">
                     <p style="margin:0;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:17px;font-weight:700;color:#f0fdf4;letter-spacing:-0.3px;line-height:1.15;">CMU ShareCycle</p>
