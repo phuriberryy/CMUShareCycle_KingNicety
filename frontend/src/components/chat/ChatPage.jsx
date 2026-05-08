@@ -31,6 +31,13 @@ export default function ChatPage({
   onNewChat,
   isMobileInitially = false,
   onInboxBack,
+  // Exchange confirmation
+  onConfirmExchange,
+  onAcceptChat,
+  onDeclineChat,
+  confirmingExchange = false,
+  acceptingChat      = false,
+  decliningChat      = false,
 }) {
   useAuth()
   const [isMobile, setIsMobile] = useState(isMobileInitially)
@@ -169,6 +176,12 @@ export default function ChatPage({
           sendingMessage={sendingMessage}
           setShowActions={setShowActions}
           showActions={showActions}
+          onConfirmExchange={onConfirmExchange}
+          onAcceptChat={onAcceptChat}
+          onDeclineChat={onDeclineChat}
+          confirmingExchange={confirmingExchange}
+          acceptingChat={acceptingChat}
+          decliningChat={decliningChat}
         />
       </div>
 

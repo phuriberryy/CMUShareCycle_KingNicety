@@ -1015,6 +1015,9 @@ function mapChatRow(row, currentUserId) {
     status,
     ownerAccepted: row.owner_accepted,
     requesterAccepted: row.requester_accepted,
+    ownerConfirmed: Boolean(row.owner_confirmed),
+    requesterConfirmed: Boolean(row.requester_confirmed),
+    confirmedAt: row.confirmed_at || null,
     qrCode: row.qr_code,
     qrConfirmed: row.qr_confirmed,
     qrConfirmedAt: row.qr_confirmed_at,
@@ -1097,4 +1100,182 @@ function generateExchangeCode() {
 function generateDonationCode() {
   const random = randomBytes(4).readUInt32BE(0) % 100000000
   return `DN${random.toString().padStart(8, '0')}`
+}
+
+// POST /chats/:chatId/confirm-exchange
+// Both owner and requester must call this to confirm the physical exchange happened.
+// When both have confirmed, the exchange is finalised automatically.
+export const confirmExchange = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json(unauthorized())
+    }
+
+    const { chatId } = req.params
+    let chatRow = await fetchChatById(chatId)
+
+    if (!chatRow) {
+      return res.status(404).json(notFound('Chat not found'))
+    }
+
+    if (!chatRow.exchange_request_id) {
+      return res.status(400).json(badRequest('This chat is not linked to an exchange request'))
+    }
+
+    const role = resolveChatRole(chatRow, req.user.id)
+    if (role !== 'owner' && role !== 'requester') {
+      return res.status(403).json(forbidden('Only the owner or requester can confirm this exchange'))
+    }
+
+    if (chatRow.status !== 'active') {
+      return res.status(400).json(badRequest('Exchange is not in an active state yet'))
+    }
+
+    // If already fully confirmed, return current state
+    if (chatRow.confirmed_at) {
+      return res.json(mapChatRow(chatRow, req.user.id))
+    }
+
+    const confirmColumn = role === 'owner' ? 'owner_confirmed' : 'requester_confirmed'
+
+    // Idempotent: if this party already confirmed, proceed to check completion
+    if (!chatRow[confirmColumn]) {
+      await query(
+        `UPDATE chats SET ${confirmColumn}=TRUE, updated_at=NOW() WHERE id=$1`,
+        [chatId]
+      )
+      chatRow = await fetchChatById(chatId)
+    }
+
+    const io = getChatServer()
+
+    // Emit per-confirmation event so the other party's UI updates immediately
+    if (io) {
+      const forCreator    = mapChatRow(chatRow, chatRow.creator_id)
+      const forParticipant = mapChatRow(chatRow, chatRow.participant_id)
+      io.to(chatRow.creator_id).emit('exchange:confirmed', forCreator)
+      io.to(chatRow.participant_id).emit('exchange:confirmed', forParticipant)
+    }
+
+    // Both confirmed → finalise
+    if (chatRow.owner_confirmed && chatRow.requester_confirmed) {
+      try {
+        await finalizeExchangeConfirmation(chatRow, chatId)
+        chatRow = await fetchChatById(chatId)
+
+        if (io) {
+          const forCreator    = mapChatRow(chatRow, chatRow.creator_id)
+          const forParticipant = mapChatRow(chatRow, chatRow.participant_id)
+          io.to(chatRow.creator_id).emit('exchange:completed', forCreator)
+          io.to(chatRow.participant_id).emit('exchange:completed', forParticipant)
+          io.to(chatRow.creator_id).emit('notification:new')
+          io.to(chatRow.participant_id).emit('notification:new')
+        }
+      } catch (err) {
+        console.error('[confirmExchange] Finalisation error:', err)
+        // Don't fail the whole request — the confirmation flags are already set
+      }
+    }
+
+    broadcastChatUpdate(chatRow)
+    return res.json(mapChatRow(chatRow, req.user.id))
+  } catch (err) {
+    console.error('confirmExchange error:', err)
+    return res.status(500).json(internalError())
+  }
+}
+
+// Finalises an exchange when both parties have clicked "Confirm Exchange".
+// Creates exchange_history (if needed), awards points, updates statuses.
+async function finalizeExchangeConfirmation(chatRow, chatId) {
+  // Mark confirmed_at
+  await query(
+    `UPDATE chats SET confirmed_at=NOW(), updated_at=NOW() WHERE id=$1`,
+    [chatId]
+  )
+
+  const exchangeRequestId = chatRow.exchange_request_id
+
+  // Fetch exchange data
+  const erResult = await query(
+    `SELECT
+       er.item_id,
+       er.requester_id,
+       er.requester_item_category,
+       er.requester_item_condition,
+       i.user_id  AS owner_id,
+       i.category AS owner_item_category,
+       i.item_condition AS owner_item_condition
+     FROM exchange_requests er
+     JOIN items i ON er.item_id = i.id
+     WHERE er.id=$1`,
+    [exchangeRequestId]
+  )
+
+  if (!erResult.rowCount) return
+
+  const exchangeData = erResult.rows[0]
+
+  // Calculate CO₂ reduction
+  const co2Owner = calculateItemCO2(exchangeData.owner_item_category, exchangeData.owner_item_condition)
+  const co2Requester =
+    exchangeData.requester_item_category && exchangeData.requester_item_condition
+      ? calculateItemCO2(exchangeData.requester_item_category, exchangeData.requester_item_condition)
+      : co2Owner
+  const co2Reduced = parseFloat(calculateExchangeCO2Reduction(co2Owner, co2Requester).toFixed(2))
+
+  // Create exchange_history if it doesn't exist yet
+  const existingHistory = await query(
+    `SELECT id FROM exchange_history WHERE exchange_request_id=$1`,
+    [exchangeRequestId]
+  )
+
+  if (!existingHistory.rowCount) {
+    await query(
+      `INSERT INTO exchange_history (exchange_request_id, item_id, owner_id, requester_id, co2_reduced)
+       VALUES ($1,$2,$3,$4,$5)`,
+      [exchangeRequestId, exchangeData.item_id, exchangeData.owner_id, exchangeData.requester_id, co2Reduced]
+    )
+  }
+
+  // Award points (awardExchangePoints is idempotent)
+  const historyRow = await query(
+    `SELECT id FROM exchange_history WHERE exchange_request_id=$1 ORDER BY created_at DESC LIMIT 1`,
+    [exchangeRequestId]
+  )
+  if (historyRow.rowCount) {
+    await awardExchangePoints(
+      exchangeData.owner_id,
+      exchangeData.requester_id,
+      historyRow.rows[0].id,
+      co2Reduced
+    )
+  }
+
+  // Mark item as exchanged
+  await query(
+    `UPDATE items SET status='exchanged', updated_at=NOW() WHERE id=$1`,
+    [exchangeData.item_id]
+  )
+
+  // Mark exchange request as completed
+  await query(
+    `UPDATE exchange_requests SET status='completed', updated_at=NOW() WHERE id=$1`,
+    [exchangeRequestId]
+  )
+
+  // Notifications for both parties
+  const notifMeta = JSON.stringify({ exchangeRequestId, chatId, itemId: exchangeData.item_id })
+  await query(
+    `INSERT INTO notifications (user_id, title, body, type, metadata)
+     VALUES ($1,$2,$3,$4,$5), ($6,$2,$3,$4,$5)`,
+    [
+      exchangeData.owner_id,
+      'การแลกเปลี่ยนสำเร็จแล้ว!',
+      'ทั้งสองฝ่ายยืนยันการแลกเปลี่ยนแล้ว แต้มและประวัติถูกบันทึกเรียบร้อย',
+      'exchange_completed',
+      notifMeta,
+      exchangeData.requester_id,
+    ]
+  )
 }

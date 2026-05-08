@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { ArrowLeft, Camera, Image as ImageIcon, Loader2, MessageCircle, Plus, Send, X } from 'lucide-react'
+import ExchangeBanner from './ExchangeBanner'
 
 export default function ChatRoom({
   chat,
@@ -21,6 +22,13 @@ export default function ChatRoom({
   sendingMessage,
   setShowActions,
   showActions,
+  // Exchange confirmation props
+  onConfirmExchange,
+  onAcceptChat,
+  onDeclineChat,
+  confirmingExchange = false,
+  acceptingChat      = false,
+  decliningChat      = false,
 }) {
   const messagesContainerRef = useRef(null)
   const [userScrolledUp, setUserScrolledUp] = useState(false)
@@ -110,6 +118,19 @@ export default function ChatRoom({
           {socketConnected ? 'ออนไลน์' : 'รอเชื่อมต่อ'}
         </span>
       </header>
+
+      {/* Exchange confirmation banner — only renders for exchange chats */}
+      {chat?.isExchangeChat ? (
+        <ExchangeBanner
+          chat={chat}
+          onConfirm={onConfirmExchange}
+          onAccept={onAcceptChat}
+          onDecline={onDeclineChat}
+          confirming={confirmingExchange}
+          accepting={acceptingChat}
+          declining={decliningChat}
+        />
+      ) : null}
 
       {/*
         overflowAnchor: 'none' — disables Chrome scroll anchoring, which otherwise

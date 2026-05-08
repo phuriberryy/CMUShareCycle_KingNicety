@@ -298,6 +298,12 @@ export const chatApi = {
       token,
       timeoutMs: CHAT_TIMEOUT_MS,
     }),
+  confirmExchange: (token, chatId) =>
+    request(`/chats/${chatId}/confirm-exchange`, {
+      method: 'POST',
+      token,
+      timeoutMs: CHAT_TIMEOUT_MS,
+    }),
   delete: (token, chatId) =>
     request(`/chats/${chatId}`, { method: 'DELETE', token, timeoutMs: CHAT_TIMEOUT_MS }),
 }
