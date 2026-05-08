@@ -5,14 +5,8 @@ import { useAuth } from '../context/AuthContext'
 import { API_BASE, chatApi } from '../lib/api'
 import ChatPageView from '../components/chat/ChatPage'
 
-function toDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result)
-    reader.onerror = reject
-    reader.readAsDataURL(file)
-  })
-}
+// toDataUrl removed — we now use URL.createObjectURL() for previews and
+// upload the raw File via FormData, eliminating FileReader memory pressure.
 
 const SOCKET_URL = (API_BASE || '').replace(/\/api$/, '')
 
@@ -45,6 +39,17 @@ export default function ChatPage() {
   const messagesRef = useRef([])
 
   // Clear location.state so a back-navigation doesn't re-select the same chat
+  // Revoke the blob preview URL whenever pendingImage changes or the component
+  // unmounts — prevents Safari WebKit memory leaks from orphaned object URLs.
+  useEffect(() => {
+    return () => {
+      if (pendingImage?.previewUrl) {
+        URL.revokeObjectURL(pendingImage.previewUrl)
+        console.log('[SAFARI FLOW] object URL revoked:', pendingImage.previewUrl)
+      }
+    }
+  }, [pendingImage])
+
   useEffect(() => {
     if (location.state?.chatId) {
       navigate(location.pathname, { replace: true, state: {} })
@@ -354,70 +359,105 @@ export default function ChatPage() {
   }
 
   const handleSendMessage = async () => {
-    if (!token || !selectedChat) return
+    const pendingFile = pendingImage?.file ?? null
+    const pendingPreview = pendingImage?.previewUrl ?? null
+    console.log('[SEND] called | file:', pendingFile?.name ?? 'none', '| text:', JSON.stringify(composerText), '| chat:', selectedChat)
+
+    if (!token) { console.warn('[SEND] abort — no token'); return }
+    if (!selectedChat) { console.warn('[SEND] abort — no selectedChat'); return }
+    if (uploadingImage) { console.warn('[SEND] abort — upload already in progress'); return }
+
     const body = composerText.trim()
-    const imageUrl = pendingImage ? String(pendingImage) : ''
-    if (!body && !imageUrl) return
+    if (!body && !pendingFile) { console.warn('[SEND] abort — nothing to send'); return }
 
-    const tempId = `temp-${Date.now()}`
-    const optimistic = {
-      id: tempId,
-      client_id: tempId,
-      chat_id: String(selectedChat),
-      sender_id: user?.id || null,
-      body,
-      image_url: imageUrl || null,
-      created_at: new Date().toISOString(),
-      _mine: true,
-      pending: true,
-    }
-
-    mergeMessages([optimistic], String(selectedChat))
+    // Clear composer immediately — responsive UX, blob URL revoked via useEffect
     setComposerText('')
     setPendingImage(null)
-    setSendingMessage(true)
+    setUploadingImage(true)
+
     try {
-      socketRef.current?.emit('chat:message', {
-        chatId: String(selectedChat),
+      let imageUrl = null
+
+      if (pendingFile) {
+        console.log('[SAFARI FLOW] upload started:', pendingFile.name, '|', pendingFile.size, 'bytes')
+        const result = await chatApi.uploadFile(token, pendingFile)
+        imageUrl = result?.url ?? null
+        console.log('[SAFARI FLOW] upload complete — server URL:', imageUrl)
+      }
+
+      const tempId = `temp-${Date.now()}`
+      const optimistic = {
+        id: tempId,
+        client_id: tempId,
+        chat_id: String(selectedChat),
+        sender_id: user?.id || null,
         body,
-        imageUrl: imageUrl || null,
-      })
-      setTimeout(() => loadMessages(selectedChat), 0)
+        image_url: imageUrl || null,
+        created_at: new Date().toISOString(),
+        _mine: true,
+        pending: true,
+      }
+
+      mergeMessages([optimistic], String(selectedChat))
+      setSendingMessage(true)
+      try {
+        console.log('[SEND] emitting chat:message | imageUrl:', imageUrl)
+        socketRef.current?.emit('chat:message', {
+          chatId: String(selectedChat),
+          body,
+          imageUrl: imageUrl || null,
+        })
+        setTimeout(() => loadMessages(selectedChat), 0)
+      } finally {
+        setSendingMessage(false)
+      }
+    } catch (err) {
+      console.error('[SEND] failed:', err.name, err.message)
+      // Upload or socket failed — user can retry from an empty composer.
+      // (pendingImage is already cleared; we don't restore it to avoid stale blob URLs.)
     } finally {
-      setSendingMessage(false)
+      setUploadingImage(false)
+      console.log('[SAFARI FLOW] state reset complete — ready for next message')
     }
   }
 
-  // Create a fresh <input type="file"> on every tap so the browser never
-  // sees a "same value" and silently skips the onChange. Appending to body
-  // satisfies older iOS Safari versions that require the element to be in
-  // the DOM before .click() is honoured.
+  // Safari-safe file picker:
+  //   • URL.createObjectURL() — synchronous, zero memory pressure, no FileReader
+  //   • Fresh <input> every tap — browser never sees a "same value", onChange always fires
+  //   • DOM cleanup in setTimeout(0) — gives Safari a full event-loop tick before teardown
+  //   • width/height 1px instead of opacity:0 — iOS 15 silently drops .click() on opacity:0
   const triggerFilePicker = (capture) => {
     const input = document.createElement('input')
     input.type = 'file'
     input.accept = 'image/*'
-    input.style.cssText = 'position:fixed;top:-200px;left:-200px;opacity:0;pointer-events:none;'
+    input.style.cssText = 'position:fixed;top:-200px;left:-200px;width:1px;height:1px;overflow:hidden;'
     if (capture) input.setAttribute('capture', 'environment')
     document.body.appendChild(input)
+    console.log('[SAFARI FLOW] picker opening | capture:', capture ? 'environment' : 'none')
 
-    input.onchange = async (e) => {
+    input.onchange = (e) => {
+      console.log('[SAFARI FLOW] onchange fired | files:', e.target.files?.length ?? 0)
       const file = e.target.files?.[0]
-      if (document.body.contains(input)) document.body.removeChild(input)
+
+      // Delay DOM cleanup — give Safari one full event-loop tick before removing
+      // the input so the File handle is fully committed to JS memory.
+      setTimeout(() => { if (document.body.contains(input)) input.remove() }, 0)
+
       if (!file) {
-        console.log('[IMAGE PICK] No file selected (picker cancelled)')
+        console.log('[SAFARI FLOW] cancelled — no file selected')
         return
       }
-      console.log('[IMAGE PICK] File selected:', file.name, '|', file.type, '|', file.size, 'bytes')
-      try {
-        const dataUrl = await toDataUrl(file)
-        console.log('[IMAGE PICK] Data URL ready — setting pending image')
-        setPendingImage(String(dataUrl))
-      } catch (err) {
-        console.error('[IMAGE PICK] toDataUrl failed:', err)
-      }
+
+      console.log('[SAFARI FLOW] file:', file.name, '|', file.type, '|', file.size, 'bytes')
+
+      // createObjectURL is synchronous and returns a tiny pointer — no
+      // FileReader, no base64 string, no memory spike.
+      const previewUrl = URL.createObjectURL(file)
+      console.log('[SAFARI FLOW] object URL created:', previewUrl)
+
+      setPendingImage({ file, previewUrl })
     }
 
-    console.log('[IMAGE PICK] Opening picker | capture:', capture ?? 'none')
     input.click()
   }
 

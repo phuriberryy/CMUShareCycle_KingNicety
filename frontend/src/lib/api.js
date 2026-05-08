@@ -287,6 +287,22 @@ export const chatApi = {
       token,
       timeoutMs: CHAT_TIMEOUT_MS,
     }),
+  // Safari-safe: sends the raw File via FormData — no base64 conversion,
+  // no giant strings in memory, no FileReader instability.
+  uploadFile: (token, file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), CHAT_TIMEOUT_MS)
+    return fetch(`${API_BASE}/chats/upload-image`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+      signal: controller.signal,
+    })
+      .then((res) => { clearTimeout(timeoutId); return handleResponse(res) })
+      .catch((err) => { clearTimeout(timeoutId); throw err })
+  },
   accept: (token, chatId) =>
     request(`/chats/${chatId}/accept`, { method: 'PATCH', token, timeoutMs: CHAT_TIMEOUT_MS }),
   decline: (token, chatId) =>

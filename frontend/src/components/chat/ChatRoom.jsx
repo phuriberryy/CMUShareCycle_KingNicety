@@ -190,7 +190,7 @@ export default function ChatRoom({
       <div className="chat-composer shrink-0 border-t border-gray-100 bg-white px-3 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
         {pendingImage ? (
           <div className="mb-3 flex items-center gap-3 rounded-2xl border border-gray-200 bg-gray-50 p-2">
-            <img src={pendingImage} alt="ตัวอย่างรูป" className="h-12 w-12 rounded-xl object-cover" />
+            <img src={pendingImage?.previewUrl} alt="ตัวอย่างรูป" className="h-12 w-12 rounded-xl object-cover" />
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium text-gray-800">พร้อมส่งรูป</p>
               <p className="text-xs text-gray-500">กดส่งเพื่ออัปโหลดรูป</p>
@@ -219,7 +219,7 @@ export default function ChatRoom({
               }}
             />
           </div>
-          <button type="button" onClick={handleSendMessage} disabled={!composerText.trim() && !pendingImage} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-white disabled:opacity-40" aria-label="ส่งข้อความ">
+          <button type="button" onClick={handleSendMessage} disabled={(!composerText.trim() && !pendingImage) || uploadingImage} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-white disabled:opacity-40" aria-label="ส่งข้อความ">
             {uploadingImage || sendingMessage ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
           </button>
         </div>

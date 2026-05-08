@@ -14,7 +14,7 @@ import {
   confirmDonation,
   deleteChat,
 } from '../controllers/chatController.js'
-import { uploadChatImage } from '../controllers/uploadController.js'
+import { uploadChatImage, uploadMulter } from '../controllers/uploadController.js'
 
 const router = Router()
 
@@ -26,7 +26,7 @@ router.use((req, _res, next) => {
 router.use(authenticate)
 
 router.get('/', getChats)
-router.post('/upload-image', uploadChatImage)
+router.post('/upload-image', uploadMulter.single('file'), uploadChatImage)
 router.post('/start', [body('email').isEmail()], validateRequest, startChatByEmail)
 router.get('/:chatId/messages', [param('chatId').isUUID()], validateRequest, getChatMessages)
 router.post(
