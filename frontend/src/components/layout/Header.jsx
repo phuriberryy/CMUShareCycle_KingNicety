@@ -39,9 +39,9 @@ function Header({ unread, onNotificationsClick }) {
         >
           <ShareCycleLogo className="h-7 w-auto shrink-0 overflow-hidden rounded-xl shadow-sm ring-1 ring-primary/10 sm:h-9 sm:w-auto sm:rounded-2xl lg:h-9" />
           <div className="min-w-0 leading-tight">
-            <p className="truncate text-[0.92rem] font-semibold text-primary-dark sm:text-base">
+            <p className="truncate text-[0.84rem] font-semibold text-primary-dark sm:text-base">
               <span className="font-bold">CMU</span>
-              <span className="hidden font-medium sm:inline"> ShareCycle</span>
+              <span className="font-medium"> ShareCycle</span>
             </p>
           </div>
         </Link>
