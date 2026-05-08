@@ -25,9 +25,11 @@ CREATE TABLE IF NOT EXISTS items (
   available_until DATE,
   image_url TEXT,
   image_urls JSONB NOT NULL DEFAULT '[]'::jsonb,
+  listing_type TEXT NOT NULL DEFAULT 'exchange',
   status TEXT DEFAULT 'active',
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  deleted_at TIMESTAMPTZ
 );
 
 -- Exchange requests table
