@@ -410,7 +410,7 @@ export const acceptChat = async (req, res) => {
         // เมื่อทั้งสองฝ่าย accept ใน chat แล้ว ให้เปลี่ยน item status
         if (chatRow && chatRow.exchange_request_id) {
           const exchangeRequestResult = await query(
-            `SELECT er.item_id, er.owner_id, er.requester_id, i.category, i.item_condition
+            `SELECT er.item_id, er.owner_id, er.requester_id, i.category, i.item_condition, i.other_subtype, i.title, i.description
              FROM exchange_requests er
              JOIN items i ON er.item_id = i.id
              WHERE er.id=$1`,
@@ -444,7 +444,11 @@ export const acceptChat = async (req, res) => {
             
             if (!existingHistory.rowCount) {
               // คำนวณ CO₂ footprint
-              const co2OwnerItem = calculateItemCO2(exchangeData.category, exchangeData.item_condition)
+              const co2OwnerItem = calculateItemCO2(exchangeData.category, exchangeData.item_condition, {
+                title: exchangeData.title,
+                description: exchangeData.description,
+                otherSubtype: exchangeData.other_subtype,
+              })
               const co2Reduced = co2OwnerItem * 0.75
               
               // สร้าง exchange history
@@ -710,9 +714,14 @@ export const confirmChatQr = async (req, res) => {
             er.requester_id,
             er.requester_item_category,
             er.requester_item_condition,
+            er.requester_item_name,
+            er.requester_item_description,
             i.user_id as owner_id,
             i.category as owner_item_category,
-            i.item_condition as owner_item_condition
+            i.item_condition as owner_item_condition,
+            i.other_subtype as owner_item_other_subtype,
+            i.title as owner_item_title,
+            i.description as owner_item_description
            FROM exchange_requests er
            JOIN items i ON er.item_id = i.id
            WHERE er.id=$1`,
@@ -722,15 +731,21 @@ export const confirmChatQr = async (req, res) => {
         if (exchangeRequestResult.rowCount > 0) {
           const exchangeData = exchangeRequestResult.rows[0]
           
-          // คำนวณ CO₂ footprint ของทั้งสอง items
+          // คำนวณ CO₂ footprint ของทั้งสอง items (ส่ง title/description/otherSubtype เพื่อให้ Others ใช้ค่าจริงได้)
           const co2OwnerItem = calculateItemCO2(
             exchangeData.owner_item_category,
-            exchangeData.owner_item_condition
+            exchangeData.owner_item_condition,
+            {
+              title: exchangeData.owner_item_title,
+              description: exchangeData.owner_item_description,
+              otherSubtype: exchangeData.owner_item_other_subtype,
+            }
           )
           const co2RequesterItem = exchangeData.requester_item_category && exchangeData.requester_item_condition
             ? calculateItemCO2(
                 exchangeData.requester_item_category,
-                exchangeData.requester_item_condition
+                exchangeData.requester_item_condition,
+                { title: exchangeData.requester_item_name, description: exchangeData.requester_item_description }
               )
             : co2OwnerItem // ถ้าไม่มี requester item ให้ใช้ค่าเดียวกับ owner item
           
@@ -806,7 +821,9 @@ export const confirmChatQr = async (req, res) => {
             i.user_id as owner_id,
             i.category as item_category,
             i.item_condition as item_condition,
+            i.other_subtype as item_other_subtype,
             i.title as item_title,
+            i.description as item_description,
             owner.name as owner_name,
             owner.email as owner_email,
             requester.name as requester_name,
@@ -825,7 +842,12 @@ export const confirmChatQr = async (req, res) => {
           // คำนวณ CO₂ footprint ของ item
           const co2Footprint = calculateItemCO2(
             donationData.item_category,
-            donationData.item_condition
+            donationData.item_condition,
+            {
+              title: donationData.item_title,
+              description: donationData.item_description,
+              otherSubtype: donationData.item_other_subtype,
+            }
           )
           const co2Reduced = co2Footprint * 0.8 // 80% reduction
           
@@ -1234,10 +1256,14 @@ async function finalizeExchangeConfirmation(chatRow, chatId) {
        er.requester_id,
        er.requester_item_category,
        er.requester_item_condition,
+       er.requester_item_name,
+       er.requester_item_description,
        i.user_id    AS owner_id,
        i.category   AS owner_item_category,
        i.item_condition AS owner_item_condition,
+       i.other_subtype AS owner_item_other_subtype,
        i.title      AS item_title,
+       i.description AS item_description,
        i.image_url  AS item_image_url,
        owner.name   AS owner_name,
        owner.email  AS owner_email,
@@ -1255,11 +1281,23 @@ async function finalizeExchangeConfirmation(chatRow, chatId) {
 
   const exchangeData = erResult.rows[0]
 
-  // Calculate CO₂ reduction
-  const co2Owner = calculateItemCO2(exchangeData.owner_item_category, exchangeData.owner_item_condition)
+  // Calculate CO₂ reduction (ส่ง title/description/otherSubtype เพื่อให้ Others ใช้ค่าจริงได้)
+  const co2Owner = calculateItemCO2(
+    exchangeData.owner_item_category,
+    exchangeData.owner_item_condition,
+    {
+      title: exchangeData.item_title,
+      description: exchangeData.item_description,
+      otherSubtype: exchangeData.owner_item_other_subtype,
+    }
+  )
   const co2Requester =
     exchangeData.requester_item_category && exchangeData.requester_item_condition
-      ? calculateItemCO2(exchangeData.requester_item_category, exchangeData.requester_item_condition)
+      ? calculateItemCO2(
+          exchangeData.requester_item_category,
+          exchangeData.requester_item_condition,
+          { title: exchangeData.requester_item_name, description: exchangeData.requester_item_description }
+        )
       : co2Owner
   const co2Reduced = parseFloat(calculateExchangeCO2Reduction(co2Owner, co2Requester).toFixed(2))
 
@@ -1440,7 +1478,9 @@ async function finalizeDonationConfirmation(chatRow, chatId) {
        i.user_id        AS owner_id,
        i.category       AS item_category,
        i.item_condition AS item_condition,
+       i.other_subtype  AS item_other_subtype,
        i.title          AS item_title,
+       i.description    AS item_description,
        owner.name       AS owner_name,
        owner.email      AS owner_email,
        requester.name   AS requester_name,
@@ -1456,7 +1496,11 @@ async function finalizeDonationConfirmation(chatRow, chatId) {
   if (!drResult.rowCount) return
 
   const d = drResult.rows[0]
-  const co2Footprint = calculateItemCO2(d.item_category, d.item_condition)
+  const co2Footprint = calculateItemCO2(d.item_category, d.item_condition, {
+    title: d.item_title,
+    description: d.item_description,
+    otherSubtype: d.item_other_subtype,
+  })
   const co2Reduced   = parseFloat((co2Footprint * 0.8).toFixed(2))
 
   // Create donation_history if not yet recorded

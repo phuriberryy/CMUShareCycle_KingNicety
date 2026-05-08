@@ -45,15 +45,15 @@ export default function RegisterPage() {
     <div className="flex min-h-screen items-center justify-center bg-surface px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
       <div className="w-full max-w-md">
         <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
-          <h1 className="mb-2 text-center text-2xl font-bold text-gray-900">Sign Up</h1>
+          <h1 className="mb-2 text-center text-2xl font-bold text-gray-900">สมัครสมาชิก</h1>
           <p className="mb-6 text-center text-sm text-gray-700">
-            Use @cmu.ac.th email to verify student identity
+            ใช้อีเมล @cmu.ac.th เพื่อยืนยันตัวตนนักศึกษา
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="mb-2 block text-sm font-semibold text-gray-900">
-                Full Name
+                ชื่อ-นามสกุล
               </label>
               <div className="relative">
                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
@@ -72,14 +72,14 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-gray-900">Faculty/Department</label>
+              <label className="mb-2 block text-sm font-semibold text-gray-900">คณะ / ภาควิชา</label>
               <select
                 name="faculty"
                 value={form.faculty}
                 onChange={handleChange}
                 className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0"
               >
-                <option value="">Select Faculty/Department</option>
+                <option value="">เลือกคณะ/ภาควิชา</option>
                 <option value="คณะมนุษยศาสตร์">คณะมนุษยศาสตร์</option>
                 <option value="คณะศึกษาศาสตร์">คณะศึกษาศาสตร์</option>
                 <option value="คณะวิจิตรศิลป์">คณะวิจิตรศิลป์</option>
@@ -107,7 +107,7 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-gray-900">CMU Account</label>
+              <label className="mb-2 block text-sm font-semibold text-gray-900">บัญชี CMU</label>
               <div className="relative">
                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
                   <Mail size={18} />
@@ -125,7 +125,7 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-gray-900">Password</label>
+              <label className="mb-2 block text-sm font-semibold text-gray-900">รหัสผ่าน</label>
               <div className="relative">
                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
                   <Lock size={18} />
@@ -135,7 +135,7 @@ export default function RegisterPage() {
                   name="password"
                   value={form.password}
                   onChange={handleChange}
-                  placeholder="At least 6 characters"
+                  placeholder="อย่างน้อย 6 ตัวอักษร"
                   className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 pl-10 pr-10 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0"
                   required
                 />
@@ -144,7 +144,7 @@ export default function RegisterPage() {
                   onClick={() => setShowPassword((prev) => !prev)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-primary"
                 >
-                  {showPassword ? 'Hide' : 'Show'}
+                  {showPassword ? 'ซ่อน' : 'แสดง'}
                 </button>
               </div>
             </div>

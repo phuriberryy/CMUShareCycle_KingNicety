@@ -14,6 +14,8 @@ import { donationRequestApi, chatApi } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { calculateItemCO2 } from '../utils/co2Calculator'
+import { getCategoryLabel, getConditionLabel } from '../utils/itemLabels'
+import ConfirmDialog from '../components/ui/ConfirmDialog'
 
 export default function DonationRequestDetailPage() {
   const { requestId } = useParams()
@@ -25,6 +27,7 @@ export default function DonationRequestDetailPage() {
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState(null)
   const [imageErrors, setImageErrors] = useState({ owner: false })
+  const [showRejectConfirm, setShowRejectConfirm] = useState(false)
 
   useEffect(() => {
     const fetchDonationRequest = async () => {
@@ -98,17 +101,18 @@ export default function DonationRequestDetailPage() {
     }
   }
 
-  const handleReject = async () => {
+  const handleReject = () => {
     if (!token || processing || !donationRequest) return
+    setShowRejectConfirm(true)
+  }
 
-    if (!window.confirm('Are you sure you want to reject this donation request?')) {
-      return
-    }
-
+  const confirmReject = async () => {
+    if (!token || !donationRequest) return
     try {
       setProcessing(true)
       await donationRequestApi.reject(token, requestId)
       toast.success('ปฏิเสธคำขอรับบริจาคสำเร็จ', 'สำเร็จ')
+      setShowRejectConfirm(false)
       navigate('/profile')
     } catch (err) {
       console.error('Failed to reject donation:', err)
@@ -159,7 +163,7 @@ export default function DonationRequestDetailPage() {
   }
 
   const getStatusLabel = () => {
-    if (!donationRequest) return 'Waiting for response'
+    if (!donationRequest) return 'รอการตอบรับ'
     if (donationRequest.status === 'completed') return 'เสร็จสิ้น'
     if (donationRequest.status === 'in_progress') return 'กำลังดำเนินการ'
     if (donationRequest.status === 'chatting') return 'พร้อมแชท'
@@ -211,7 +215,7 @@ export default function DonationRequestDetailPage() {
 
   const isOwner = donationRequest.user_role === 'owner'
   const otherUserName = isOwner ? donationRequest.requester_name : donationRequest.owner_name
-  const otherUser = otherUserName || (isOwner ? 'Requester' : 'Post Owner')
+  const otherUser = otherUserName || (isOwner ? 'ผู้ขอรับ' : 'เจ้าของโพสต์')
   const otherUserFaculty = isOwner ? donationRequest.requester_faculty : donationRequest.owner_faculty
   const otherUserAvatar = isOwner ? donationRequest.requester_avatar_url : donationRequest.owner_avatar_url
   const bothAccepted = donationRequest.owner_accepted && donationRequest.requester_accepted
@@ -223,7 +227,11 @@ export default function DonationRequestDetailPage() {
   const canReject = !currentUserAccepted && (donationRequest.status === 'pending' || donationRequest.status === 'chatting')
 
   const co2Footprint = donationRequest.item_category && donationRequest.item_condition
-    ? calculateItemCO2(donationRequest.item_category, donationRequest.item_condition)
+    ? calculateItemCO2(donationRequest.item_category, donationRequest.item_condition, {
+        title: donationRequest.item_title,
+        description: donationRequest.item_description,
+        otherSubtype: donationRequest.item_other_subtype,
+      })
     : null
   const co2Reduced = co2Footprint ? co2Footprint * 0.8 : null
 
@@ -236,7 +244,7 @@ export default function DonationRequestDetailPage() {
         className="mb-6 inline-flex items-center gap-2 text-gray-600 hover:text-gray-900"
       >
         <ArrowLeft size={20} />
-        <span>Back</span>
+        <span>ย้อนกลับ</span>
       </button>
 
       {/* Header Section */}
@@ -272,7 +280,7 @@ export default function DonationRequestDetailPage() {
             <span className="text-lg font-semibold text-gray-900">คำขอรับบริจาค</span>
           </div>
           <span className="rounded-full bg-white px-3 py-1 text-sm font-semibold text-gray-700">
-            {isOwner ? 'You are the donor' : 'You are the recipient'}
+            {isOwner ? 'คุณเป็นผู้บริจาค' : 'คุณเป็นผู้รับบริจาค'}
           </span>
         </div>
 
@@ -298,10 +306,10 @@ export default function DonationRequestDetailPage() {
               <div className="mt-2 space-y-1 text-sm text-gray-600">
                 <div className="flex items-center gap-2">
                   <Package size={16} className="text-gray-400" />
-                  <span>{donationRequest.item_category}</span>
+                  <span>{getCategoryLabel(donationRequest.item_category, donationRequest.item_other_subtype)}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span>Condition: {donationRequest.item_condition}</span>
+                  <span>สภาพ: {getConditionLabel(donationRequest.item_condition)}</span>
                 </div>
                 {donationRequest.item_pickup_location && (
                   <div className="flex items-center gap-2">
@@ -317,15 +325,15 @@ export default function DonationRequestDetailPage() {
         {/* Recipient Information (แสดงเฉพาะเจ้าของโพสต์) */}
         {isOwner && donationRequest.recipient_name && (
           <div className="mb-4 rounded-xl bg-white p-4">
-            <p className="text-sm font-semibold text-gray-700 mb-3">Recipient Information:</p>
+            <p className="text-sm font-semibold text-gray-700 mb-3">ข้อมูลผู้รับบริจาค:</p>
             <div className="space-y-2">
               <div>
-                <p className="text-xs text-gray-500">Recipient Name</p>
+                <p className="text-xs text-gray-500">ชื่อผู้รับ</p>
                 <p className="text-sm font-medium text-gray-900">{donationRequest.recipient_name}</p>
               </div>
               {donationRequest.recipient_contact && (
                 <div>
-                  <p className="text-xs text-gray-500">Contact Information</p>
+                  <p className="text-xs text-gray-500">ข้อมูลติดต่อ</p>
                   <p className="text-sm font-medium text-gray-900">{donationRequest.recipient_contact}</p>
                 </div>
               )}
@@ -345,7 +353,7 @@ export default function DonationRequestDetailPage() {
         {co2Reduced && (
           <div className="rounded-xl bg-primary/5 p-4">
             <p className="text-sm font-semibold text-primary-dark">
-              CO₂ Reduced: {co2Reduced.toFixed(2)} kg CO₂e
+              CO₂ ที่ลดได้: {co2Reduced.toFixed(2)} กก. CO₂e
             </p>
           </div>
         )}
@@ -357,7 +365,7 @@ export default function DonationRequestDetailPage() {
           <div className="flex-1 rounded-xl bg-yellow-50 p-4 text-center">
             <Clock size={20} className="mx-auto mb-2 text-yellow-600" />
             <p className="text-sm font-semibold text-yellow-800">
-              Waiting for {otherUser} to accept
+              กำลังรอ {otherUser} ตอบรับ
             </p>
           </div>
         )}
@@ -368,7 +376,7 @@ export default function DonationRequestDetailPage() {
             className="flex-1 rounded-full bg-primary px-6 py-3 text-base font-semibold text-white shadow-md transition hover:bg-primary-dark flex items-center justify-center gap-2"
           >
             <MessageCircle size={20} />
-            Start Chat
+            เริ่มแชท
           </button>
         )}
 
@@ -379,7 +387,7 @@ export default function DonationRequestDetailPage() {
             className="flex-1 rounded-full bg-primary px-6 py-3 text-base font-semibold text-white shadow-md transition hover:bg-primary-dark disabled:opacity-60 flex items-center justify-center gap-2"
           >
             <CheckCircle size={20} />
-            {processing ? 'Processing...' : 'Accept'}
+            {processing ? 'กำลังดำเนินการ...' : 'ยอมรับ'}
           </button>
         )}
 
@@ -390,11 +398,31 @@ export default function DonationRequestDetailPage() {
             className="flex-1 rounded-full bg-red-500 px-6 py-3 text-base font-semibold text-white shadow-md transition hover:bg-red-600 disabled:opacity-60 flex items-center justify-center gap-2"
           >
             <XCircle size={20} />
-            Reject
+            ปฏิเสธ
           </button>
         )}
       </div>
       </div>
+
+      <ConfirmDialog
+        open={showRejectConfirm}
+        variant="danger"
+        title="ยืนยันการปฏิเสธคำขอรับบริจาค"
+        description={
+          <span>
+            คุณแน่ใจหรือไม่ว่าต้องการปฏิเสธคำขอรับบริจาคนี้?
+            <br />
+            <span className="text-gray-500">การปฏิเสธไม่สามารถย้อนกลับได้</span>
+          </span>
+        }
+        confirmLabel="ปฏิเสธคำขอ"
+        cancelLabel="ยกเลิก"
+        loading={processing}
+        onConfirm={confirmReject}
+        onCancel={() => {
+          if (!processing) setShowRejectConfirm(false)
+        }}
+      />
     </div>
   )
 }

@@ -52,7 +52,7 @@ export default function ChatInbox({
             className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-3 text-sm font-semibold text-white transition hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50"
           >
             {startingChat ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
-            Start Chat
+            เริ่มแชท
           </button>
         </div>
         {startChatError ? <p className="mt-2 text-xs text-red-600">{startChatError}</p> : null}

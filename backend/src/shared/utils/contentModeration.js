@@ -1,185 +1,410 @@
-// Content moderation utilities
+/**
+ * Content moderation — โพสต์สินค้า (ข้อความ + ภาพ)
+ *
+ * ข้อความ: ภาษาไทย + อังกฤษ (จับการเลียนด้วยช่องว่าง/leetspeak) + ประเภทอาวุธ/ของผิดกฎหมายในเชิงโปรโมท
+ *
+ * รูปภาพ:
+ *  - ตั้งค่า SIGHTENGINE_API_USER + SIGHTENGINE_API_SECRET → ใช้ Sightengine (อนาจาร + อาวุธในรูป ฯลฯ)
+ *  - ไม่มี API → ใช้ nsfwjs บนเซิร์ฟเวอร์กรองอนาจารเบื้องต้น (รูปอาวุธอาจรอด — ควรเปิด Sightengine ถ้าต้องการครบ)
+ *
+ * ปิดระบบตรวจรูปชั่วคราว (dev): DISABLE_IMAGE_MODERATION=1
+ */
 
-// List of inappropriate words (basic example - in production, use a comprehensive list or API)
-const INAPPROPRIATE_WORDS = [
-  // Spam/Test words
-  'spam', 'scam', 'fake', 'test123', 'asdf', 'qwerty',
-  
-  // Profanity - English
-  'fuck', 'fucking', 'fucked', 'shit', 'shitting', 'damn', 'damned',
-  'bitch', 'bitches', 'ass', 'asshole', 'bastard', 'crap', 'cunt',
-  'dick', 'dicks', 'pussy', 'cock', 'whore', 'slut', 'nigger', 'nigga',
-  'retard', 'retarded', 'gay', 'fag', 'faggot', 'homo', 'lesbo',
-  
-  // Profanity - Thai (transliterated)
-  'ai', 'ee', 'khee', 'khi', 'kwai', 'kwaii', 'sii', 'see',
-  'mae', 'mee', 'mhee', 'pii', 'pee', 'peepee', 'piss',
-  
-  // Sexual content
-  'sex', 'sexual', 'porn', 'porno', 'pornography', 'xxx', 'nude', 'naked',
-  'orgasm', 'masturbate', 'masturbation', 'penis', 'vagina', 'boob', 'boobs',
-  'breast', 'breasts', 'nipple', 'nipples', 'erotic', 'erotica',
-  
-  // Violence/Threats
-  'kill', 'killing', 'murder', 'murderer', 'suicide', 'bomb', 'terrorist',
-  'terrorism', 'violence', 'violent', 'weapon', 'gun', 'knife', 'shoot',
-  'shooting', 'rape', 'raping', 'abuse', 'abusing',
-  
-  // Drugs/Illegal substances
-  'drug', 'drugs', 'cocaine', 'heroin', 'marijuana', 'weed', 'cannabis',
-  'meth', 'methamphetamine', 'lsd', 'ecstasy', 'mdma', 'opium',
-  
-  // Hate speech
-  'hate', 'hatred', 'racist', 'racism', 'nazi', 'hitler', 'holocaust',
-  'genocide', 'ethnic', 'cleansing',
-  
-  // Scam/Fraud related
-  'phishing', 'phish', 'fraud', 'fraudulent', 'steal', 'stealing', 'theft',
-  'hack', 'hacking', 'hacker', 'virus', 'malware', 'trojan',
-  
-  // Other inappropriate
-  'stupid', 'idiot', 'moron', 'dumb', 'dumbass', 'loser', 'pathetic'
+import {
+  moderateImageBufferSightengine,
+  isSightengineConfigured,
+  evaluateSightengineOutput,
+} from './sightengineModeration.js'
+
+// ─── Thai substrings ───
+
+const THAI_BLOCKED_SUBSTRINGS = [
+  'ควย',
+  'หำ',
+  'หี',
+  'เย็ด',
+  'เงี่ยน',
+  'เหี้ย',
+  'สัส',
+  'แตด',
+  'ลามก',
+  'เสียว',
+  'ช่วยว่าว',
+  'โป๊',
+  'อนาจาร',
+  'หนังโป๊',
+  'ความใคร่',
 ]
 
-// Check for spam patterns
-export const detectSpam = (text) => {
-  if (!text) return { isSpam: false, reason: null }
-  
-  // Trim whitespace
-  const trimmedText = text.trim()
-  if (trimmedText.length < 3) {
-    return { isSpam: false, reason: null } // Too short to be spam
-  }
-  
-  const lowerText = trimmedText.toLowerCase()
-  
-  // Check for inappropriate words
-  // Use word boundary regex to match whole words only (avoid false positives)
-  for (const word of INAPPROPRIATE_WORDS) {
-    // Create regex pattern that matches the word as a whole word
-    // \b is word boundary, but we also check for spaces, punctuation, or start/end
-    const wordPattern = new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i')
-    if (wordPattern.test(lowerText)) {
-      return { isSpam: true, reason: 'Contains inappropriate content' }
-    }
-    // Also check if the word appears at the start or end of the text
-    if (lowerText.startsWith(word + ' ') || lowerText.endsWith(' ' + word) || lowerText === word) {
-      return { isSpam: true, reason: 'Contains inappropriate content' }
-    }
-  }
-  
-  // Check for excessive repetition of same character (e.g., "aaaaaa", "111111")
-  // Only check if text is longer than 10 characters
-  if (trimmedText.length > 10 && /(.)\1{5,}/.test(trimmedText)) {
-    return { isSpam: true, reason: 'Contains excessive character repetition' }
-  }
-  
-  // Check for excessive special characters (excluding spaces and common punctuation)
-  // Only check if text is longer than 20 characters
-  if (trimmedText.length > 20) {
-    const specialChars = trimmedText.match(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~`]/g) || []
-    const specialCharRatio = specialChars.length / trimmedText.length
-    // Allow up to 20% special characters for normal text
-    if (specialCharRatio > 0.2) {
-      return { isSpam: true, reason: 'Contains excessive special characters' }
-    }
-  }
-  
-  // Check for all caps (shouting) - only for English text
-  // Skip this check for Thai text (which doesn't have case)
-  if (trimmedText.length > 10 && /[A-Z]/.test(trimmedText) && !/[\u0E00-\u0E7F]/.test(trimmedText)) {
-    const upperCaseRatio = (trimmedText.match(/[A-Z]/g) || []).length / trimmedText.length
-    // If more than 80% are uppercase and it's all uppercase, consider it spam
-    if (upperCaseRatio > 0.8 && trimmedText === trimmedText.toUpperCase()) {
-      return { isSpam: true, reason: 'Excessive use of capital letters' }
-    }
-  }
-  
-  return { isSpam: false, reason: null }
+const TH_ROMAN_BLOCKED = ['kuy', 'hee', 'kuay', 'hia', 'khee', 'kuyy', 'fuckkk', 'shitt']
+
+const THAI_WEAPON_PROMO = [
+  'ขายปืน',
+  'ปืนอัดแก็ส',
+  'ปืนยิง',
+  'ปืนกระสุน',
+  'กระสุน',
+  'ระเบิด',
+  'ลูกระเบิด',
+]
+
+const EN_WEAPON_PROMO = [
+  'sell gun',
+  'buy gun',
+  'ammo for sale',
+  'bullet sale',
+  'grenade',
+  'explosives',
+]
+
+const EN_BLOCKED_WORDS = [
+  'fuck',
+  'fucking',
+  'fucked',
+  'motherfucker',
+  'cock',
+  'cocksucker',
+  'dick',
+  'dickhead',
+  'pussy',
+  'whore',
+  'slut',
+  'cum',
+  'cumming',
+  'cunt',
+  'bitch',
+  'bastard',
+  'asshole',
+  'shit',
+  'bullshit',
+  'jackass',
+  'porn',
+  'porno',
+  'pornhub',
+  'xxx',
+  'nude',
+  'nudes',
+  'naked',
+  'masturbate',
+  'masturbation',
+  'nipples',
+  'erotic',
+  'orgasm',
+  'blowjob',
+  'anal',
+  'rape',
+  'rapist',
+]
+
+const EN_HARD_SUBSTRINGS = ['nigger', 'nigga', 'faggot']
+
+const DRUG_PROMO_TH = ['ยาบ้า', 'ไอซ์ขาย', 'เฮโรอีน']
+const DRUG_PROMO_EN = ['cocaine for sale', 'heroin', 'buy meth']
+
+const SIGHTENGINE_GET = 'https://api.sightengine.com/1.0/check.json'
+
+function escapeRegex(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
-// Validate image URL/Base64
-export const validateImage = (imageUrl) => {
-  if (!imageUrl) return { isValid: true } // Image is optional
-  
-  // Check if it's a base64 image
+export function normalizeTextForModeration(input) {
+  if (!input || typeof input !== 'string') return ''
+  let s = input.normalize('NFKC').replace(/\u200b|\uFEFF/g, '')
+  s = s.toLowerCase()
+  s = s.replace(/[.\s*_\-:·•\\/|[\]()]+/g, '')
+  return s
+    .replace(/@/g, 'a')
+    .replace(/0/g, 'o')
+    .replace(/1/g, 'i')
+    .replace(/3/g, 'e')
+    .replace(/\$/g, 's')
+    .replace(/5/g, 's')
+    .replace(/7/g, 't')
+    .replace(/\*/g, '')
+}
+
+function containsThaiSubstring(compactNorm, substring) {
+  const sub = substring.normalize('NFKC').toLowerCase().replace(/\s+/g, '')
+  return compactNorm.includes(sub)
+}
+
+function englishWordBoundaryTest(lowerSpaced, word) {
+  const re = new RegExp(`(^|[^a-z])${escapeRegex(word)}([^a-z]|$)`, 'i')
+  return re.test(lowerSpaced)
+}
+
+export function moderateText(text) {
+  if (text === undefined || text === null) return { allowed: true }
+  const raw = typeof text === 'string' ? text.trim() : String(text).trim()
+  if (!raw) return { allowed: true }
+
+  const compact = normalizeTextForModeration(raw)
+  const lowerSpaced = raw.normalize('NFKC').replace(/\u200b|\uFEFF/g, '').toLowerCase()
+
+  for (const word of THAI_BLOCKED_SUBSTRINGS) {
+    if (containsThaiSubstring(compact, word)) {
+      return {
+        allowed: false,
+        code: 'TEXT_PROFANITY',
+        reasonTh: 'ข้อความมีคำหยาบ ลามก หรือไม่เหมาะสม โปรดแก้ไขก่อนโพสต์',
+      }
+    }
+  }
+
+  for (const w of TH_ROMAN_BLOCKED) {
+    if (compact.includes(w)) {
+      return {
+        allowed: false,
+        code: 'TEXT_PROFANITY',
+        reasonTh: 'ข้อความมีคำหยาบ ลามก หรือไม่เหมาะสม โปรดแก้ไขก่อนโพสต์',
+      }
+    }
+  }
+
+  for (const phrase of [...THAI_WEAPON_PROMO, ...DRUG_PROMO_TH]) {
+    const p = phrase.replace(/\s+/g, '')
+    if (compact.includes(p)) {
+      return {
+        allowed: false,
+        code: 'TEXT_WEAPON_DRUG',
+        reasonTh: 'ข้อความมีเนื้อหาเกี่ยวกับอาวุธหรือของผิดกฎหมาย ไม่สามารถโพสต์ได้',
+      }
+    }
+  }
+
+  for (const phrase of [...EN_WEAPON_PROMO, ...DRUG_PROMO_EN]) {
+    if (lowerSpaced.includes(phrase)) {
+      return {
+        allowed: false,
+        code: 'TEXT_WEAPON_DRUG',
+        reasonTh: 'ข้อความมีเนื้อหาเกี่ยวกับอาวุธหรือของผิดกฎหมาย ไม่สามารถโพสต์ได้',
+      }
+    }
+  }
+
+  for (const hate of EN_HARD_SUBSTRINGS) {
+    if (compact.includes(hate)) {
+      return {
+        allowed: false,
+        code: 'TEXT_HATE',
+        reasonTh: 'ข้อความมีถ้อยคำเหยียดหยามหรือรุนแรง โปรดแก้ไขก่อนโพสต์',
+      }
+    }
+  }
+
+  for (const word of EN_BLOCKED_WORDS) {
+    if (englishWordBoundaryTest(lowerSpaced, word)) {
+      return {
+        allowed: false,
+        code: 'TEXT_PROFANITY',
+        reasonTh: 'ข้อความมีคำหยาบ ลามก หรือไม่เหมาะสม โปรดแก้ไขก่อนโพสต์',
+      }
+    }
+  }
+
+  if (raw.length > 10 && /(.)\1{5,}/.test(raw)) {
+    return {
+      allowed: false,
+      code: 'TEXT_SPAM',
+      reasonTh: 'ข้อความมีการพิมพ์ซ้ำตัวอักษรมากเกินไป โปรดแก้ไขก่อนโพสต์',
+    }
+  }
+
+  if (raw.length > 20) {
+    const specialChars = raw.match(/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?~`]/g) || []
+    if (specialChars.length / raw.length > 0.2) {
+      return {
+        allowed: false,
+        code: 'TEXT_SPAM',
+        reasonTh: 'ข้อความมีสัญลักษณ์พิเศษมากเกินไป โปรดแก้ไขก่อนโพสต์',
+      }
+    }
+  }
+
+  return { allowed: true }
+}
+
+export function moderateCombinedItemText(payload) {
+  const pairs = [
+    payload.title,
+    payload.description,
+    payload.lookingFor,
+    payload.pickupLocation,
+    payload.otherSubtype,
+  ]
+  for (const value of pairs) {
+    if (value === undefined || value === null || value === '') continue
+    const r = moderateText(String(value))
+    if (!r.allowed) return r
+  }
+  return { allowed: true }
+}
+
+/** เข้ากันได้กับโค้ดเดิม */
+export function detectSpam(text) {
+  const r = moderateText(text || '')
+  return {
+    isSpam: !r.allowed,
+    reason: r.reasonTh || null,
+    reasonTh: r.reasonTh,
+    code: r.code,
+  }
+}
+
+export function validateImage(imageUrl) {
+  if (!imageUrl) return { isValid: true }
   if (imageUrl.startsWith('data:image/')) {
     const base64Data = imageUrl.split(',')[1]
-    if (!base64Data) {
-      return { isValid: false, reason: 'Invalid base64 image format' }
-    }
-    
-    // Check size (max 5MB for base64)
+    if (!base64Data) return { isValid: false, reason: 'Invalid base64 image format' }
     const sizeInBytes = (base64Data.length * 3) / 4
-    const maxSize = 5 * 1024 * 1024 // 5MB
-    
-    if (sizeInBytes > maxSize) {
-      return { isValid: false, reason: 'Image size exceeds 5MB limit' }
-    }
-    
-    // Check image type
+    const maxSize = 5 * 1024 * 1024
+    if (sizeInBytes > maxSize) return { isValid: false, reason: 'รูปมีขนาดเกิน 5 เมกะไบต์' }
     const imageType = imageUrl.match(/data:image\/(\w+);base64/)?.[1]
     const allowedTypes = ['jpeg', 'jpg', 'png', 'webp', 'gif']
-    
     if (!imageType || !allowedTypes.includes(imageType.toLowerCase())) {
-      return { isValid: false, reason: 'Invalid image type. Only JPEG, PNG, WebP, and GIF are allowed' }
+      return { isValid: false, reason: 'ชนิดไฟล์รูปไม่รองรับ (ใช้ได้ JPEG, PNG, WebP, GIF เท่านั้น)' }
     }
-  } else if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-    // URL validation - basic check
+    return { isValid: true }
+  }
+  if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
     try {
       new URL(imageUrl)
     } catch {
-      return { isValid: false, reason: 'Invalid image URL format' }
+      return { isValid: false, reason: 'ลิงก์รูปไม่ถูกต้อง' }
     }
-  } else {
-    return { isValid: false, reason: 'Invalid image format' }
+    return { isValid: true }
   }
-  
-  return { isValid: true }
+  return { isValid: false, reason: 'รูปภาพไม่ถูกต้อง' }
 }
 
-// Check for duplicate content
-export const checkDuplicateContent = async (query, userId, title, description) => {
+export async function checkDuplicateContent(dbQuery, userId, title, description) {
   try {
-    // Check for similar titles from the same user in the last 24 hours
-    const result = await query(
-      `SELECT id, title, created_at 
-       FROM items 
-       WHERE user_id = $1 
+    const result = await dbQuery(
+      `SELECT id, title, created_at
+       FROM items
+       WHERE user_id = $1
          AND LOWER(title) = LOWER($2)
          AND created_at > NOW() - INTERVAL '24 hours'
        LIMIT 1`,
       [userId, title]
     )
-    
     if (result.rowCount > 0) {
-      return { isDuplicate: true, reason: 'You have already posted an item with the same title recently' }
+      return { isDuplicate: true, reason: 'คุณเพิ่งโพสต์รายการที่ชื่อเหมือนกันเมื่อเร็ว ๆ นี้' }
     }
-    
-    // Check for very similar descriptions (simple check)
+
     if (description && description.length > 20) {
-      const similarResult = await query(
-        `SELECT id, title 
-         FROM items 
-         WHERE user_id = $1 
-           AND description IS NOT NULL
-           AND LENGTH(description) > 20
-           AND created_at > NOW() - INTERVAL '1 hour'
-           AND description = $2
-         LIMIT 1`,
+      const similarResult = await dbQuery(
+        `SELECT id FROM items WHERE user_id = $1
+           AND description IS NOT NULL AND LENGTH(description) > 20
+           AND created_at > NOW() - INTERVAL '1 hour' AND description = $2 LIMIT 1`,
         [userId, description]
       )
-      
       if (similarResult.rowCount > 0) {
-        return { isDuplicate: true, reason: 'You have already posted a similar item recently' }
+        return { isDuplicate: true, reason: 'คุณเพิ่งโพสต์คำอธิบายที่เหมือนกันเมื่อเร็ว ๆ นี้' }
       }
     }
-    
     return { isDuplicate: false }
   } catch (err) {
-    console.error('Error checking duplicate content:', err)
-    // Don't block on error, just log it
+    console.error('Duplicate check:', err)
     return { isDuplicate: false }
   }
 }
 
+function dataUrlToBuffer(dataUrl) {
+  const m = /^data:image\/(\w+);base64,(.+)$/i.exec(dataUrl.trim())
+  if (!m) return null
+  const type = (m[1] || '').toLowerCase()
+  try {
+    return { buffer: Buffer.from(m[2], 'base64'), mime: type === 'jpg' ? 'image/jpeg' : `image/${type}` }
+  } catch {
+    return null
+  }
+}
+
+async function moderateOneImageBuffer(buffer, mimeHint) {
+  const se = await moderateImageBufferSightengine(buffer, mimeHint)
+  if (!se.skipped) {
+    if (se.allowed === false) {
+      return { allowed: false, reasonTh: se.reasonTh, code: se.code }
+    }
+    return { allowed: true }
+  }
+
+  if (process.env.DISABLE_IMAGE_MODERATION === '1' || process.env.DISABLE_IMAGE_MODERATION === 'true') {
+    return { allowed: true }
+  }
+
+  try {
+    const tf = await import('@tensorflow/tfjs-node')
+    const nsfwjs = await import('nsfwjs')
+    let imageTensor = null
+    try {
+      imageTensor = tf.node.decodeImage(buffer, 3)
+      const model = await nsfwjs.load()
+      const predictions = await model.classify(imageTensor)
+      const byName = Object.fromEntries(predictions.map((p) => [p.className, p.probability]))
+      const porn = byName.Porn ?? 0
+      const hentai = byName.Hentai ?? 0
+      const sexy = byName.Sexy ?? 0
+      if (porn >= 0.35 || hentai >= 0.35 || sexy >= 0.92) {
+        return {
+          allowed: false,
+          reasonTh:
+            'รูปภาพไม่เหมาะสม (เข้าข่ายอนาจาร/โป้) — เปลี่ยนรูปหรือตั้ง Sightengine เพื่อกรองอาวุธในรูปให้เข้มงวดขึ้น',
+          code: 'IMAGE_NSFW',
+        }
+      }
+    } finally {
+      if (imageTensor) imageTensor.dispose()
+    }
+    return { allowed: true }
+  } catch (err) {
+    console.error('[moderation] image nsfw:', err?.message || err)
+    return {
+      allowed: false,
+      reasonTh:
+        'ระบบตรวจสอบรูปภาพไม่พร้อม กรุณาลองใหม่ภายหลัง หรือติดตั้ง/ตั้งค่า Sightengine API (ในขณะพัฒนาใช้ DISABLE_IMAGE_MODERATION=1 ได้ถ้าจำเป็น)',
+      code: 'IMAGE_MODERATION_UNAVAILABLE',
+    }
+  }
+}
+
+export async function moderateItemImageUrls(urls) {
+  const list = Array.isArray(urls) ? urls : []
+  const models =
+    process.env.SIGHTENGINE_MODELS ||
+    'nudity-2.1,weapon,gore-2.0,offensive,text-content'
+
+  for (const url of list) {
+    const shape = validateImage(url)
+    if (!shape.isValid) return { allowed: false, reasonTh: shape.reason, code: 'IMAGE_INVALID' }
+
+    if (typeof url === 'string' && url.startsWith('data:image/')) {
+      const decoded = dataUrlToBuffer(url)
+      if (!decoded?.buffer?.length) return { allowed: false, reasonTh: 'อ่านรูปจากข้อมูลไม่สำเร็จ', code: 'IMAGE_DECODE' }
+      const r = await moderateOneImageBuffer(decoded.buffer, decoded.mime)
+      if (!r.allowed) return r
+      continue
+    }
+
+    if (typeof url === 'string' && (url.startsWith('http://') || url.startsWith('https://'))) {
+      if (!isSightengineConfigured()) continue
+      try {
+        const params = new URLSearchParams({
+          url,
+          models,
+          api_user: process.env.SIGHTENGINE_API_USER,
+          api_secret: process.env.SIGHTENGINE_API_SECRET,
+        }).toString()
+        const res = await fetch(`${SIGHTENGINE_GET}?${params}`, { signal: AbortSignal.timeout(28000) })
+        const data = await res.json().catch(() => ({}))
+        const out = evaluateSightengineOutput(data)
+        if (!out.allowed) return out
+      } catch {
+        return { allowed: false, reasonTh: 'ตรวจสอบรูปจากลิงก์ไม่สำเร็จ', code: 'SIGHTENGINE_URL' }
+      }
+    }
+  }
+
+  return { allowed: true }
+}

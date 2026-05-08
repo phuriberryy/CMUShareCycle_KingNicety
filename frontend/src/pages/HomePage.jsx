@@ -151,21 +151,21 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
             </div>
             {!isMobile ? (
               <div className="mt-1 flex gap-3 overflow-x-auto pb-1 pr-1 sm:mt-0 sm:grid sm:w-full sm:grid-cols-2 sm:gap-3 lg:mt-0 lg:max-w-sm lg:shrink-0 lg:overflow-visible lg:pb-0 lg:pr-0">
-                {benefitCards.map((benefit) => (
-                  <div
-                    key={benefit.title}
+              {benefitCards.map((benefit) => (
+                <div
+                  key={benefit.title}
                     className={`min-w-[190px] flex-1 items-center gap-2.5 rounded-xl border p-3 transition duration-200 hover:border-gray-200/90 hover:shadow-sm sm:min-w-0 sm:gap-3 sm:p-3.5 ${benefitToneClasses[benefit.tone]}`}
-                  >
+                >
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-black/[0.06] [color:inherit] sm:h-9 sm:w-9 sm:rounded-xl">
                       <benefit.icon className="h-4 w-4 sm:h-[17px] sm:w-[17px]" strokeWidth={2} />
-                    </div>
-                    <div className="min-w-0">
+                  </div>
+                  <div className="min-w-0">
                       <p className="text-[12px] font-bold leading-snug text-gray-900 sm:text-[13px]">{benefit.title}</p>
                       <p className="benefit-desc mt-0.5 text-[10px] leading-snug sm:text-[11px]">{benefit.description}</p>
                     </div>
-                  </div>
-                ))}
-              </div>
+                </div>
+              ))}
+            </div>
             ) : null}
           </div>
         </section>
@@ -260,14 +260,14 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
       </div>
 
       {!filtersOpen ? (
-        <button
-          type="button"
-          onClick={onPostItem}
+      <button
+        type="button"
+        onClick={onPostItem}
           className="fixed bottom-5 right-4 z-50 flex h-12 w-12 items-center justify-center rounded-full border border-white/40 bg-primary text-white shadow-elevated-hover ring-2 ring-primary/20 transition active:scale-[0.96] sm:hidden"
-          aria-label="โพสต์สินค้าใหม่"
-        >
+        aria-label="โพสต์สินค้าใหม่"
+      >
           <Plus size={24} strokeWidth={2.6} />
-        </button>
+      </button>
       ) : null}
     </div>
   )

@@ -3,6 +3,7 @@ import { ArrowLeft } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import ChatInbox from './ChatInbox'
 import ChatRoom from './ChatRoom'
+import ConfirmDialog from '../ui/ConfirmDialog'
 
 export default function ChatPage({
   open,
@@ -194,36 +195,23 @@ export default function ChatPage({
         />
       </div>
 
-      {showDeleteModal ? (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 px-4" role="dialog" aria-modal="true" aria-labelledby="delete-chat-title">
-          <div className="w-full max-w-md rounded-3xl bg-white p-5 shadow-2xl">
-            <h2 id="delete-chat-title" className="text-lg font-bold text-gray-900">Delete chat?</h2>
-            <p className="mt-2 text-sm leading-6 text-gray-600">
-              Are you sure you want to delete this chat?
-              <br />
-              This action cannot be undone.
-            </p>
-            <div className="mt-5 flex items-center justify-end gap-3">
-              <button
-                type="button"
-                onClick={closeDeleteModal}
-                className="inline-flex h-10 items-center rounded-full border border-gray-200 bg-white px-4 text-sm font-semibold text-gray-700"
-                disabled={Boolean(deletingChatId)}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={confirmDelete}
-                className="inline-flex h-10 items-center rounded-full bg-red-600 px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
-                disabled={Boolean(deletingChatId)}
-              >
-                {deletingChatId ? 'Deleting…' : 'Delete'}
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <ConfirmDialog
+        open={showDeleteModal}
+        variant="danger"
+        title="ลบห้องแชท?"
+        description={
+          <span>
+            คุณแน่ใจหรือไม่ว่าต้องการลบห้องแชทนี้?
+            <br />
+            <span className="text-gray-500">การลบไม่สามารถย้อนกลับได้</span>
+          </span>
+        }
+        confirmLabel="ลบห้องแชท"
+        cancelLabel="ยกเลิก"
+        loading={Boolean(deletingChatId)}
+        onConfirm={confirmDelete}
+        onCancel={closeDeleteModal}
+      />
     </div>
   )
 }

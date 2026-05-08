@@ -8,6 +8,8 @@ import { MAX_ITEM_GALLERY } from '../../utils/itemImages'
 import FormField from '../../shared/ui/FormField'
 import Input from '../../shared/ui/Input'
 import Textarea from '../../shared/ui/Textarea'
+import { OTHER_SUBTYPE_MAX_LENGTH } from '../../utils/co2Calculator'
+import { moderateCombinedItemText } from '../../utils/contentModeration'
 
 const readFileAsDataUrl = (file) =>
   new Promise((resolve, reject) => {
@@ -31,6 +33,7 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
     itemName: '',
     category: '',
+    otherSubtype: '',
     condition: '',
     lookingFor: '',
     availableUntil: addDaysIso(14),
@@ -48,6 +51,7 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
     setFormData({
       itemName: '',
       category: '',
+      otherSubtype: '',
       condition: '',
       lookingFor: '',
       availableUntil: addDaysIso(14),
@@ -67,6 +71,14 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
     setFormData((prev) => ({ ...prev, lookingFor: '' }))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.listingType])
+
+  useEffect(() => {
+    // ล้าง otherSubtype เมื่อเปลี่ยนหมวดเป็นอื่นที่ไม่ใช่ Others
+    if (formData.category === 'Others') return
+    if (!formData.otherSubtype) return
+    setFormData((prev) => ({ ...prev, otherSubtype: '' }))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.category])
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -124,13 +136,14 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
     if (imagePreviews.length === 0) return false
     if (normalized.itemName.length < 3) return false
     if (!formData.category) return false
+    if (formData.category === 'Others' && (formData.otherSubtype || '').trim().length < 2) return false
     if (!formData.condition) return false
     if (!normalized.description) return false
     if (!normalized.pickupLocation) return false
     if (!normalized.availableUntil) return false
     if (formData.listingType === 'exchange' && !normalized.lookingFor) return false
     return true
-  }, [submitting, token, imagePreviews, normalized, formData.category, formData.condition, formData.listingType])
+  }, [submitting, token, imagePreviews, normalized, formData.category, formData.otherSubtype, formData.condition, formData.listingType])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -147,6 +160,13 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
       toast.warning('กรุณากรอกข้อมูลที่จำเป็นให้ครบ', 'ข้อมูลไม่ครบ')
       return
     }
+    if (formData.category === 'Others') {
+      const subtypeText = (formData.otherSubtype || '').trim()
+      if (subtypeText.length < 2) {
+        toast.warning('กรุณาระบุประเภทย่อยของสินค้าหมวด "อื่นๆ" (อย่างน้อย 2 ตัวอักษร) เพื่อคำนวณ CO₂ ที่แม่นยำ', 'ข้อมูลไม่ครบ')
+        return
+      }
+    }
     if (normalized.itemName.length < 3) {
       toast.warning('ชื่อสินค้าต้องมีอย่างน้อย 3 ตัวอักษร', 'ข้อมูลไม่ถูกต้อง')
       return
@@ -156,12 +176,29 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
       toast.warning('กรุณาระบุสิ่งที่ต้องการแลกเปลี่ยน', 'ข้อมูลไม่ครบ')
       return
     }
+
+    const otherSubtypeValue = formData.category === 'Others' ? (formData.otherSubtype || '').trim() : ''
+    const textMod = moderateCombinedItemText({
+      title: normalized.itemName,
+      description: normalized.description,
+      lookingFor: formData.listingType === 'exchange' ? normalized.lookingFor : '',
+      pickupLocation: normalized.pickupLocation,
+      otherSubtype: otherSubtypeValue,
+    })
+    if (!textMod.allowed) {
+      toast.warning(textMod.reasonTh, 'เนื้อหาไม่เหมาะสม')
+      return
+    }
+
     setSubmitting(true)
     try {
+      const otherSubtypeStored = formData.category === 'Others' ? (formData.otherSubtype || '').trim() || null : null
       await itemsApi.create(token, {
         // Send both camelCase + snake_case for backend compatibility
         title: normalized.itemName,
         category: formData.category,
+        otherSubtype: otherSubtypeStored,
+        other_subtype: otherSubtypeStored,
         itemCondition: formData.condition,
         item_condition: formData.condition,
         lookingFor: formData.listingType === 'exchange' ? normalized.lookingFor : '',
@@ -368,6 +405,28 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
             </select>
           </div>
         </div>
+
+        {/* Other Subtype — แสดงเมื่อหมวดเป็น Others เพื่อคำนวณ CO₂ ให้แม่นยำ */}
+        {formData.category === 'Others' ? (
+          <div className="rounded-xl border border-amber-200 bg-amber-50/40 p-3 sm:p-4">
+            <label className="mb-2 block text-sm font-bold text-gray-900">
+              ระบุชนิดสินค้า <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="otherSubtype"
+              value={formData.otherSubtype}
+              onChange={handleInputChange}
+              maxLength={OTHER_SUBTYPE_MAX_LENGTH}
+              placeholder="เช่น โน้ตบุ๊ก Dell, ปากกา Pilot, หม้อหุงข้าว Sharp"
+              className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0 sm:py-3 sm:text-base"
+              required
+            />
+            <p className="mt-2 text-[11px] leading-relaxed text-gray-600 sm:text-xs">
+              จำเป็นสำหรับหมวด "อื่นๆ" — พิมพ์ชนิดสินค้าให้ชัดเจน ระบบจะใช้ keyword นี้คำนวณ CO₂ ให้แม่นยำขึ้น (เช่น โน้ตบุ๊ก ~250 kg vs ปากกา ~0.3 kg)
+            </p>
+          </div>
+        ) : null}
 
         {/* Looking to Exchange For - Only show for exchange type */}
         {formData.listingType === 'exchange' ? (

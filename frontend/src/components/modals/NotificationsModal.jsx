@@ -214,7 +214,7 @@ export default function NotificationsModal({ open, onClose, onUnreadChange }) {
                       )}
                       {isMessage && chatId && (
                         <div className="mt-3 flex items-center gap-2 text-sm text-primary">
-                          <span>Open Chat</span>
+                          <span>เปิดแชท</span>
                           <ArrowRight size={16} />
                         </div>
                       )}

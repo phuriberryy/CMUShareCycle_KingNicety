@@ -21,7 +21,9 @@ import { profileApi, exchangeApi, donationApi, itemsApi, API_BASE } from '../lib
 import { io } from 'socket.io-client'
 import EditItemModal from '../components/modals/EditItemModal'
 import { itemCoverUrl } from '../utils/itemImages'
+import { getCategoryLabel } from '../utils/itemLabels'
 import ManageItemModal from '../components/modals/ManageItemModal'
+import ConfirmDialog from '../components/ui/ConfirmDialog'
 
 const fetchMyItems = async ({ token, activeTab, setMyItems }) => {
   // Fetch items เมื่อ activeTab เป็น 'posts' หรือ 'expired' เพื่อให้แสดงทั้ง active และ expired items
@@ -46,6 +48,8 @@ export default function ProfilePage() {
   const [showEditItemModal, setShowEditItemModal] = useState(false)
   const [showManageItemModal, setShowManageItemModal] = useState(false)
   const [selectedItem, setSelectedItem] = useState(null)
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [deletingItem, setDeletingItem] = useState(false)
   const { user, token } = useAuth()
   const toast = useToast()
 
@@ -223,24 +227,27 @@ export default function ProfilePage() {
     setShowManageItemModal(true)
   }
 
-  const handleDeleteItem = async (item) => {
+  const handleDeleteItem = (item) => {
     if (!token) return
-    
-    if (!window.confirm(`Are you sure you want to delete "${item.title}"? This action cannot be undone.`)) {
-      return
-    }
+    setDeleteTarget(item)
+  }
 
+  const confirmDeleteItem = async () => {
+    if (!token || !deleteTarget) return
+    setDeletingItem(true)
     try {
-      await itemsApi.delete(token, item.id)
+      await itemsApi.delete(token, deleteTarget.id)
       toast.success('ลบโพสต์สำเร็จ!', 'สำเร็จ')
-      // Refresh items list
       if (activeTab === 'posts' || activeTab === 'expired') {
         const data = await profileApi.getMyItems(token)
         setMyItems(data)
       }
+      setDeleteTarget(null)
     } catch (err) {
       console.error('Failed to delete item:', err)
       toast.error(err.message || 'ไม่สามารถลบโพสต์ได้', 'เกิดข้อผิดพลาด')
+    } finally {
+      setDeletingItem(false)
     }
   }
 
@@ -258,7 +265,7 @@ export default function ProfilePage() {
 
 
   const initials = useMemo(() => {
-    if (!user?.name) return 'YO'
+    if (!user?.name) return 'มช'
     return user.name
       .split(' ')
       .map((part) => part[0])
@@ -423,7 +430,7 @@ export default function ProfilePage() {
                         )}
                         {isActive && (
                           <span className="absolute right-3 top-3 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-white shadow-md">
-                            Active
+                            กำลังโพสต์
                           </span>
                         )}
                       </div>
@@ -437,14 +444,14 @@ export default function ProfilePage() {
                         {/* Category Tag */}
                         <div className="mb-3 flex flex-wrap gap-2">
                           <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-gray-700">
-                            {item.category}
+                            {getCategoryLabel(item.category, item.other_subtype)}
                           </span>
                         </div>
 
                         {/* Views Count */}
                         <div className="mb-4 flex items-center gap-1 text-sm text-gray-500">
                           <Eye size={16} className="text-gray-400" />
-                          <span>{views} views</span>
+                          <span>{views} คำขอ</span>
                         </div>
 
                         {/* Action Buttons */}
@@ -453,23 +460,23 @@ export default function ProfilePage() {
                             onClick={() => handleManageItem(item)}
                             disabled={!canEdit}
                             className="flex-1 rounded-full bg-primary/10 px-4 py-2 text-sm font-semibold text-primary transition hover:bg-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                            title={!canEdit ? 'Cannot edit because there is an accepted exchange request' : ''}
+                            title={!canEdit ? 'ไม่สามารถแก้ไขได้เพราะมีคำขอที่ตอบรับแล้ว' : ''}
                           >
-                            Manage
+                            จัดการ
                           </button>
                           <button
                             onClick={() => handleEditItem(item)}
                             disabled={!canEdit}
                             className="flex-1 rounded-full bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                            title={!canEdit ? 'Cannot edit because there is an accepted exchange request' : ''}
+                            title={!canEdit ? 'ไม่สามารถแก้ไขได้เพราะมีคำขอที่ตอบรับแล้ว' : ''}
                           >
-                            Edit
+                            แก้ไข
                           </button>
                           <button
                             onClick={() => handleDeleteItem(item)}
                             disabled={!canEdit}
                             className="rounded-full bg-red-100 px-4 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                            title={!canEdit ? 'Cannot delete because there is an accepted exchange request' : 'Delete this post'}
+                            title={!canEdit ? 'ไม่สามารถลบได้เพราะมีคำขอที่ตอบรับแล้ว' : 'ลบโพสต์นี้'}
                           >
                             <Trash2 size={16} />
                           </button>
@@ -502,7 +509,7 @@ export default function ProfilePage() {
                 <p className="mt-2 text-sm text-gray-500">โพสต์หมดอายุจะแสดงที่นี่</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-3.5 lg:grid-cols-4 xl:grid-cols-5">
                 {expiredItems.map((item) => {
                   const views = getItemViews(item.id)
                   const canEdit = canEditItem(item)
@@ -511,77 +518,69 @@ export default function ProfilePage() {
                   return (
                     <div
                       key={item.id}
-                      className="group relative overflow-hidden rounded-2xl border border-yellow-200 bg-white opacity-90 shadow-sm transition hover:shadow-md"
+                      className="group relative flex flex-col overflow-hidden rounded-xl border border-yellow-200/80 bg-white shadow-sm transition hover:shadow-md"
                     >
-                      {/* Image with หมดอายุ Badge */}
-                      <div className="relative h-36 w-full overflow-hidden sm:h-44">
+                      {/* Image — compact aspect */}
+                      <div className="relative aspect-[16/10] w-full overflow-hidden bg-gray-100">
                         {itemCoverUrl(item) ? (
                           <img
                             src={itemCoverUrl(item)}
                             alt={item.title}
-                            className="h-full w-full object-cover grayscale-[30%]"
+                            className="h-full w-full object-cover grayscale-[20%]"
                           />
                         ) : (
-                          <div className="flex h-full w-full items-center justify-center bg-gray-100">
-                            <ImageIcon size={36} className="text-gray-400" />
+                          <div className="flex h-full w-full items-center justify-center">
+                            <ImageIcon size={28} className="text-gray-400" />
                           </div>
                         )}
-                        <span className="absolute right-2 top-2 rounded-full bg-red-500 px-2.5 py-0.5 text-[11px] font-semibold text-white shadow-md sm:right-3 sm:top-3">
-                          หมดอายุ
+                        <span className="absolute left-1.5 top-1.5 inline-flex items-center gap-1 rounded-full bg-red-500/95 px-1.5 py-0.5 text-[9px] font-semibold text-white shadow-sm">
+                          <Clock3 size={10} className="shrink-0" />
+                          หมดอายุ {expiredDate}
                         </span>
-                        <div className="absolute left-2 top-2 rounded-full bg-yellow-100 px-2.5 py-0.5 text-[11px] font-semibold text-yellow-800 sm:left-3 sm:top-3">
-                          <Clock3 size={12} className="inline mr-1" />
-                          หมดอายุ: {expiredDate}
-                        </div>
                       </div>
 
                       {/* Content */}
-                      <div className="p-3 sm:p-5">
-                        <div className="mb-2 flex items-start justify-between">
-                          <h3 className="line-clamp-1 flex-1 text-sm font-semibold text-gray-900 sm:text-lg">{item.title}</h3>
-                        </div>
+                      <div className="flex flex-1 flex-col p-2.5">
+                        <h3 className="line-clamp-1 text-[13px] font-semibold leading-tight text-gray-900">
+                          {item.title}
+                        </h3>
 
-                        {/* Category Tag */}
-                        <div className="mb-2 flex flex-wrap gap-2 sm:mb-3">
-                          <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-[11px] font-semibold text-gray-700 sm:px-3 sm:py-1 sm:text-xs">
-                            {item.category}
+                        <div className="mt-1.5 flex flex-wrap items-center gap-1">
+                          <span className="truncate rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-700">
+                            {getCategoryLabel(item.category, item.other_subtype)}
+                          </span>
+                          <span className="inline-flex items-center gap-0.5 text-[10px] text-gray-500">
+                            <Eye size={11} className="text-gray-400" />
+                            {views}
                           </span>
                         </div>
 
-                        {/* Info */}
-                        <div className="mb-3 space-y-1 text-xs text-gray-600 sm:mb-4 sm:space-y-2 sm:text-sm">
-                          <p className="text-xs text-gray-500">Not exchanged</p>
-                          <div className="flex items-center gap-1">
-                            <Eye size={14} className="text-gray-400 sm:h-4 sm:w-4" />
-                            <span>{views} views</span>
-                          </div>
-                        </div>
-
                         {/* Action Buttons */}
-                        <div className="flex gap-1.5 sm:gap-2">
+                        <div className="mt-auto flex gap-1 pt-2">
                           <button
                             onClick={() => handleManageItem(item)}
                             disabled={!canEdit}
-                            className="flex-1 rounded-full bg-yellow-100 px-3 py-1.5 text-xs font-semibold text-yellow-800 transition hover:bg-yellow-200 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:py-2 sm:text-sm"
-                            title={!canEdit ? 'Cannot edit because there is an accepted exchange request' : ''}
+                            className="flex-1 rounded-full bg-yellow-100 px-2 py-1 text-[11px] font-semibold text-yellow-800 transition hover:bg-yellow-200 disabled:cursor-not-allowed disabled:opacity-50"
+                            title={!canEdit ? 'ไม่สามารถแก้ไขได้เพราะมีคำขอที่ตอบรับแล้ว' : 'จัดการคำขอ'}
                           >
-                            Manage
+                            จัดการ
                           </button>
                           <button
                             onClick={() => handleEditItem(item)}
                             disabled={!canEdit}
-                            className="flex-1 rounded-full bg-gray-100 px-3 py-1.5 text-xs font-semibold text-gray-700 transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:py-2 sm:text-sm"
-                            title={!canEdit ? 'Cannot edit because there is an accepted exchange request' : ''}
+                            className="flex-1 rounded-full bg-gray-100 px-2 py-1 text-[11px] font-semibold text-gray-700 transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
+                            title={!canEdit ? 'ไม่สามารถแก้ไขได้เพราะมีคำขอที่ตอบรับแล้ว' : 'แก้ไขโพสต์'}
                           >
-                            Edit
+                            แก้ไข
                           </button>
                           <button
                             onClick={() => handleDeleteItem(item)}
                             disabled={!canEdit}
-                            className="rounded-full bg-red-100 px-3 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-200 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:py-2 sm:text-sm"
-                            title={!canEdit ? 'Cannot delete because there is an accepted exchange request' : 'Delete this post'}
+                            className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-600 transition hover:bg-red-200 disabled:cursor-not-allowed disabled:opacity-50"
+                            title={!canEdit ? 'ไม่สามารถลบได้เพราะมีคำขอที่ตอบรับแล้ว' : 'ลบโพสต์นี้'}
+                            aria-label="ลบโพสต์"
                           >
-                            <Trash2 size={16} />
+                            <Trash2 size={13} />
                           </button>
                         </div>
                       </div>
@@ -620,7 +619,7 @@ export default function ProfilePage() {
                         </p>
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary-dark">
                           <CheckCircle size={16} className="text-primary" />
-                          ประหยัด CO₂ {parseFloat(history.co2_reduced || 0).toFixed(1)}kg
+                          ประหยัด CO₂ {parseFloat(history.co2_reduced || 0).toFixed(1)} กก.
                         </span>
                       </div>
 
@@ -644,10 +643,10 @@ export default function ProfilePage() {
                             </div>
                             <p className="mt-2 text-xs font-medium text-gray-500">ของของฉัน</p>
                             <p className="mt-1 text-sm font-semibold text-gray-900">
-                              {history.my_item_title || history.item_title || 'Unknown Item'}
+                              {history.my_item_title || history.item_title || 'ไม่ระบุชื่อ'}
                             </p>
                             {history.my_item_category && (
-                              <p className="mt-1 text-xs text-gray-500">{history.my_item_category}</p>
+                              <p className="mt-1 text-xs text-gray-500">{getCategoryLabel(history.my_item_category, history.my_item_other_subtype)}</p>
                             )}
                           </div>
                         </div>
@@ -675,10 +674,10 @@ export default function ProfilePage() {
                             </div>
                             <p className="mt-2 text-xs font-medium text-gray-500">ที่ได้รับ</p>
                             <p className="mt-1 text-sm font-semibold text-gray-900">
-                              {history.received_item_title || 'Unknown Item'}
+                              {history.received_item_title || 'ไม่ระบุชื่อ'}
                             </p>
                             {history.received_item_category && (
-                              <p className="mt-1 text-xs text-gray-500">{history.received_item_category}</p>
+                              <p className="mt-1 text-xs text-gray-500">{getCategoryLabel(history.received_item_category, history.received_item_other_subtype)}</p>
                             )}
                             {history.received_from_name && (
                               <p className="mt-1 text-xs text-gray-500">
@@ -724,7 +723,7 @@ export default function ProfilePage() {
                         </p>
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-3 py-1 text-sm font-semibold text-red-700">
                           <Heart size={16} className="text-red-600" />
-                          ประหยัด CO₂ {parseFloat(donation.co2_reduced || 0).toFixed(1)}kg
+                          ประหยัด CO₂ {parseFloat(donation.co2_reduced || 0).toFixed(1)} กก.
                         </span>
                       </div>
 
@@ -745,12 +744,12 @@ export default function ProfilePage() {
                                 </div>
                               )}
                             </div>
-                            <p className="mt-2 text-xs font-medium text-gray-500">Donated Item</p>
+                            <p className="mt-2 text-xs font-medium text-gray-500">สินค้าที่บริจาค</p>
                             <p className="mt-1 text-sm font-semibold text-gray-900">
-                              {donation.item_title || 'Unknown Item'}
+                              {donation.item_title || 'ไม่ระบุชื่อ'}
                             </p>
                             {donation.item_category && (
-                              <p className="mt-1 text-xs text-gray-500">{donation.item_category}</p>
+                              <p className="mt-1 text-xs text-gray-500">{getCategoryLabel(donation.item_category, donation.item_other_subtype)}</p>
                             )}
                           </div>
                         </div>
@@ -760,7 +759,7 @@ export default function ProfilePage() {
                           <div className="rounded-lg bg-red-50 p-4">
                             {donation.recipient_name && (
                               <div className="mb-2">
-                                <p className="text-xs font-medium text-gray-500">Recipient</p>
+                                <p className="text-xs font-medium text-gray-500">ผู้รับบริจาค</p>
                                 <p className="text-sm font-semibold text-gray-900">{donation.recipient_name}</p>
                               </div>
                             )}
@@ -814,6 +813,29 @@ export default function ProfilePage() {
         }}
         item={selectedItem}
         onUpdate={handleItemUpdate}
+      />
+
+      {/* Confirm Delete Dialog */}
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        variant="danger"
+        title="ยืนยันการลบโพสต์"
+        description={
+          deleteTarget ? (
+            <span>
+              ต้องการลบโพสต์ <span className="font-semibold text-gray-900">“{deleteTarget.title}”</span> ใช่หรือไม่?
+              <br />
+              <span className="text-gray-500">การลบไม่สามารถย้อนกลับได้</span>
+            </span>
+          ) : null
+        }
+        confirmLabel="ลบโพสต์"
+        cancelLabel="ยกเลิก"
+        loading={deletingItem}
+        onConfirm={confirmDeleteItem}
+        onCancel={() => {
+          if (!deletingItem) setDeleteTarget(null)
+        }}
       />
       </div>
     </div>

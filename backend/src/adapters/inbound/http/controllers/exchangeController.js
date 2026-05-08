@@ -211,6 +211,7 @@ export const getExchangeRequest = async (req, res) => {
         i.title as item_title,
         i.category as item_category,
         i.item_condition as item_condition,
+        i.other_subtype as item_other_subtype,
         i.description as item_description,
         i.image_url as item_image_url,
         i.pickup_location as item_pickup_location,
@@ -356,6 +357,7 @@ export const acceptExchangeRequestByOwner = async (req, res) => {
         i.title as item_title,
         i.category as item_category,
         i.item_condition as item_condition,
+        i.other_subtype as item_other_subtype,
         i.description as item_description,
         i.image_url as item_image_url,
         i.pickup_location as item_pickup_location,
@@ -476,6 +478,7 @@ export const acceptExchangeRequestByRequester = async (req, res) => {
         i.title as item_title,
         i.category as item_category,
         i.item_condition as item_condition,
+        i.other_subtype as item_other_subtype,
         i.description as item_description,
         i.image_url as item_image_url,
         i.pickup_location as item_pickup_location,
@@ -665,7 +668,7 @@ async function completeExchange(requestId, exchangeRequest) {
 
     // ดึงข้อมูล item ของ owner
     const ownerItemResult = await query(
-      `SELECT id, category, item_condition, title, image_url FROM items WHERE id=$1`,
+      `SELECT id, category, item_condition, other_subtype, title, description, image_url FROM items WHERE id=$1`,
       [exchangeRequest.item_id]
     )
 
@@ -678,9 +681,20 @@ async function completeExchange(requestId, exchangeRequest) {
     const hasRequesterItem = Boolean(
       exchangeRequest.requester_item_category && exchangeRequest.requester_item_condition
     )
-    const co2OwnerItem = calculateItemCO2(ownerItem.category, ownerItem.item_condition)
+    const co2OwnerItem = calculateItemCO2(ownerItem.category, ownerItem.item_condition, {
+      title: ownerItem.title,
+      description: ownerItem.description,
+      otherSubtype: ownerItem.other_subtype,
+    })
     const co2RequesterItem = hasRequesterItem
-      ? calculateItemCO2(exchangeRequest.requester_item_category, exchangeRequest.requester_item_condition)
+      ? calculateItemCO2(
+          exchangeRequest.requester_item_category,
+          exchangeRequest.requester_item_condition,
+          {
+            title: exchangeRequest.requester_item_name,
+            description: exchangeRequest.requester_item_description,
+          }
+        )
       : null
     const co2Reduced = hasRequesterItem
       ? calculateExchangeCO2Reduction(co2OwnerItem, co2RequesterItem)
