@@ -9,9 +9,12 @@ let ioInstance = null
 export const initChatServer = (server) => {
   const io = new Server(server, {
     cors: {
-      origin: env.clientOrigin,
+      origin: env.allowedOrigins,
       credentials: true,
     },
+    // Allow ping/pong through Cloudflare's 100s proxy timeout
+    pingTimeout: 60000,
+    pingInterval: 25000,
   })
 
   io.use((socket, next) => {

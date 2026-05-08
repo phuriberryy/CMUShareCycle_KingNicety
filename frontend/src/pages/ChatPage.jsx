@@ -209,6 +209,7 @@ export default function ChatPage() {
     const handleExchangeCompleted = (updatedChat) => { if (updatedChat?.id) patchChat(updatedChat) }
     const handleDonationConfirmed = (updatedChat) => { if (updatedChat?.id) patchChat(updatedChat) }
     const handleDonationCompleted = (updatedChat) => { if (updatedChat?.id) patchChat(updatedChat) }
+    const handleChatError         = (err) => { console.warn('[socket] chat:error', err?.message || err) }
 
     socket.off('connect', handleConnect)
     socket.off('disconnect', handleDisconnect)
@@ -218,6 +219,7 @@ export default function ChatPage() {
     socket.off('exchange:completed', handleExchangeCompleted)
     socket.off('donation:confirmed', handleDonationConfirmed)
     socket.off('donation:completed', handleDonationCompleted)
+    socket.off('chat:error', handleChatError)
 
     socket.on('connect', handleConnect)
     socket.on('disconnect', handleDisconnect)
@@ -227,6 +229,7 @@ export default function ChatPage() {
     socket.on('exchange:completed', handleExchangeCompleted)
     socket.on('donation:confirmed', handleDonationConfirmed)
     socket.on('donation:completed', handleDonationCompleted)
+    socket.on('chat:error', handleChatError)
 
     return () => {
       socket.off('connect', handleConnect)
@@ -237,6 +240,7 @@ export default function ChatPage() {
       socket.off('exchange:completed', handleExchangeCompleted)
       socket.off('donation:confirmed', handleDonationConfirmed)
       socket.off('donation:completed', handleDonationCompleted)
+      socket.off('chat:error', handleChatError)
       socket.disconnect()
       socketRef.current = null
     }
@@ -407,7 +411,14 @@ export default function ChatPage() {
           body,
           imageUrl: imageUrl || null,
         })
-        setTimeout(() => loadMessages(selectedChat), 0)
+        // Do NOT call loadMessages immediately — it would race the DB insert and
+        // wipe the optimistic message before the socket confirmation arrives.
+        // Instead, fire a late reconciliation poll after the socket has had time
+        // to deliver the confirmed message (2 s is enough for any real network).
+        const chatIdAtSend = String(selectedChat)
+        setTimeout(() => {
+          if (selectedChatRef.current === chatIdAtSend) loadMessages(chatIdAtSend)
+        }, 2000)
       } finally {
         setSendingMessage(false)
       }
