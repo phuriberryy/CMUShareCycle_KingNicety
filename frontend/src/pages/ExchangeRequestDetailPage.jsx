@@ -131,33 +131,18 @@ export default function ExchangeRequestDetailPage() {
     if (!token || !exchangeRequest) return
 
     try {
-      // Fetch chat related to exchange request
       const chats = await chatApi.list(token)
-      const chat = chats.find((c) => {
-        // Check if this chat is related to this exchange request
-        // By checking item_id or exchange_request_id
-        return c.item_id === exchangeRequest.item_id || 
-               c.exchange_request_id === requestId ||
-               (c.creator_id === exchangeRequest.owner_id && c.participant_id === exchangeRequest.requester_id) ||
-               (c.creator_id === exchangeRequest.requester_id && c.participant_id === exchangeRequest.owner_id)
-      })
+      const chat = chats.find((c) =>
+        String(c.exchange_request_id || c.exchangeRequestId || '') === String(requestId) ||
+        (c.creator_id === exchangeRequest.owner_id && c.participant_id === exchangeRequest.requester_id) ||
+        (c.creator_id === exchangeRequest.requester_id && c.participant_id === exchangeRequest.owner_id)
+      )
 
-      let chatId = chat?.id
-
-      if (!chatId) {
-        // If no chat exists, create a new one
-        const isOwner = exchangeRequest.user_role === 'owner'
-        const otherUserId = isOwner ? exchangeRequest.requester_id : exchangeRequest.owner_id
-        const newChat = await chatApi.create(token, {
-          participantId: otherUserId,
-          itemId: exchangeRequest.item_id,
-        })
-        chatId = newChat.id
-      }
-
-      // Dispatch event to open ChatModal
+      const chatId = chat?.id
       if (chatId) {
-        window.dispatchEvent(new CustomEvent('openChat', { detail: { chatId } }))
+        navigate('/chat', { state: { chatId: String(chatId) } })
+      } else {
+        toast.error('ไม่พบห้องแชทที่เกี่ยวข้อง', 'เกิดข้อผิดพลาด')
       }
     } catch (err) {
       console.error('Failed to start chat:', err)

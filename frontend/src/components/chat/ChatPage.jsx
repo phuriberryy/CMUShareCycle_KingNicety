@@ -50,6 +50,8 @@ export default function ChatPage({
   const [pendingDeleteChatId, setPendingDeleteChatId] = useState(null)
   const conversations = Array.isArray(chats) ? chats : []
   const activeChat = conversations.find((c) => String(c?.id) === String(selectedChat)) || null
+  // On mobile, show chat room if a chat is selected (even while the list is still loading)
+  const hasChatSelected = Boolean(activeChat) || Boolean(selectedChat)
   const displayUser = (chat) => ({
     id: chat?.participant_id ?? chat?.creator_id ?? null,
     name: chat?.participant_name ?? chat?.other_user_name ?? 'นักศึกษา CMU',
@@ -125,8 +127,8 @@ export default function ChatPage({
   if (!open) return null
 
   return (
-    <div className="chat-root flex h-[100dvh] w-screen flex-col bg-white md:h-auto md:w-full md:flex-row md:overflow-hidden">
-      <div className={`${isMobile && activeChat ? 'hidden' : 'flex'} h-full min-h-0 w-full flex-col md:w-[320px] md:flex-none md:border-r md:border-gray-200`}>
+    <div className="chat-root fixed inset-0 flex flex-col bg-white md:flex-row overflow-hidden">
+      <div className={`${isMobile && hasChatSelected ? 'hidden' : 'flex'} h-full min-h-0 w-full flex-col md:w-[320px] md:flex-none md:border-r md:border-gray-200`}>
         <div className="flex shrink-0 items-center gap-2 border-b border-gray-200 bg-white px-3 py-2">
           <button
             type="button"
@@ -157,7 +159,7 @@ export default function ChatPage({
         />
       </div>
 
-      <div className={`${isMobile ? (activeChat ? 'flex' : 'hidden') : 'flex'} h-full min-h-0 flex-1 flex-col`}>
+      <div className={`${isMobile ? (hasChatSelected ? 'flex' : 'hidden') : 'flex'} h-full min-h-0 flex-1 flex-col`}>
         <ChatRoom
           chat={activeChat}
           socketConnected={socketConnected}

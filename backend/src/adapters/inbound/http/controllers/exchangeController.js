@@ -5,6 +5,7 @@ import { sendEmail } from '../../../../shared/utils/email.js'
 import { calculateItemCO2, calculateExchangeCO2Reduction } from '../../../../shared/utils/co2Calculator.js'
 import { getChatServer } from '../../../../application/services/chatService.js'
 import { badRequest, forbidden, internalError, notFound, unauthorized } from '../../../../shared/http/apiError.js'
+import env from '../../../../infrastructure/config/env.js'
 
 // สร้างคำขอแลกเปลี่ยน
 export const createExchangeRequest = async (req, res) => {
@@ -153,26 +154,49 @@ export const createExchangeRequest = async (req, res) => {
 
     // ส่งอีเมลไปยังเจ้าของโพสต์ (หลัง commit)
     try {
+      const appUrl = env.clientOrigin || 'http://localhost:3000'
+      const chatUrl = `${appUrl}/chat`
       await sendEmail({
         to: item.email,
-        subject: 'มีคำขอแลกเปลี่ยนใหม่บน CMU ShareCycle',
+        subject: `มีคำขอแลกเปลี่ยนใหม่สำหรับ "${item.title}" — CMU ShareCycle`,
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #2D7D3F;">มีคำขอแลกเปลี่ยนใหม่</h2>
-            <p>สวัสดี ${item.name},</p>
-            <p><strong>${req.user.name}</strong> ขอแลกเปลี่ยนสำหรับสินค้า "<strong>${item.title}</strong>"</p>
-            ${message ? `<p><strong>ข้อความ:</strong> ${message}</p>` : ''}
-            <p>กรุณาเข้าสู่ระบบเพื่อดูรายละเอียดและยอมรับ/ปฏิเสธคำขอ</p>
-            <p style="margin-top: 30px; color: #666; font-size: 12px;">
-              CMU ShareCycle - Green Campus<br>
-              <a href="http://localhost:3000" style="color: #2D7D3F;">เข้าสู่ระบบ</a>
-            </p>
+          <div style="font-family:'IBM Plex Sans Thai',Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
+            <div style="background:#2a6b52;padding:28px 32px;">
+              <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:700;">CMU ShareCycle</h1>
+              <p style="margin:4px 0 0;color:#a7f3d0;font-size:13px;">Green Campus — Chiang Mai University</p>
+            </div>
+            <div style="padding:28px 32px;">
+              <h2 style="margin:0 0 16px;color:#111827;font-size:18px;">มีคำขอแลกเปลี่ยนใหม่!</h2>
+              <p style="margin:0 0 12px;color:#374151;font-size:15px;">สวัสดีคุณ <strong>${item.name}</strong>,</p>
+              <p style="margin:0 0 20px;color:#374151;font-size:15px;">
+                <strong>${req.user.name}</strong> (${req.user.email}) ต้องการแลกเปลี่ยนสำหรับสินค้าของคุณ
+              </p>
+              <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px 20px;margin-bottom:20px;">
+                <p style="margin:0 0 6px;font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;font-weight:600;">สินค้าของคุณ</p>
+                <p style="margin:0;font-size:16px;font-weight:700;color:#15803d;">${item.title}</p>
+              </div>
+              ${message ? `
+              <div style="background:#f9fafb;border-left:3px solid #2a6b52;border-radius:0 6px 6px 0;padding:12px 16px;margin-bottom:20px;">
+                <p style="margin:0 0 4px;font-size:12px;color:#6b7280;font-weight:600;">ข้อความจากผู้ขอ</p>
+                <p style="margin:0;font-size:14px;color:#374151;">${message}</p>
+              </div>` : ''}
+              <a href="${chatUrl}" style="display:inline-block;background:#2a6b52;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;padding:12px 28px;border-radius:8px;margin-bottom:24px;">
+                เปิดกล่องข้อความ →
+              </a>
+              <p style="margin:0;font-size:13px;color:#6b7280;">
+                ไปที่ <strong>กล่องข้อความ (Chat)</strong> เพื่อยอมรับหรือปฏิเสธคำขอ และพูดคุยกับผู้ขอแลกเปลี่ยน
+              </p>
+            </div>
+            <div style="background:#f9fafb;border-top:1px solid #e5e7eb;padding:16px 32px;">
+              <p style="margin:0;font-size:12px;color:#9ca3af;">
+                อีเมลนี้ส่งโดยอัตโนมัติจาก CMU ShareCycle — กรุณาอย่าตอบกลับ
+              </p>
+            </div>
           </div>
         `,
       })
     } catch (emailErr) {
-      console.error('Failed to send email:', emailErr)
-      // ไม่ throw error เพื่อไม่ให้การสร้าง exchange request ล้มเหลว
+      console.error('Exchange request email failed:', emailErr.message)
     }
 
     // แก้ไข response ให้ส่ง chatId กลับไปด้วย

@@ -95,7 +95,7 @@ export default function ChatRoom({
   }
 
   return (
-    <div className="chat-room flex h-[100dvh] w-full flex-col bg-white">
+    <div className="chat-room flex h-full w-full flex-col bg-white">
       <header className="chat-header shrink-0 flex items-center gap-2 border-b border-gray-200 bg-white px-3 py-2.5">
         {onBack ? (
           <button

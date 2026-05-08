@@ -19,11 +19,13 @@ const SOCKET_URL = (API_BASE || '').replace(/\/api$/, '')
 
 export default function ChatPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { token, loading: authLoading, user } = useAuth()
-  const initialChatId = null
 
   const [chats, setChats] = useState([])
-  const [selectedChat, setSelectedChat] = useState(initialChatId)
+  const [selectedChat, setSelectedChat] = useState(
+    location.state?.chatId ? String(location.state.chatId) : null
+  )
   const [loading, setLoading] = useState(false)
   const [messages, setMessages] = useState([])
   const [messagesLoading, setMessagesLoading] = useState(false)
@@ -42,6 +44,13 @@ export default function ChatPage() {
   const socketRef = useRef(null)
   const selectedChatRef = useRef(null)
   const messagesRef = useRef([])
+
+  // Clear location.state so a back-navigation doesn't re-select the same chat
+  useEffect(() => {
+    if (location.state?.chatId) {
+      navigate(location.pathname, { replace: true, state: {} })
+    }
+  }, [])
 
   useEffect(() => {
     selectedChatRef.current = selectedChat
