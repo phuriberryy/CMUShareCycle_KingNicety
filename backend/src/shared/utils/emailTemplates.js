@@ -154,7 +154,7 @@ function muted(text) {
 function productCard({ imageUrl, title, category, condition, statusText, statusColor = '#f59e0b' }) {
   const img = imageUrl
     ? `<img src="${imageUrl}" width="72" height="72" alt="${title}" style="display:block;width:72px;height:72px;border-radius:10px;object-fit:cover;">`
-    : `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="72" height="72"><tr><td align="center" valign="middle" width="72" height="72" bgcolor="#ffffff" style="background-color:#ffffff;border-radius:10px;overflow:hidden;"><img src="${logoUrl()}" width="48" height="48" alt="" style="display:block;margin:12px auto;width:48px;height:48px;object-fit:contain;"></td></tr></table>`
+    : `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="72" height="72"><tr><td align="center" valign="middle" width="72" height="72" bgcolor="#162118" style="background:linear-gradient(145deg,#1e3328,#162118);border-radius:10px;border:1px solid rgba(34,197,94,0.15);">&nbsp;</td></tr></table>`
 
   const categoryBadge = category
     ? `<span style="display:inline-block;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.22);border-radius:6px;padding:3px 9px;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:11px;font-weight:600;color:#4ade80;letter-spacing:0.1px;">${category}</span>&nbsp;`
@@ -463,14 +463,7 @@ export function exchangeCompletedEmail({ recipientName, itemTitle, co2Text }) {
 
     ${co2Text ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:22px;">
     <tr><td bgcolor="#0f2e1a" style="background:linear-gradient(145deg,#0f2e1a,#0a2013);border:1px solid rgba(34,197,94,0.2);border-radius:14px;padding:18px 20px;">
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:8px;">
-        <tr>
-          <td valign="middle" bgcolor="#ffffff" style="background-color:#ffffff;border-radius:4px;overflow:hidden;width:18px;height:18px;" width="18" height="18">
-            <img src="${logoUrl()}" width="16" height="16" alt="" style="display:block;margin:1px;width:16px;height:16px;object-fit:contain;">
-          </td>
-          <td valign="middle" style="padding-left:7px;"><span style="font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:11px;font-weight:600;color:#4b5563;text-transform:uppercase;letter-spacing:0.7px;line-height:1.2;">ผลลัพธ์ด้านสิ่งแวดล้อม</span></td>
-        </tr>
-      </table>
+      <p style="margin:0 0 6px;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:11px;font-weight:600;color:#4b5563;text-transform:uppercase;letter-spacing:0.7px;line-height:1.2;">ผลลัพธ์ด้านสิ่งแวดล้อม</p>
       <p style="margin:0;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:20px;font-weight:700;color:#4ade80;line-height:1.3;">&#x2212; ${co2Text} CO&#x2082;</p>
       <p style="margin:4px 0 0;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#6b7280;line-height:1.4;">คาร์บอนที่ประหยัดได้จากการแลกเปลี่ยนครั้งนี้</p>
     </td></tr>
@@ -609,14 +602,7 @@ export function donationCompletedEmail({ recipientName, itemTitle }) {
     ${para(`สวัสดี ${strong(recipientName)},`)}
     ${para(`การบริจาค <strong style="color:#d1fae5;">"${itemTitle}"</strong> เสร็จสมบูรณ์แล้ว ของชิ้นนี้จะได้ถูกใช้อย่างคุ้มค่าต่อไป`)}
     ${ctaButton('ดูบันทึกการบริจาค &nbsp;&#8594;', url)}
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:4px;">
-      <tr>
-        <td valign="middle" bgcolor="#ffffff" style="background-color:#ffffff;border-radius:5px;overflow:hidden;width:22px;height:22px;" width="22" height="22">
-          <img src="${logoUrl()}" width="18" height="18" alt="" style="display:block;margin:2px;width:18px;height:18px;object-fit:contain;">
-        </td>
-        <td valign="middle" style="padding-left:8px;"><p style="margin:0;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:13px;color:#6b7280;line-height:1.6;">การแบ่งปันเล็กๆ น้อยๆ สร้างความแตกต่างได้เสมอ — ขอบคุณที่เป็นส่วนหนึ่งของชุมชน CMU ShareCycle</p></td>
-      </tr>
-    </table>
+    ${para('การแบ่งปันเล็กๆ น้อยๆ สร้างความแตกต่างได้เสมอ — ขอบคุณที่เป็นส่วนหนึ่งของชุมชน CMU ShareCycle', 'font-size:13px;color:#6b7280;')}
   `
 
   const text = [
