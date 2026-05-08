@@ -17,12 +17,15 @@ export default function DesktopChatPanel({
   setShowActions,
   showActions,
   handlePickImage,
+  handleTakePhoto,
   composerText,
   setComposerText,
   handleSendMessage,
   uploadingImage,
   pendingImageUploading,
   fileInputRef,
+  cameraInputRef,
+  fileInputKey,
   handleImageSelected,
 }) {
   if (!activeChat) {
@@ -213,7 +216,7 @@ export default function DesktopChatPanel({
                 <button
                   type="button"
                   onClick={() => {
-                    handlePickImage()
+                    handleTakePhoto()
                     setShowActions(false)
                   }}
                   className="mt-2 flex min-h-12 w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-medium text-gray-800 transition active:scale-[0.98] hover:bg-gray-50"
@@ -227,14 +230,8 @@ export default function DesktopChatPanel({
             </div>
           </>
         ) : null}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          className="hidden"
-          onChange={handleImageSelected}
-        />
+        <input key={`gallery-${fileInputKey}`} ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelected} />
+        <input key={`camera-${fileInputKey}`} ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleImageSelected} />
       </div>
     </>
   )

@@ -17,7 +17,10 @@ export default function ChatRoom({
   pendingImage,
   setPendingImage,
   handlePickImage,
+  handleTakePhoto,
   fileInputRef,
+  cameraInputRef,
+  fileInputKey,
   handleImageSelected,
   uploadingImage,
   sendingMessage,
@@ -235,14 +238,17 @@ export default function ChatRoom({
                 <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary"><ImageIcon size={18} /></span>
                 อัปโหลดรูป
               </button>
-              <button type="button" onClick={() => { handlePickImage(); setShowActions(false) }} className="mt-2 flex min-h-12 w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-medium text-gray-800 hover:bg-gray-50">
+              <button type="button" onClick={() => { handleTakePhoto(); setShowActions(false) }} className="mt-2 flex min-h-12 w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-medium text-gray-800 hover:bg-gray-50">
                 <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary"><Camera size={18} /></span>
                 เปิดกล้อง
               </button>
             </div>
           </div>
         ) : null}
-        <input ref={fileInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleImageSelected} />
+        {/* Gallery picker — no capture so the device shows files/photos, not the camera */}
+        <input key={`gallery-${fileInputKey}`} ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelected} />
+        {/* Camera — capture="environment" opens the rear camera directly */}
+        <input key={`camera-${fileInputKey}`} ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleImageSelected} />
       </div>
     </div>
   )

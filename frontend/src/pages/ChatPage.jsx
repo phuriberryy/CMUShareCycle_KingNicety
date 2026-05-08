@@ -42,6 +42,8 @@ export default function ChatPage() {
   const [acceptingChat, setAcceptingChat] = useState(false)
   const [decliningChat, setDecliningChat] = useState(false)
   const fileInputRef = useRef(null)
+  const cameraInputRef = useRef(null)
+  const [fileInputKey, setFileInputKey] = useState(0)
   const socketRef = useRef(null)
   const selectedChatRef = useRef(null)
   const messagesRef = useRef([])
@@ -391,12 +393,15 @@ export default function ChatPage() {
   }
 
   const handlePickImage = () => fileInputRef.current?.click()
+  const handleTakePhoto = () => cameraInputRef.current?.click()
   const handleImageSelected = async (event) => {
     const file = event.target.files?.[0]
     if (!file) return
     const dataUrl = await toDataUrl(file)
     setPendingImage(String(dataUrl))
-    event.target.value = ''
+    // Increment key to force-remount both inputs — more reliable than
+    // value = '' on mobile Safari for repeated or same-file picks.
+    setFileInputKey((k) => k + 1)
   }
 
   const handleDeleteChat = async (chatId) => {
@@ -444,7 +449,10 @@ export default function ChatPage() {
       pendingImage={pendingImage}
       setPendingImage={setPendingImage}
       handlePickImage={handlePickImage}
+      handleTakePhoto={handleTakePhoto}
       fileInputRef={fileInputRef}
+      cameraInputRef={cameraInputRef}
+      fileInputKey={fileInputKey}
       handleImageSelected={handleImageSelected}
       uploadingImage={uploadingImage}
       sendingMessage={sendingMessage}

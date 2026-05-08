@@ -16,6 +16,7 @@ export default function MobileChatPanel({
   sheetOpen,
   setSheetOpen,
   handlePickImage,
+  handleTakePhoto,
   pendingImage,
   setPendingImage,
   composerText,
@@ -24,6 +25,8 @@ export default function MobileChatPanel({
   uploadingImage,
   sendingMessage,
   fileInputRef,
+  cameraInputRef,
+  fileInputKey,
   handleImageSelected,
 }) {
   return (
@@ -157,7 +160,7 @@ export default function MobileChatPanel({
             <button
               type="button"
               onClick={() => {
-                handlePickImage()
+                handleTakePhoto()
                 setSheetOpen(false)
               }}
               className="mt-2 flex min-h-12 w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-medium text-gray-800 transition active:scale-[0.98] hover:bg-gray-50"
@@ -232,14 +235,8 @@ export default function MobileChatPanel({
             )}
           </button>
         </div>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          className="hidden"
-          onChange={handleImageSelected}
-        />
+        <input key={`gallery-${fileInputKey}`} ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelected} />
+        <input key={`camera-${fileInputKey}`} ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleImageSelected} />
       </div>
     </div>
   )
