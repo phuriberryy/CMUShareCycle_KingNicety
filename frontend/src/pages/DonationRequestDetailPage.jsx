@@ -123,28 +123,17 @@ export default function DonationRequestDetailPage() {
 
     try {
       const chats = await chatApi.list(token)
-      const chat = chats.find((c) => {
-        return c.item_id === donationRequest.item_id || 
-               c.donation_request_id === requestId ||
-               (c.creator_id === donationRequest.owner_id && c.participant_id === donationRequest.requester_id) ||
-               (c.creator_id === donationRequest.requester_id && c.participant_id === donationRequest.owner_id)
-      })
+      const chat = chats.find((c) =>
+        String(c.donation_request_id || c.donationRequestId || '') === String(requestId) ||
+        (c.creator_id === donationRequest.owner_id && c.participant_id === donationRequest.requester_id) ||
+        (c.creator_id === donationRequest.requester_id && c.participant_id === donationRequest.owner_id)
+      )
 
-      let chatId = chat?.id
-
-      if (!chatId) {
-        const isOwner = donationRequest.user_role === 'owner'
-        const otherUserId = isOwner ? donationRequest.requester_id : donationRequest.owner_id
-        const newChat = await chatApi.create(token, {
-          participantId: otherUserId,
-          itemId: donationRequest.item_id,
-          donationRequestId: requestId,
-        })
-        chatId = newChat.id
-      }
-
+      const chatId = chat?.id
       if (chatId) {
-        window.dispatchEvent(new CustomEvent('openChat', { detail: { chatId } }))
+        navigate('/chat', { state: { chatId: String(chatId) } })
+      } else {
+        toast.error('ไม่พบห้องแชทที่เกี่ยวข้อง', 'เกิดข้อผิดพลาด')
       }
     } catch (err) {
       console.error('Failed to start chat:', err)

@@ -10,6 +10,8 @@ import {
   acceptChat,
   declineChat,
   confirmChatQr,
+  confirmExchange,
+  confirmDonation,
   deleteChat,
 } from '../controllers/chatController.js'
 import { uploadChatImage } from '../controllers/uploadController.js'
@@ -56,6 +58,20 @@ router.post(
   [param('chatId').isUUID(), body('code').isString().trim().isLength({ min: 1, max: 128 })],
   validateRequest,
   confirmChatQr
+)
+
+router.post(
+  '/:chatId/confirm-exchange',
+  [param('chatId').isUUID()],
+  validateRequest,
+  confirmExchange
+)
+
+router.post(
+  '/:chatId/confirm-donation',
+  [param('chatId').isUUID()],
+  validateRequest,
+  confirmDonation
 )
 
 export default router

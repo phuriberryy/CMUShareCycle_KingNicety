@@ -19,11 +19,13 @@ const SOCKET_URL = (API_BASE || '').replace(/\/api$/, '')
 
 export default function ChatPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { token, loading: authLoading, user } = useAuth()
-  const initialChatId = null
 
   const [chats, setChats] = useState([])
-  const [selectedChat, setSelectedChat] = useState(initialChatId)
+  const [selectedChat, setSelectedChat] = useState(
+    location.state?.chatId ? String(location.state.chatId) : null
+  )
   const [loading, setLoading] = useState(false)
   const [messages, setMessages] = useState([])
   const [messagesLoading, setMessagesLoading] = useState(false)
@@ -35,10 +37,21 @@ export default function ChatPage() {
   const [deletingChatId, setDeletingChatId] = useState(null)
   const [chatMeta, setChatMeta] = useState({})
   const [socketConnected, setSocketConnected] = useState(false)
+  const [confirmingExchange, setConfirmingExchange] = useState(false)
+  const [confirmingDonation, setConfirmingDonation] = useState(false)
+  const [acceptingChat, setAcceptingChat] = useState(false)
+  const [decliningChat, setDecliningChat] = useState(false)
   const fileInputRef = useRef(null)
   const socketRef = useRef(null)
   const selectedChatRef = useRef(null)
   const messagesRef = useRef([])
+
+  // Clear location.state so a back-navigation doesn't re-select the same chat
+  useEffect(() => {
+    if (location.state?.chatId) {
+      navigate(location.pathname, { replace: true, state: {} })
+    }
+  }, [])
 
   useEffect(() => {
     selectedChatRef.current = selectedChat
@@ -187,18 +200,40 @@ export default function ChatPage() {
       if (String(message?.chat_id || message?.chatId) !== String(currentChatId)) return
       mergeMessages([message], currentChatId)
     }
+    // Patch chat state for real-time confirmation updates
+    const handleChatUpdated       = (updatedChat) => { if (updatedChat?.id) patchChat(updatedChat) }
+    const handleExchangeConfirmed = (updatedChat) => { if (updatedChat?.id) patchChat(updatedChat) }
+    const handleExchangeCompleted = (updatedChat) => { if (updatedChat?.id) patchChat(updatedChat) }
+    const handleDonationConfirmed = (updatedChat) => { if (updatedChat?.id) patchChat(updatedChat) }
+    const handleDonationCompleted = (updatedChat) => { if (updatedChat?.id) patchChat(updatedChat) }
 
     socket.off('connect', handleConnect)
     socket.off('disconnect', handleDisconnect)
     socket.off('chat:message', handleChatMessage)
+    socket.off('chat:updated', handleChatUpdated)
+    socket.off('exchange:confirmed', handleExchangeConfirmed)
+    socket.off('exchange:completed', handleExchangeCompleted)
+    socket.off('donation:confirmed', handleDonationConfirmed)
+    socket.off('donation:completed', handleDonationCompleted)
+
     socket.on('connect', handleConnect)
     socket.on('disconnect', handleDisconnect)
     socket.on('chat:message', handleChatMessage)
+    socket.on('chat:updated', handleChatUpdated)
+    socket.on('exchange:confirmed', handleExchangeConfirmed)
+    socket.on('exchange:completed', handleExchangeCompleted)
+    socket.on('donation:confirmed', handleDonationConfirmed)
+    socket.on('donation:completed', handleDonationCompleted)
 
     return () => {
       socket.off('connect', handleConnect)
       socket.off('disconnect', handleDisconnect)
       socket.off('chat:message', handleChatMessage)
+      socket.off('chat:updated', handleChatUpdated)
+      socket.off('exchange:confirmed', handleExchangeConfirmed)
+      socket.off('exchange:completed', handleExchangeCompleted)
+      socket.off('donation:confirmed', handleDonationConfirmed)
+      socket.off('donation:completed', handleDonationCompleted)
       socket.disconnect()
       socketRef.current = null
     }
@@ -210,6 +245,66 @@ export default function ChatPage() {
     current.emit('chat:join', { chatId: String(selectedChat) })
     setTimeout(() => loadMessages(selectedChat), 0)
   }, [selectedChat, token])
+
+  // Patch a single chat in the list with an updated version from the server
+  const patchChat = (updatedChat) => {
+    if (!updatedChat?.id) return
+    setChats((prev) =>
+      prev.map((c) => (String(c.id) === String(updatedChat.id) ? { ...c, ...updatedChat } : c))
+    )
+  }
+
+  const handleConfirmExchange = async () => {
+    if (!token || !selectedChat || confirmingExchange) return
+    setConfirmingExchange(true)
+    try {
+      const updated = await chatApi.confirmExchange(token, String(selectedChat))
+      if (updated) patchChat(updated)
+    } catch (err) {
+      console.error('Confirm exchange error:', err)
+    } finally {
+      setConfirmingExchange(false)
+    }
+  }
+
+  const handleConfirmDonation = async () => {
+    if (!token || !selectedChat || confirmingDonation) return
+    setConfirmingDonation(true)
+    try {
+      const updated = await chatApi.confirmDonation(token, String(selectedChat))
+      if (updated) patchChat(updated)
+    } catch (err) {
+      console.error('Confirm donation error:', err)
+    } finally {
+      setConfirmingDonation(false)
+    }
+  }
+
+  const handleAcceptChat = async () => {
+    if (!token || !selectedChat || acceptingChat) return
+    setAcceptingChat(true)
+    try {
+      const updated = await chatApi.accept(token, String(selectedChat))
+      if (updated) patchChat(updated)
+    } catch (err) {
+      console.error('Accept chat error:', err)
+    } finally {
+      setAcceptingChat(false)
+    }
+  }
+
+  const handleDeclineChat = async () => {
+    if (!token || !selectedChat || decliningChat) return
+    setDecliningChat(true)
+    try {
+      const updated = await chatApi.decline(token, String(selectedChat))
+      if (updated) patchChat(updated)
+    } catch (err) {
+      console.error('Decline chat error:', err)
+    } finally {
+      setDecliningChat(false)
+    }
+  }
 
   const handleSetSelectedChat = (chatId) => {
     const nextId = typeof chatId === 'string' ? chatId : chatId?.id ? String(chatId.id) : null
@@ -359,6 +454,14 @@ export default function ChatPage() {
       onNewChat={handleStartChat}
       isMobileInitially={false}
       onInboxBack={handleInboxBack}
+      onConfirmExchange={handleConfirmExchange}
+      onAcceptChat={handleAcceptChat}
+      onDeclineChat={handleDeclineChat}
+      confirmingExchange={confirmingExchange}
+      acceptingChat={acceptingChat}
+      decliningChat={decliningChat}
+      onConfirmDonation={handleConfirmDonation}
+      confirmingDonation={confirmingDonation}
     />
   )
 }

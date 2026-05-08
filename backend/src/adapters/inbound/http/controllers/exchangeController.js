@@ -5,6 +5,13 @@ import { sendEmail } from '../../../../shared/utils/email.js'
 import { calculateItemCO2, calculateExchangeCO2Reduction } from '../../../../shared/utils/co2Calculator.js'
 import { getChatServer } from '../../../../application/services/chatService.js'
 import { badRequest, forbidden, internalError, notFound, unauthorized } from '../../../../shared/http/apiError.js'
+import env from '../../../../infrastructure/config/env.js'
+import {
+  exchangeRequestEmail,
+  exchangeAcceptedEmail,
+  exchangeRejectedEmail,
+  exchangeMatchedEmail,
+} from '../../../../shared/utils/emailTemplates.js'
 
 // สร้างคำขอแลกเปลี่ยน
 export const createExchangeRequest = async (req, res) => {
@@ -40,7 +47,8 @@ export const createExchangeRequest = async (req, res) => {
     await client.query('BEGIN')
 
     const itemResult = await client.query(
-      `SELECT items.title, items.user_id, users.email, users.name
+      `SELECT items.title, items.user_id, items.image_url, items.category, items.item_condition,
+              users.email, users.name
        FROM items
        JOIN users ON items.user_id = users.id
        WHERE items.id=$1 AND items.status='active'`,
@@ -153,26 +161,21 @@ export const createExchangeRequest = async (req, res) => {
 
     // ส่งอีเมลไปยังเจ้าของโพสต์ (หลัง commit)
     try {
-      await sendEmail({
-        to: item.email,
-        subject: 'มีคำขอแลกเปลี่ยนใหม่บน CMU ShareCycle',
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #2D7D3F;">มีคำขอแลกเปลี่ยนใหม่</h2>
-            <p>สวัสดี ${item.name},</p>
-            <p><strong>${req.user.name}</strong> ขอแลกเปลี่ยนสำหรับสินค้า "<strong>${item.title}</strong>"</p>
-            ${message ? `<p><strong>ข้อความ:</strong> ${message}</p>` : ''}
-            <p>กรุณาเข้าสู่ระบบเพื่อดูรายละเอียดและยอมรับ/ปฏิเสธคำขอ</p>
-            <p style="margin-top: 30px; color: #666; font-size: 12px;">
-              CMU ShareCycle - Green Campus<br>
-              <a href="http://localhost:3000" style="color: #2D7D3F;">เข้าสู่ระบบ</a>
-            </p>
-          </div>
-        `,
+      const tpl = exchangeRequestEmail({
+        ownerName: item.name,
+        requesterName: req.user.name,
+        requesterEmail: req.user.email,
+        itemTitle: item.title,
+        message,
+        itemImageUrl: item.image_url || null,
+        itemCategory: item.category || null,
+        itemCondition: item.item_condition || null,
+        requestId: exchangeRequest.id,
+        requestedAt: exchangeRequest.created_at,
       })
+      await sendEmail({ to: item.email, ...tpl })
     } catch (emailErr) {
-      console.error('Failed to send email:', emailErr)
-      // ไม่ throw error เพื่อไม่ให้การสร้าง exchange request ล้มเหลว
+      console.error('Exchange request email failed:', emailErr.message)
     }
 
     // แก้ไข response ให้ส่ง chatId กลับไปด้วย
@@ -330,24 +333,14 @@ export const acceptExchangeRequestByOwner = async (req, res) => {
 
     // ส่งอีเมลไปยังผู้ขอแลก
     try {
-      await sendEmail({
-        to: exchangeRequest.requester_email,
-        subject: 'เจ้าของโพสต์ยอมรับคำขอแลกเปลี่ยน',
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #2D7D3F;">คำขอแลกเปลี่ยนของคุณได้รับการยอมรับ</h2>
-            <p>สวัสดี ${exchangeRequest.requester_name},</p>
-            <p><strong>${exchangeRequest.owner_name}</strong> ยอมรับคำขอแลกเปลี่ยนสำหรับสินค้า "<strong>${exchangeRequest.item_title}</strong>"</p>
-            <p>กรุณาเข้าสู่ระบบเพื่อยอมรับคำขอแลกเปลี่ยนของคุณ</p>
-            <p style="margin-top: 30px; color: #666; font-size: 12px;">
-              CMU ShareCycle - Green Campus<br>
-              <a href="http://localhost:3000" style="color: #2D7D3F;">เข้าสู่ระบบ</a>
-            </p>
-          </div>
-        `,
+      const tpl = exchangeAcceptedEmail({
+        requesterName: exchangeRequest.requester_name,
+        ownerName: exchangeRequest.owner_name,
+        itemTitle: exchangeRequest.item_title,
       })
+      await sendEmail({ to: exchangeRequest.requester_email, ...tpl })
     } catch (emailErr) {
-      console.error('Failed to send email:', emailErr)
+      console.error('Exchange accepted email failed:', emailErr.message)
     }
 
     // ถ้าทั้งสองฝ่าย accept แล้ว ให้สร้าง chat และ exchange history
@@ -595,23 +588,14 @@ export const rejectExchangeRequest = async (req, res) => {
 
     // ส่งอีเมล
     try {
-      await sendEmail({
-        to: targetUserEmail,
-        subject: 'คำขอแลกเปลี่ยนถูกปฏิเสธ',
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #d32f2f;">คำขอแลกเปลี่ยนถูกปฏิเสธ</h2>
-            <p>สวัสดี ${targetUserName},</p>
-            <p><strong>${rejecterName}</strong> ปฏิเสธคำขอแลกเปลี่ยนสำหรับสินค้า "<strong>${exchangeRequest.item_title}</strong>"</p>
-            <p style="margin-top: 30px; color: #666; font-size: 12px;">
-              CMU ShareCycle - Green Campus<br>
-              <a href="http://localhost:3000" style="color: #2D7D3F;">เข้าสู่ระบบ</a>
-            </p>
-          </div>
-        `,
+      const tpl = exchangeRejectedEmail({
+        recipientName: targetUserName,
+        rejecterName,
+        itemTitle: exchangeRequest.item_title,
       })
+      await sendEmail({ to: targetUserEmail, ...tpl })
     } catch (emailErr) {
-      console.error('Failed to send email:', emailErr)
+      console.error('Exchange rejected email failed:', emailErr.message)
     }
 
     return res.json({ success: true, message: 'Exchange request rejected' })
@@ -813,39 +797,30 @@ async function completeExchange(requestId, exchangeRequest) {
     // //   io.to(exchangeRequest.requester_id).emit('notification:new')
     // // }
 
-    // ส่งอีเมลไปยังทั้งสองฝ่าย
+    // ส่งอีเมล "จับคู่สำเร็จ" ให้ทั้งสองฝ่าย — ยังไม่ใช่การแลกเปลี่ยนจริง แค่ทั้งคู่ตอบรับแล้ว
     try {
-      const co2ReducedFormatted = Number.isFinite(co2Reduced)
-        ? parseFloat(co2Reduced.toFixed(2))
-        : null
-      const co2Text = co2ReducedFormatted !== null ? `${co2ReducedFormatted} kg` : 'N/A'
-      const emailHtml = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #2D7D3F;">การแลกเปลี่ยนสำเร็จ!</h2>
-          <p>การแลกเปลี่ยนสินค้า "<strong>${exchangeRequest.item_title}</strong>" สำเร็จแล้ว</p>
-          <p>แชทได้เปิดให้แล้วเพื่อให้คุณทั้งสองสามารถติดต่อกันได้</p>
-          <p>CO₂ ที่ลดได้จากการแลกเปลี่ยนนี้: <strong>${co2Text}</strong></p>
-          <p style="margin-top: 30px; color: #666; font-size: 12px;">
-            CMU ShareCycle - Green Campus<br>
-            <a href="http://localhost:3000" style="color: #2D7D3F;">เข้าสู่ระบบ</a>
-          </p>
-        </div>
-      `
-
+      const ownerTpl = exchangeMatchedEmail({
+        recipientName: exchangeRequest.owner_name,
+        otherName: exchangeRequest.requester_name,
+        itemTitle: ownerItem.title,
+        itemImageUrl: ownerItem.image_url || null,
+        itemCategory: ownerItem.category || null,
+        itemCondition: ownerItem.item_condition || null,
+      })
+      const requesterTpl = exchangeMatchedEmail({
+        recipientName: exchangeRequest.requester_name,
+        otherName: exchangeRequest.owner_name,
+        itemTitle: ownerItem.title,
+        itemImageUrl: ownerItem.image_url || null,
+        itemCategory: ownerItem.category || null,
+        itemCondition: ownerItem.item_condition || null,
+      })
       await Promise.all([
-        sendEmail({
-          to: exchangeRequest.owner_email,
-          subject: 'การแลกเปลี่ยนสำเร็จ - CMU ShareCycle',
-          html: emailHtml,
-        }),
-        sendEmail({
-          to: exchangeRequest.requester_email,
-          subject: 'การแลกเปลี่ยนสำเร็จ - CMU ShareCycle',
-          html: emailHtml,
-        }),
+        sendEmail({ to: exchangeRequest.owner_email, ...ownerTpl }),
+        sendEmail({ to: exchangeRequest.requester_email, ...requesterTpl }),
       ])
     } catch (emailErr) {
-      console.error('Failed to send completion emails:', emailErr)
+      console.error('Exchange matched emails failed:', emailErr.message)
     }
 
     return null

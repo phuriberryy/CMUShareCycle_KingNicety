@@ -4,6 +4,8 @@ import { query } from '../../../outbound/persistence/pool.js'
 import { getChatServer } from '../../../../application/services/chatService.js'
 import { calculateItemCO2, calculateExchangeCO2Reduction } from '../../../../shared/utils/co2Calculator.js'
 import { awardExchangePoints, awardDonationPoints } from '../../../../shared/utils/pointsService.js'
+import { sendEmail } from '../../../../shared/utils/email.js'
+import { exchangeCompletedEmail, donationCompletedEmail } from '../../../../shared/utils/emailTemplates.js'
 import {
   badRequest,
   forbidden,
@@ -798,14 +800,21 @@ export const confirmChatQr = async (req, res) => {
       if (!existingHistory.rowCount) {
         // ดึงข้อมูล donation request และ item
         const donationRequestResult = await query(
-          `SELECT 
+          `SELECT
             dr.item_id,
             dr.requester_id,
             i.user_id as owner_id,
             i.category as item_category,
-            i.item_condition as item_condition
+            i.item_condition as item_condition,
+            i.title as item_title,
+            owner.name as owner_name,
+            owner.email as owner_email,
+            requester.name as requester_name,
+            requester.email as requester_email
            FROM donation_requests dr
            JOIN items i ON dr.item_id = i.id
+           JOIN users owner ON i.user_id = owner.id
+           JOIN users requester ON dr.requester_id = requester.id
            WHERE dr.id=$1`,
           [chatRow.donation_request_id]
         )
@@ -863,6 +872,24 @@ export const confirmChatQr = async (req, res) => {
                if (io) {
                  io.emit('donation:completed')
                }
+
+               // ส่งอีเมลแจ้งการบริจาคสำเร็จจริง (ยืนยันในแชทแล้ว)
+               try {
+                 const ownerTpl = donationCompletedEmail({
+                   recipientName: donationData.owner_name,
+                   itemTitle: donationData.item_title,
+                 })
+                 const requesterTpl = donationCompletedEmail({
+                   recipientName: donationData.requester_name,
+                   itemTitle: donationData.item_title,
+                 })
+                 await Promise.all([
+                   sendEmail({ to: donationData.owner_email, ...ownerTpl }),
+                   sendEmail({ to: donationData.requester_email, ...requesterTpl }),
+                 ])
+               } catch (emailErr) {
+                 console.error('Donation completed emails failed:', emailErr.message)
+               }
              }
            }
          } catch (err) {
@@ -894,6 +921,8 @@ async function fetchChatById(chatId) {
       item.user_id AS item_owner_id,
       er.requester_id AS exchange_request_requester_id,
       er.status AS exchange_request_status,
+      dr.requester_id AS donation_request_requester_id,
+      dr.status AS donation_request_status,
       last_message.id AS last_message_id,
       last_message.body AS last_message_body,
       last_message.sender_id AS last_message_sender_id,
@@ -939,6 +968,8 @@ async function fetchChatsForUser(userId) {
       item.user_id AS item_owner_id,
       er.requester_id AS exchange_request_requester_id,
       er.status AS exchange_request_status,
+      dr.requester_id AS donation_request_requester_id,
+      dr.status AS donation_request_status,
       last_message.id AS last_message_id,
       last_message.body AS last_message_body,
       last_message.sender_id AS last_message_sender_id,
@@ -1015,6 +1046,9 @@ function mapChatRow(row, currentUserId) {
     status,
     ownerAccepted: row.owner_accepted,
     requesterAccepted: row.requester_accepted,
+    ownerConfirmed: Boolean(row.owner_confirmed),
+    requesterConfirmed: Boolean(row.requester_confirmed),
+    confirmedAt: row.confirmed_at || null,
     qrCode: row.qr_code,
     qrConfirmed: row.qr_confirmed,
     qrConfirmedAt: row.qr_confirmed_at,
@@ -1026,7 +1060,7 @@ function mapChatRow(row, currentUserId) {
     exchangeRequestId: row.exchange_request_id,
     exchangeStatus: row.exchange_request_status,
     donationRequestId: row.donation_request_id,
-    donationStatus: row.donation_request_status,
+    donationStatus: row.donation_request_status || null,
     role,
     isExchangeChat,
     isDonationChat,
@@ -1097,4 +1131,385 @@ function generateExchangeCode() {
 function generateDonationCode() {
   const random = randomBytes(4).readUInt32BE(0) % 100000000
   return `DN${random.toString().padStart(8, '0')}`
+}
+
+// POST /chats/:chatId/confirm-exchange
+// Both owner and requester must call this to confirm the physical exchange happened.
+// When both have confirmed, the exchange is finalised automatically.
+export const confirmExchange = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json(unauthorized())
+    }
+
+    const { chatId } = req.params
+    let chatRow = await fetchChatById(chatId)
+
+    if (!chatRow) {
+      return res.status(404).json(notFound('Chat not found'))
+    }
+
+    if (!chatRow.exchange_request_id) {
+      return res.status(400).json(badRequest('This chat is not linked to an exchange request'))
+    }
+
+    const role = resolveChatRole(chatRow, req.user.id)
+    if (role !== 'owner' && role !== 'requester') {
+      return res.status(403).json(forbidden('Only the owner or requester can confirm this exchange'))
+    }
+
+    if (chatRow.status !== 'active') {
+      return res.status(400).json(badRequest('Exchange is not in an active state yet'))
+    }
+
+    // If already fully confirmed, return current state
+    if (chatRow.confirmed_at) {
+      return res.json(mapChatRow(chatRow, req.user.id))
+    }
+
+    const confirmColumn = role === 'owner' ? 'owner_confirmed' : 'requester_confirmed'
+
+    // Idempotent: if this party already confirmed, proceed to check completion
+    if (!chatRow[confirmColumn]) {
+      await query(
+        `UPDATE chats SET ${confirmColumn}=TRUE, updated_at=NOW() WHERE id=$1`,
+        [chatId]
+      )
+      chatRow = await fetchChatById(chatId)
+    }
+
+    const io = getChatServer()
+
+    // Emit per-confirmation event so the other party's UI updates immediately
+    if (io) {
+      const forCreator    = mapChatRow(chatRow, chatRow.creator_id)
+      const forParticipant = mapChatRow(chatRow, chatRow.participant_id)
+      io.to(chatRow.creator_id).emit('exchange:confirmed', forCreator)
+      io.to(chatRow.participant_id).emit('exchange:confirmed', forParticipant)
+    }
+
+    // Both confirmed → finalise
+    if (chatRow.owner_confirmed && chatRow.requester_confirmed) {
+      try {
+        await finalizeExchangeConfirmation(chatRow, chatId)
+        chatRow = await fetchChatById(chatId)
+
+        if (io) {
+          const forCreator    = mapChatRow(chatRow, chatRow.creator_id)
+          const forParticipant = mapChatRow(chatRow, chatRow.participant_id)
+          io.to(chatRow.creator_id).emit('exchange:completed', forCreator)
+          io.to(chatRow.participant_id).emit('exchange:completed', forParticipant)
+          io.to(chatRow.creator_id).emit('notification:new')
+          io.to(chatRow.participant_id).emit('notification:new')
+        }
+      } catch (err) {
+        console.error('[confirmExchange] Finalisation error:', err)
+        // Don't fail the whole request — the confirmation flags are already set
+      }
+    }
+
+    broadcastChatUpdate(chatRow)
+    return res.json(mapChatRow(chatRow, req.user.id))
+  } catch (err) {
+    console.error('confirmExchange error:', err)
+    return res.status(500).json(internalError())
+  }
+}
+
+// Finalises an exchange when both parties have clicked "Confirm Exchange".
+// Creates exchange_history (if needed), awards points, updates statuses.
+async function finalizeExchangeConfirmation(chatRow, chatId) {
+  // Mark confirmed_at
+  await query(
+    `UPDATE chats SET confirmed_at=NOW(), updated_at=NOW() WHERE id=$1`,
+    [chatId]
+  )
+
+  const exchangeRequestId = chatRow.exchange_request_id
+
+  // Fetch exchange data (including user names/emails for completion email)
+  const erResult = await query(
+    `SELECT
+       er.item_id,
+       er.requester_id,
+       er.requester_item_category,
+       er.requester_item_condition,
+       i.user_id    AS owner_id,
+       i.category   AS owner_item_category,
+       i.item_condition AS owner_item_condition,
+       i.title      AS item_title,
+       i.image_url  AS item_image_url,
+       owner.name   AS owner_name,
+       owner.email  AS owner_email,
+       requester.name  AS requester_name,
+       requester.email AS requester_email
+     FROM exchange_requests er
+     JOIN items i ON er.item_id = i.id
+     JOIN users owner ON i.user_id = owner.id
+     JOIN users requester ON er.requester_id = requester.id
+     WHERE er.id=$1`,
+    [exchangeRequestId]
+  )
+
+  if (!erResult.rowCount) return
+
+  const exchangeData = erResult.rows[0]
+
+  // Calculate CO₂ reduction
+  const co2Owner = calculateItemCO2(exchangeData.owner_item_category, exchangeData.owner_item_condition)
+  const co2Requester =
+    exchangeData.requester_item_category && exchangeData.requester_item_condition
+      ? calculateItemCO2(exchangeData.requester_item_category, exchangeData.requester_item_condition)
+      : co2Owner
+  const co2Reduced = parseFloat(calculateExchangeCO2Reduction(co2Owner, co2Requester).toFixed(2))
+
+  // Create exchange_history if it doesn't exist yet
+  const existingHistory = await query(
+    `SELECT id FROM exchange_history WHERE exchange_request_id=$1`,
+    [exchangeRequestId]
+  )
+
+  if (!existingHistory.rowCount) {
+    await query(
+      `INSERT INTO exchange_history (exchange_request_id, item_id, owner_id, requester_id, co2_reduced)
+       VALUES ($1,$2,$3,$4,$5)`,
+      [exchangeRequestId, exchangeData.item_id, exchangeData.owner_id, exchangeData.requester_id, co2Reduced]
+    )
+  }
+
+  // Award points (awardExchangePoints is idempotent)
+  const historyRow = await query(
+    `SELECT id FROM exchange_history WHERE exchange_request_id=$1 ORDER BY created_at DESC LIMIT 1`,
+    [exchangeRequestId]
+  )
+  if (historyRow.rowCount) {
+    await awardExchangePoints(
+      exchangeData.owner_id,
+      exchangeData.requester_id,
+      historyRow.rows[0].id,
+      co2Reduced
+    )
+  }
+
+  // Mark item as exchanged
+  await query(
+    `UPDATE items SET status='exchanged', updated_at=NOW() WHERE id=$1`,
+    [exchangeData.item_id]
+  )
+
+  // Mark exchange request as completed
+  await query(
+    `UPDATE exchange_requests SET status='completed', updated_at=NOW() WHERE id=$1`,
+    [exchangeRequestId]
+  )
+
+  // Notifications for both parties
+  const notifMeta = JSON.stringify({ exchangeRequestId, chatId, itemId: exchangeData.item_id })
+  await query(
+    `INSERT INTO notifications (user_id, title, body, type, metadata)
+     VALUES ($1,$2,$3,$4,$5), ($6,$2,$3,$4,$5)`,
+    [
+      exchangeData.owner_id,
+      'การแลกเปลี่ยนสำเร็จแล้ว!',
+      'ทั้งสองฝ่ายยืนยันการแลกเปลี่ยนแล้ว แต้มและประวัติถูกบันทึกเรียบร้อย',
+      'exchange_completed',
+      notifMeta,
+      exchangeData.requester_id,
+    ]
+  )
+
+  // Completion emails — sent only here, after both parties confirm the real-world exchange
+  try {
+    const co2Text = `${co2Reduced} kg`
+    const ownerTpl = exchangeCompletedEmail({
+      recipientName: exchangeData.owner_name,
+      itemTitle: exchangeData.item_title,
+      co2Text,
+    })
+    const requesterTpl = exchangeCompletedEmail({
+      recipientName: exchangeData.requester_name,
+      itemTitle: exchangeData.item_title,
+      co2Text,
+    })
+    await Promise.all([
+      sendEmail({ to: exchangeData.owner_email, ...ownerTpl }),
+      sendEmail({ to: exchangeData.requester_email, ...requesterTpl }),
+    ])
+  } catch (emailErr) {
+    console.error('Exchange completed emails failed:', emailErr.message)
+  }
+}
+
+// POST /chats/:chatId/confirm-donation
+// Mirrors confirmExchange — both owner (donor) and requester (recipient) must call this
+// to confirm the physical hand-off happened. Finalises the donation when both have confirmed.
+export const confirmDonation = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json(unauthorized())
+    }
+
+    const { chatId } = req.params
+    let chatRow = await fetchChatById(chatId)
+
+    if (!chatRow) {
+      return res.status(404).json(notFound('Chat not found'))
+    }
+
+    if (!chatRow.donation_request_id) {
+      return res.status(400).json(badRequest('This chat is not linked to a donation request'))
+    }
+
+    const role = resolveChatRole(chatRow, req.user.id)
+    if (role !== 'owner' && role !== 'requester') {
+      return res.status(403).json(forbidden('Only the donor or recipient can confirm this donation'))
+    }
+
+    if (chatRow.status !== 'active') {
+      return res.status(400).json(badRequest('Donation is not in an active state yet'))
+    }
+
+    // Already fully confirmed — return current state idempotently
+    if (chatRow.confirmed_at) {
+      return res.json(mapChatRow(chatRow, req.user.id))
+    }
+
+    const confirmColumn = role === 'owner' ? 'owner_confirmed' : 'requester_confirmed'
+
+    // Idempotent: only write if not yet set
+    if (!chatRow[confirmColumn]) {
+      await query(
+        `UPDATE chats SET ${confirmColumn}=TRUE, updated_at=NOW() WHERE id=$1`,
+        [chatId]
+      )
+      chatRow = await fetchChatById(chatId)
+    }
+
+    const io = getChatServer()
+
+    // Notify both parties of the partial confirmation
+    if (io) {
+      const forCreator     = mapChatRow(chatRow, chatRow.creator_id)
+      const forParticipant = mapChatRow(chatRow, chatRow.participant_id)
+      io.to(chatRow.creator_id).emit('donation:confirmed', forCreator)
+      io.to(chatRow.participant_id).emit('donation:confirmed', forParticipant)
+    }
+
+    // Both confirmed → finalise
+    if (chatRow.owner_confirmed && chatRow.requester_confirmed) {
+      try {
+        await finalizeDonationConfirmation(chatRow, chatId)
+        chatRow = await fetchChatById(chatId)
+
+        if (io) {
+          const forCreator     = mapChatRow(chatRow, chatRow.creator_id)
+          const forParticipant = mapChatRow(chatRow, chatRow.participant_id)
+          io.to(chatRow.creator_id).emit('donation:completed', forCreator)
+          io.to(chatRow.participant_id).emit('donation:completed', forParticipant)
+          io.to(chatRow.creator_id).emit('notification:new')
+          io.to(chatRow.participant_id).emit('notification:new')
+        }
+      } catch (err) {
+        console.error('[confirmDonation] Finalisation error:', err)
+        // Don't fail the whole request — the confirmation flags are already set
+      }
+    }
+
+    broadcastChatUpdate(chatRow)
+    return res.json(mapChatRow(chatRow, req.user.id))
+  } catch (err) {
+    console.error('confirmDonation error:', err)
+    return res.status(500).json(internalError())
+  }
+}
+
+// Finalises a donation when both parties have clicked "Confirm Delivery".
+// Creates donation_history (if needed), awards points, updates statuses, sends emails.
+async function finalizeDonationConfirmation(chatRow, chatId) {
+  await query(
+    `UPDATE chats SET confirmed_at=NOW(), updated_at=NOW() WHERE id=$1`,
+    [chatId]
+  )
+
+  const donationRequestId = chatRow.donation_request_id
+
+  const drResult = await query(
+    `SELECT
+       dr.item_id,
+       dr.requester_id,
+       i.user_id        AS owner_id,
+       i.category       AS item_category,
+       i.item_condition AS item_condition,
+       i.title          AS item_title,
+       owner.name       AS owner_name,
+       owner.email      AS owner_email,
+       requester.name   AS requester_name,
+       requester.email  AS requester_email
+     FROM donation_requests dr
+     JOIN items i        ON dr.item_id      = i.id
+     JOIN users owner    ON i.user_id       = owner.id
+     JOIN users requester ON dr.requester_id = requester.id
+     WHERE dr.id=$1`,
+    [donationRequestId]
+  )
+
+  if (!drResult.rowCount) return
+
+  const d = drResult.rows[0]
+  const co2Footprint = calculateItemCO2(d.item_category, d.item_condition)
+  const co2Reduced   = parseFloat((co2Footprint * 0.8).toFixed(2))
+
+  // Create donation_history if not yet recorded
+  const existingHistory = await query(
+    `SELECT id FROM donation_history WHERE item_id=$1 AND recipient_id=$2`,
+    [d.item_id, d.requester_id]
+  )
+
+  if (!existingHistory.rowCount) {
+    await query(
+      `INSERT INTO donation_history (item_id, donor_id, recipient_id, co2_reduced)
+       VALUES ($1,$2,$3,$4)`,
+      [d.item_id, d.owner_id, d.requester_id, co2Reduced]
+    )
+  }
+
+  // Award points (idempotent)
+  const historyRow = await query(
+    `SELECT id FROM donation_history WHERE item_id=$1 AND recipient_id=$2 ORDER BY created_at DESC LIMIT 1`,
+    [d.item_id, d.requester_id]
+  )
+  if (historyRow.rowCount) {
+    await awardDonationPoints(d.owner_id, d.requester_id, historyRow.rows[0].id, co2Reduced)
+  }
+
+  // Mark item donated + donation_request completed
+  await query(`UPDATE items SET status='donated', updated_at=NOW() WHERE id=$1`, [d.item_id])
+  await query(`UPDATE donation_requests SET status='completed', updated_at=NOW() WHERE id=$1`, [donationRequestId])
+
+  // Notifications for both parties
+  const notifMeta = JSON.stringify({ donationRequestId, chatId, itemId: d.item_id })
+  await query(
+    `INSERT INTO notifications (user_id, title, body, type, metadata)
+     VALUES ($1,$2,$3,$4,$5), ($6,$2,$3,$4,$5)`,
+    [
+      d.owner_id,
+      'การบริจาคสำเร็จแล้ว!',
+      'ทั้งสองฝ่ายยืนยันการส่งมอบแล้ว แต้มและประวัติถูกบันทึกเรียบร้อย',
+      'donation_completed',
+      notifMeta,
+      d.requester_id,
+    ]
+  )
+
+  // Completion emails
+  try {
+    const ownerTpl     = donationCompletedEmail({ recipientName: d.owner_name,     itemTitle: d.item_title })
+    const requesterTpl = donationCompletedEmail({ recipientName: d.requester_name, itemTitle: d.item_title })
+    await Promise.all([
+      sendEmail({ to: d.owner_email,     ...ownerTpl }),
+      sendEmail({ to: d.requester_email, ...requesterTpl }),
+    ])
+  } catch (emailErr) {
+    console.error('Donation completed emails failed:', emailErr.message)
+  }
 }

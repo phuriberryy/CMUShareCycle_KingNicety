@@ -26,7 +26,7 @@ router.post(
     body('requesterItemCategory').optional().isString().trim().isLength({ max: 80 }),
     body('requesterItemCondition').optional().isString().trim().isLength({ max: 40 }),
     body('requesterItemDescription').optional().isString().trim().isLength({ max: 2000 }),
-    body('requesterItemImageUrl').optional().isURL(),
+    body('requesterItemImageUrl').optional().isString(),
     body('requesterPickupLocation').optional().isString().trim().isLength({ max: 200 }),
   ],
   validateRequest,

@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { body } from 'express-validator'
 import {
+  emailStatus,
   testEmail,
   testExchangeRequestEmail,
   testExchangeAcceptedEmail,
@@ -9,6 +10,9 @@ import {
 import { validateRequest } from '../middleware/validateRequest.js'
 
 const router = Router()
+
+// สถานะ email service — GET /api/email/status
+router.get('/status', emailStatus)
 
 // ทดสอบการส่งอีเมลทั่วไป
 router.post(
