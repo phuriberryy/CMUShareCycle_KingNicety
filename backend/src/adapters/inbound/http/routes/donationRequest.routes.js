@@ -37,7 +37,7 @@ router.post(
 )
 
 // ดึงคำขอรับบริจาคที่เกี่ยวข้องกับผู้ใช้
-router.get('/my/requests', getMyDonationRequests)
+router.get('/my-requests', getMyDonationRequests)
 
 // ดึงรายละเอียดคำขอรับบริจาค
 router.get('/:requestId', [param('requestId').isUUID()], validateRequest, getDonationRequest)
