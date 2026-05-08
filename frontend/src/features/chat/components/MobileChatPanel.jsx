@@ -93,7 +93,18 @@ export default function MobileChatPanel({
                         src={message.image_url}
                         alt="รูปที่แนบ"
                         className="mb-2 max-h-72 w-full rounded-xl object-cover"
+                        onError={(e) => {
+                          console.warn('[IMG] failed to load:', message.image_url)
+                          e.currentTarget.style.display = 'none'
+                          const el = e.currentTarget.nextElementSibling
+                          if (el && el.dataset.imgErr) el.style.display = ''
+                        }}
                       />
+                    ) : null}
+                    {message.image_url ? (
+                      <p data-img-err="1" style={{ display: 'none' }} className="mb-2 rounded-xl bg-black/10 px-3 py-3 text-xs text-center opacity-60">
+                        ไม่สามารถโหลดรูปภาพได้
+                      </p>
                     ) : null}
                     {message.body ? <p className="whitespace-pre-wrap break-words">{message.body}</p> : null}
                     {message.pending ? (

@@ -169,7 +169,24 @@ export default function ChatRoom({
               return (
                 <div key={getMessageId(message)} className={`flex flex-col gap-1 ${mine ? 'items-end' : 'items-start'}`}>
                   <div className={`max-w-[78%] rounded-3xl px-4 py-3 text-[15px] leading-6 shadow-sm ${mine ? 'bg-primary text-white' : 'bg-gray-100 text-gray-900'} ${message.pending ? 'opacity-60' : 'opacity-100'}`}>
-                    {message.image_url ? <img src={message.image_url} alt="รูปที่แนบ" className="mb-2.5 max-h-72 w-full rounded-2xl object-cover" /> : null}
+                    {message.image_url ? (
+                      <img
+                        src={message.image_url}
+                        alt="รูปที่แนบ"
+                        className="mb-2.5 max-h-72 w-full rounded-2xl object-cover"
+                        onError={(e) => {
+                          console.warn('[IMG] failed to load:', message.image_url)
+                          e.currentTarget.style.display = 'none'
+                          const el = e.currentTarget.nextElementSibling
+                          if (el && el.dataset.imgErr) el.style.display = ''
+                        }}
+                      />
+                    ) : null}
+                    {message.image_url ? (
+                      <p data-img-err="1" style={{ display: 'none' }} className="mb-2.5 rounded-2xl bg-black/10 px-3 py-4 text-xs text-center opacity-60">
+                        ไม่สามารถโหลดรูปภาพได้
+                      </p>
+                    ) : null}
                     {message.body ? <p className="whitespace-pre-wrap break-words">{message.body}</p> : null}
                   </div>
                   <p className="px-1 text-[10px] text-gray-400">{formatMessageTime(message.created_at)}</p>

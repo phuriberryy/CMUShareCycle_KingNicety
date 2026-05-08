@@ -4,6 +4,7 @@ import { io } from 'socket.io-client'
 import { useAuth } from '../context/AuthContext'
 import { API_BASE, chatApi } from '../lib/api'
 import ChatPageView from '../components/chat/ChatPage'
+import { APP_ROUTES } from '../shared/constants/routes'
 
 // toDataUrl removed — we now use URL.createObjectURL() for previews and
 // upload the raw File via FormData, eliminating FileReader memory pressure.
@@ -496,7 +497,7 @@ export default function ChatPage() {
     navigate(-1)
     setTimeout(() => {
       if (window.location.pathname === '/chat') {
-        navigate('/home')
+        navigate(APP_ROUTES.home)
       }
     }, 0)
   }

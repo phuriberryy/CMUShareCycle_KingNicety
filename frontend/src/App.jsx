@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect, useState } from 'react'
-import { Routes, Route, useLocation, useNavigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { io } from 'socket.io-client'
 import Header from './components/layout/Header'
 import Footer from './components/layout/Footer'
@@ -213,6 +213,8 @@ function AppContent() {
               </ProtectedRoute>
             }
           />
+          {/* Catch-all: redirect unknown paths to home instead of blank screen */}
+          <Route path="*" element={<CatchAllRedirect />} />
           </Routes>
         </Suspense>
       </main>
@@ -241,6 +243,10 @@ function AppContent() {
       />
     </div>
   )
+}
+
+function CatchAllRedirect() {
+  return <Navigate to={APP_ROUTES.home} replace />
 }
 
 function App() {
