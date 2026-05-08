@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { io } from 'socket.io-client'
-import { ArrowLeft } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { API_BASE, chatApi } from '../lib/api'
 import ChatPageView from '../components/chat/ChatPage'
@@ -41,9 +40,6 @@ export default function ChatPage() {
   const [confirmingDonation, setConfirmingDonation] = useState(false)
   const [acceptingChat, setAcceptingChat] = useState(false)
   const [decliningChat, setDecliningChat] = useState(false)
-  const fileInputRef = useRef(null)
-  const cameraInputRef = useRef(null)
-  const [fileInputKey, setFileInputKey] = useState(0)
   const socketRef = useRef(null)
   const selectedChatRef = useRef(null)
   const messagesRef = useRef([])
@@ -392,17 +388,41 @@ export default function ChatPage() {
     }
   }
 
-  const handlePickImage = () => fileInputRef.current?.click()
-  const handleTakePhoto = () => cameraInputRef.current?.click()
-  const handleImageSelected = async (event) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-    const dataUrl = await toDataUrl(file)
-    setPendingImage(String(dataUrl))
-    // Increment key to force-remount both inputs — more reliable than
-    // value = '' on mobile Safari for repeated or same-file picks.
-    setFileInputKey((k) => k + 1)
+  // Create a fresh <input type="file"> on every tap so the browser never
+  // sees a "same value" and silently skips the onChange. Appending to body
+  // satisfies older iOS Safari versions that require the element to be in
+  // the DOM before .click() is honoured.
+  const triggerFilePicker = (capture) => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = 'image/*'
+    input.style.cssText = 'position:fixed;top:-200px;left:-200px;opacity:0;pointer-events:none;'
+    if (capture) input.setAttribute('capture', 'environment')
+    document.body.appendChild(input)
+
+    input.onchange = async (e) => {
+      const file = e.target.files?.[0]
+      if (document.body.contains(input)) document.body.removeChild(input)
+      if (!file) {
+        console.log('[IMAGE PICK] No file selected (picker cancelled)')
+        return
+      }
+      console.log('[IMAGE PICK] File selected:', file.name, '|', file.type, '|', file.size, 'bytes')
+      try {
+        const dataUrl = await toDataUrl(file)
+        console.log('[IMAGE PICK] Data URL ready — setting pending image')
+        setPendingImage(String(dataUrl))
+      } catch (err) {
+        console.error('[IMAGE PICK] toDataUrl failed:', err)
+      }
+    }
+
+    console.log('[IMAGE PICK] Opening picker | capture:', capture ?? 'none')
+    input.click()
   }
+
+  const handlePickImage = () => triggerFilePicker(false)
+  const handleTakePhoto = () => triggerFilePicker(true)
 
   const handleDeleteChat = async (chatId) => {
     const nextId = typeof chatId === 'string' ? chatId : chatId?.id ? String(chatId.id) : null
@@ -450,10 +470,6 @@ export default function ChatPage() {
       setPendingImage={setPendingImage}
       handlePickImage={handlePickImage}
       handleTakePhoto={handleTakePhoto}
-      fileInputRef={fileInputRef}
-      cameraInputRef={cameraInputRef}
-      fileInputKey={fileInputKey}
-      handleImageSelected={handleImageSelected}
       uploadingImage={uploadingImage}
       sendingMessage={sendingMessage}
       setShowActions={setShowActions}

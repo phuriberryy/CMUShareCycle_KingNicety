@@ -23,10 +23,6 @@ export default function ChatPage({
   setPendingImage,
   handlePickImage,
   handleTakePhoto,
-  fileInputRef,
-  cameraInputRef,
-  fileInputKey,
-  handleImageSelected,
   uploadingImage,
   sendingMessage,
   setShowActions,
@@ -181,10 +177,6 @@ export default function ChatPage({
           setPendingImage={setPendingImage}
           handlePickImage={handlePickImage}
           handleTakePhoto={handleTakePhoto}
-          fileInputRef={fileInputRef}
-          cameraInputRef={cameraInputRef}
-          fileInputKey={fileInputKey}
-          handleImageSelected={handleImageSelected}
           uploadingImage={uploadingImage}
           sendingMessage={sendingMessage}
           setShowActions={setShowActions}

@@ -23,10 +23,6 @@ export default function DesktopChatPanel({
   handleSendMessage,
   uploadingImage,
   pendingImageUploading,
-  fileInputRef,
-  cameraInputRef,
-  fileInputKey,
-  handleImageSelected,
 }) {
   if (!activeChat) {
     return (
@@ -230,8 +226,6 @@ export default function DesktopChatPanel({
             </div>
           </>
         ) : null}
-        <input key={`gallery-${fileInputKey}`} ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelected} />
-        <input key={`camera-${fileInputKey}`} ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleImageSelected} />
       </div>
     </>
   )

@@ -24,10 +24,6 @@ export default function MobileChatPanel({
   handleSendMessage,
   uploadingImage,
   sendingMessage,
-  fileInputRef,
-  cameraInputRef,
-  fileInputKey,
-  handleImageSelected,
 }) {
   return (
     <div className={`flex h-full min-h-0 flex-col bg-[#FBFCFB] md:hidden ${isOpen ? 'flex' : 'hidden'}`}>
@@ -235,8 +231,6 @@ export default function MobileChatPanel({
             )}
           </button>
         </div>
-        <input key={`gallery-${fileInputKey}`} ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelected} />
-        <input key={`camera-${fileInputKey}`} ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleImageSelected} />
       </div>
     </div>
   )

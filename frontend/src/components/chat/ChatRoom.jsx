@@ -18,10 +18,6 @@ export default function ChatRoom({
   setPendingImage,
   handlePickImage,
   handleTakePhoto,
-  fileInputRef,
-  cameraInputRef,
-  fileInputKey,
-  handleImageSelected,
   uploadingImage,
   sendingMessage,
   setShowActions,
@@ -245,10 +241,6 @@ export default function ChatRoom({
             </div>
           </div>
         ) : null}
-        {/* Gallery picker — no capture so the device shows files/photos, not the camera */}
-        <input key={`gallery-${fileInputKey}`} ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelected} />
-        {/* Camera — capture="environment" opens the rear camera directly */}
-        <input key={`camera-${fileInputKey}`} ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleImageSelected} />
       </div>
     </div>
   )
