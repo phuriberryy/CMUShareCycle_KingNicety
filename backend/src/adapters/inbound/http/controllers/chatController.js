@@ -4,6 +4,8 @@ import { query } from '../../../outbound/persistence/pool.js'
 import { getChatServer } from '../../../../application/services/chatService.js'
 import { calculateItemCO2, calculateExchangeCO2Reduction } from '../../../../shared/utils/co2Calculator.js'
 import { awardExchangePoints, awardDonationPoints } from '../../../../shared/utils/pointsService.js'
+import { sendEmail } from '../../../../shared/utils/email.js'
+import { exchangeCompletedEmail } from '../../../../shared/utils/emailTemplates.js'
 import {
   badRequest,
   forbidden,
@@ -1196,18 +1198,26 @@ async function finalizeExchangeConfirmation(chatRow, chatId) {
 
   const exchangeRequestId = chatRow.exchange_request_id
 
-  // Fetch exchange data
+  // Fetch exchange data (including user names/emails for completion email)
   const erResult = await query(
     `SELECT
        er.item_id,
        er.requester_id,
        er.requester_item_category,
        er.requester_item_condition,
-       i.user_id  AS owner_id,
-       i.category AS owner_item_category,
-       i.item_condition AS owner_item_condition
+       i.user_id    AS owner_id,
+       i.category   AS owner_item_category,
+       i.item_condition AS owner_item_condition,
+       i.title      AS item_title,
+       i.image_url  AS item_image_url,
+       owner.name   AS owner_name,
+       owner.email  AS owner_email,
+       requester.name  AS requester_name,
+       requester.email AS requester_email
      FROM exchange_requests er
      JOIN items i ON er.item_id = i.id
+     JOIN users owner ON i.user_id = owner.id
+     JOIN users requester ON er.requester_id = requester.id
      WHERE er.id=$1`,
     [exchangeRequestId]
   )
@@ -1278,4 +1288,25 @@ async function finalizeExchangeConfirmation(chatRow, chatId) {
       exchangeData.requester_id,
     ]
   )
+
+  // Completion emails — sent only here, after both parties confirm the real-world exchange
+  try {
+    const co2Text = `${co2Reduced} kg`
+    const ownerTpl = exchangeCompletedEmail({
+      recipientName: exchangeData.owner_name,
+      itemTitle: exchangeData.item_title,
+      co2Text,
+    })
+    const requesterTpl = exchangeCompletedEmail({
+      recipientName: exchangeData.requester_name,
+      itemTitle: exchangeData.item_title,
+      co2Text,
+    })
+    await Promise.all([
+      sendEmail({ to: exchangeData.owner_email, ...ownerTpl }),
+      sendEmail({ to: exchangeData.requester_email, ...requesterTpl }),
+    ])
+  } catch (emailErr) {
+    console.error('Exchange completed emails failed:', emailErr.message)
+  }
 }

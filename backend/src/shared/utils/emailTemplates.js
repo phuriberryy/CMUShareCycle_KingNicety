@@ -1,6 +1,7 @@
 import env from '../../infrastructure/config/env.js'
 
 const appUrl = () => env.clientOrigin || 'http://localhost:3000'
+const logoUrl = () => `${appUrl()}/logo.png`
 
 // ─── Embedded CSS ─────────────────────────────────────────────────────────────
 
@@ -79,8 +80,8 @@ function shell({ pretext = '', badge = '', body }) {
             <td valign="middle">
               <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                 <tr>
-                  <td valign="middle" bgcolor="#16a34a" style="background:linear-gradient(135deg,#22c55e,#15803d);border-radius:10px;padding:0;width:36px;height:36px;text-align:center;" width="36" height="36" align="center">
-                    <p style="margin:0;font-size:18px;line-height:36px;color:#fff;font-family:Arial,Helvetica,sans-serif;">&#x267B;</p>
+                  <td valign="middle" bgcolor="#ffffff" style="background-color:#ffffff;border-radius:10px;padding:4px;width:36px;height:36px;text-align:center;overflow:hidden;" width="36" height="36" align="center">
+                    <img src="${logoUrl()}" width="28" height="28" alt="CMU ShareCycle" style="display:block;width:28px;height:28px;object-fit:contain;">
                   </td>
                   <td valign="middle" style="padding-left:12px;">
                     <p style="margin:0;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:17px;font-weight:700;color:#f0fdf4;letter-spacing:-0.3px;line-height:1.15;">CMU ShareCycle</p>
@@ -153,7 +154,7 @@ function muted(text) {
 function productCard({ imageUrl, title, category, condition, statusText, statusColor = '#f59e0b' }) {
   const img = imageUrl
     ? `<img src="${imageUrl}" width="72" height="72" alt="${title}" style="display:block;width:72px;height:72px;border-radius:10px;object-fit:cover;">`
-    : `<div style="width:72px;height:72px;border-radius:10px;background:linear-gradient(145deg,#1a3328,#16a34a22);display:flex;align-items:center;justify-content:center;font-size:28px;text-align:center;line-height:72px;">&#128218;</div>`
+    : `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="72" height="72"><tr><td align="center" valign="middle" width="72" height="72" bgcolor="#ffffff" style="background-color:#ffffff;border-radius:10px;overflow:hidden;"><img src="${logoUrl()}" width="48" height="48" alt="" style="display:block;margin:12px auto;width:48px;height:48px;object-fit:contain;"></td></tr></table>`
 
   const categoryBadge = category
     ? `<span style="display:inline-block;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.22);border-radius:6px;padding:3px 9px;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:11px;font-weight:600;color:#4ade80;letter-spacing:0.1px;">${category}</span>&nbsp;`
@@ -401,7 +402,56 @@ export function exchangeRejectedEmail({ recipientName, rejecterName, itemTitle }
 }
 
 /**
- * ส่งถึงทั้งสองฝ่ายเมื่อการแลกเปลี่ยนเสร็จสมบูรณ์
+ * ส่งถึงทั้งสองฝ่ายเมื่อทั้งคู่ตอบรับแล้ว — ยังไม่ได้แลกจริง แค่จับคู่สำเร็จ พร้อมนัดหมาย
+ */
+export function exchangeMatchedEmail({ recipientName, otherName, itemTitle, itemImageUrl, itemCategory, itemCondition }) {
+  const url = `${appUrl()}/chat`
+
+  const body = `
+    ${h1('คุณทั้งคู่<br>สนใจแลกเปลี่ยนกัน')}
+    ${para(`สวัสดี ${strong(recipientName)},`)}
+    ${para(`${strong(otherName)} และคุณต่างสนใจแลกเปลี่ยนกัน ตอนนี้สามารถพูดคุยเพื่อนัดหมายการแลกเปลี่ยนได้แล้ว`)}
+
+    ${productCard({
+      imageUrl: itemImageUrl || null,
+      title: itemTitle,
+      category: itemCategory || null,
+      condition: itemCondition || null,
+      statusText: 'รอนัดหมายและยืนยันการส่งมอบ',
+      statusColor: '#3b82f6',
+    })}
+
+    ${ctaButton('เปิดแชท &nbsp;&#8594;', url)}
+
+    ${para('นัดหมายวัน เวลา และสถานที่ผ่านข้อความได้เลย<br>เมื่อแลกเปลี่ยนเรียบร้อยแล้ว กดยืนยันในแชทเพื่อบันทึกผลได้เลย', 'font-size:13px;color:#6b7280;')}
+  `
+
+  const text = [
+    `สวัสดี ${recipientName},`,
+    '',
+    `${otherName} และคุณต่างสนใจแลกเปลี่ยน "${itemTitle}" กัน ตอนนี้พูดคุยเพื่อนัดหมายได้แล้ว`,
+    '',
+    `เปิดแชท: ${url}`,
+    '',
+    'นัดหมายวัน เวลา และสถานที่ผ่านข้อความได้เลย',
+    'เมื่อแลกเปลี่ยนเรียบร้อยแล้ว กดยืนยันในแชทเพื่อบันทึกผลได้เลย',
+    '',
+    'CMU ShareCycle — กรีนแคมปัส มหาวิทยาลัยเชียงใหม่',
+  ].join('\n')
+
+  return {
+    subject: `จับคู่สำเร็จแล้ว ✓`,
+    html: shell({
+      pretext: `คุณทั้งคู่สนใจแลกเปลี่ยน "${itemTitle}" — ไปนัดหมายกันในแชทได้เลย`,
+      badge: 'จับคู่แล้ว',
+      body,
+    }),
+    text,
+  }
+}
+
+/**
+ * ส่งถึงทั้งสองฝ่ายเมื่อยืนยันในแชทแล้วว่าการแลกเปลี่ยนเกิดขึ้นจริง
  */
 export function exchangeCompletedEmail({ recipientName, itemTitle, co2Text }) {
   const url = `${appUrl()}/chat`
@@ -409,11 +459,18 @@ export function exchangeCompletedEmail({ recipientName, itemTitle, co2Text }) {
   const body = `
     ${h1('แลกเปลี่ยน<br>สำเร็จแล้ว &#10003;')}
     ${para(`สวัสดี ${strong(recipientName)},`)}
-    ${para(`การแลกเปลี่ยน <strong style="color:#d1fae5;">"${itemTitle}"</strong> เสร็จสมบูรณ์แล้ว ขอบคุณที่ช่วยกันแชร์ของดีในชุมชน`)}
+    ${para(`คุณและอีกฝ่ายยืนยันแล้วว่าการแลกเปลี่ยน <strong style="color:#d1fae5;">"${itemTitle}"</strong> เสร็จสมบูรณ์ ขอบคุณที่ช่วยกันหมุนเวียนของดีในชุมชน CMU ShareCycle`)}
 
     ${co2Text ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:22px;">
     <tr><td bgcolor="#0f2e1a" style="background:linear-gradient(145deg,#0f2e1a,#0a2013);border:1px solid rgba(34,197,94,0.2);border-radius:14px;padding:18px 20px;">
-      <p style="margin:0 0 4px;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:11px;font-weight:600;color:#4b5563;text-transform:uppercase;letter-spacing:0.7px;line-height:1.2;">ผลลัพธ์ด้านสิ่งแวดล้อม</p>
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:8px;">
+        <tr>
+          <td valign="middle" bgcolor="#ffffff" style="background-color:#ffffff;border-radius:4px;overflow:hidden;width:18px;height:18px;" width="18" height="18">
+            <img src="${logoUrl()}" width="16" height="16" alt="" style="display:block;margin:1px;width:16px;height:16px;object-fit:contain;">
+          </td>
+          <td valign="middle" style="padding-left:7px;"><span style="font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:11px;font-weight:600;color:#4b5563;text-transform:uppercase;letter-spacing:0.7px;line-height:1.2;">ผลลัพธ์ด้านสิ่งแวดล้อม</span></td>
+        </tr>
+      </table>
       <p style="margin:0;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:20px;font-weight:700;color:#4ade80;line-height:1.3;">&#x2212; ${co2Text} CO&#x2082;</p>
       <p style="margin:4px 0 0;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#6b7280;line-height:1.4;">คาร์บอนที่ประหยัดได้จากการแลกเปลี่ยนครั้งนี้</p>
     </td></tr>
@@ -552,7 +609,14 @@ export function donationCompletedEmail({ recipientName, itemTitle }) {
     ${para(`สวัสดี ${strong(recipientName)},`)}
     ${para(`การบริจาค <strong style="color:#d1fae5;">"${itemTitle}"</strong> เสร็จสมบูรณ์แล้ว ของชิ้นนี้จะได้ถูกใช้อย่างคุ้มค่าต่อไป`)}
     ${ctaButton('ดูบันทึกการบริจาค &nbsp;&#8594;', url)}
-    ${para('การแบ่งปันเล็กๆ น้อยๆ สร้างความแตกต่างได้เสมอ — ขอบคุณที่เป็นส่วนหนึ่งของชุมชน CMU ShareCycle', 'font-size:13px;color:#6b7280;')}
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:4px;">
+      <tr>
+        <td valign="middle" bgcolor="#ffffff" style="background-color:#ffffff;border-radius:5px;overflow:hidden;width:22px;height:22px;" width="22" height="22">
+          <img src="${logoUrl()}" width="18" height="18" alt="" style="display:block;margin:2px;width:18px;height:18px;object-fit:contain;">
+        </td>
+        <td valign="middle" style="padding-left:8px;"><p style="margin:0;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;font-size:13px;color:#6b7280;line-height:1.6;">การแบ่งปันเล็กๆ น้อยๆ สร้างความแตกต่างได้เสมอ — ขอบคุณที่เป็นส่วนหนึ่งของชุมชน CMU ShareCycle</p></td>
+      </tr>
+    </table>
   `
 
   const text = [

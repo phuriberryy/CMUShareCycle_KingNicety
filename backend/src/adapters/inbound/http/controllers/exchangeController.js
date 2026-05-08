@@ -10,7 +10,7 @@ import {
   exchangeRequestEmail,
   exchangeAcceptedEmail,
   exchangeRejectedEmail,
-  exchangeCompletedEmail,
+  exchangeMatchedEmail,
 } from '../../../../shared/utils/emailTemplates.js'
 
 // สร้างคำขอแลกเปลี่ยน
@@ -797,28 +797,30 @@ async function completeExchange(requestId, exchangeRequest) {
     // //   io.to(exchangeRequest.requester_id).emit('notification:new')
     // // }
 
-    // ส่งอีเมลไปยังทั้งสองฝ่าย
+    // ส่งอีเมล "จับคู่สำเร็จ" ให้ทั้งสองฝ่าย — ยังไม่ใช่การแลกเปลี่ยนจริง แค่ทั้งคู่ตอบรับแล้ว
     try {
-      const co2ReducedFormatted = Number.isFinite(co2Reduced)
-        ? parseFloat(co2Reduced.toFixed(2))
-        : null
-      const co2Text = co2ReducedFormatted !== null ? `${co2ReducedFormatted} kg` : null
-      const ownerTpl = exchangeCompletedEmail({
+      const ownerTpl = exchangeMatchedEmail({
         recipientName: exchangeRequest.owner_name,
-        itemTitle: exchangeRequest.item_title,
-        co2Text,
+        otherName: exchangeRequest.requester_name,
+        itemTitle: ownerItem.title,
+        itemImageUrl: ownerItem.image_url || null,
+        itemCategory: ownerItem.category || null,
+        itemCondition: ownerItem.item_condition || null,
       })
-      const requesterTpl = exchangeCompletedEmail({
+      const requesterTpl = exchangeMatchedEmail({
         recipientName: exchangeRequest.requester_name,
-        itemTitle: exchangeRequest.item_title,
-        co2Text,
+        otherName: exchangeRequest.owner_name,
+        itemTitle: ownerItem.title,
+        itemImageUrl: ownerItem.image_url || null,
+        itemCategory: ownerItem.category || null,
+        itemCondition: ownerItem.item_condition || null,
       })
       await Promise.all([
         sendEmail({ to: exchangeRequest.owner_email, ...ownerTpl }),
         sendEmail({ to: exchangeRequest.requester_email, ...requesterTpl }),
       ])
     } catch (emailErr) {
-      console.error('Exchange completed emails failed:', emailErr.message)
+      console.error('Exchange matched emails failed:', emailErr.message)
     }
 
     return null
