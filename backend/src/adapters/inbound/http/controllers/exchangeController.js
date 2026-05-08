@@ -47,7 +47,8 @@ export const createExchangeRequest = async (req, res) => {
     await client.query('BEGIN')
 
     const itemResult = await client.query(
-      `SELECT items.title, items.user_id, users.email, users.name
+      `SELECT items.title, items.user_id, items.image_url, items.category, items.item_condition,
+              users.email, users.name
        FROM items
        JOIN users ON items.user_id = users.id
        WHERE items.id=$1 AND items.status='active'`,
@@ -166,6 +167,11 @@ export const createExchangeRequest = async (req, res) => {
         requesterEmail: req.user.email,
         itemTitle: item.title,
         message,
+        itemImageUrl: item.image_url || null,
+        itemCategory: item.category || null,
+        itemCondition: item.item_condition || null,
+        requestId: exchangeRequest.id,
+        requestedAt: exchangeRequest.created_at,
       })
       await sendEmail({ to: item.email, ...tpl })
     } catch (emailErr) {
