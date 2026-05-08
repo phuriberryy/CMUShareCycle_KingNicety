@@ -4,6 +4,12 @@ import { sendEmail } from '../../../../shared/utils/email.js'
 import { calculateItemCO2 } from '../../../../shared/utils/co2Calculator.js'
 import { getChatServer } from '../../../../application/services/chatService.js'
 import { badRequest, forbidden, internalError, notFound, unauthorized } from '../../../../shared/http/apiError.js'
+import {
+  donationRequestEmail,
+  donationAcceptedEmail,
+  donationRejectedEmail,
+  donationCompletedEmail,
+} from '../../../../shared/utils/emailTemplates.js'
 
 // สร้างคำขอรับบริจาค
 export const createDonationRequest = async (req, res) => {
@@ -105,27 +111,18 @@ export const createDonationRequest = async (req, res) => {
 
     // ส่งอีเมลไปยังเจ้าของโพสต์
     try {
-      await sendEmail({
-        to: item.email,
-        subject: 'มีคำขอรับบริจาคใหม่บน CMU ShareCycle',
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #2D7D3F;">มีคำขอรับบริจาคใหม่</h2>
-            <p>สวัสดี ${item.name},</p>
-            <p><strong>${req.user.name}</strong> ขอรับบริจาคสินค้า "<strong>${item.title}</strong>"</p>
-            <p><strong>ชื่อผู้รับบริจาค:</strong> ${recipientName.trim()}</p>
-            <p><strong>ข้อมูลติดต่อ:</strong> ${recipientContact.trim()}</p>
-            ${message?.trim() ? `<p><strong>ข้อความเพิ่มเติม:</strong> ${message.trim()}</p>` : ''}
-            <p>กรุณาเข้าสู่ระบบเพื่อดูรายละเอียดและยอมรับ/ปฏิเสธคำขอ</p>
-            <p style="margin-top: 30px; color: #666; font-size: 12px;">
-              CMU ShareCycle - Green Campus<br>
-              <a href="http://localhost:3000" style="color: #2D7D3F;">เข้าสู่ระบบ</a>
-            </p>
-          </div>
-        `,
+      const tpl = donationRequestEmail({
+        ownerName: item.name,
+        requesterName: req.user.name,
+        requesterEmail: req.user.email,
+        itemTitle: item.title,
+        recipientName: recipientName.trim(),
+        recipientContact: recipientContact.trim(),
+        message: message?.trim() || null,
       })
+      await sendEmail({ to: item.email, ...tpl })
     } catch (emailErr) {
-      console.error('Failed to send email:', emailErr)
+      console.error('Donation request email failed:', emailErr.message)
     }
 
     // สร้างแชทที่เชื่อมโยงกับ donation request นี้ทันที
@@ -289,24 +286,14 @@ export const acceptDonationRequestByOwner = async (req, res) => {
 
     // ส่งอีเมลไปยังผู้ขอรับบริจาค
     try {
-      await sendEmail({
-        to: donationRequest.requester_email,
-        subject: 'เจ้าของโพสต์ยอมรับคำขอรับบริจาค',
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #2D7D3F;">คำขอรับบริจาคของคุณได้รับการยอมรับ</h2>
-            <p>สวัสดี ${donationRequest.requester_name},</p>
-            <p><strong>${donationRequest.owner_name}</strong> ยอมรับคำขอรับบริจาคสำหรับสินค้า "<strong>${donationRequest.item_title}</strong>"</p>
-            <p>กรุณาเข้าสู่ระบบเพื่อยอมรับคำขอรับบริจาคของคุณ</p>
-            <p style="margin-top: 30px; color: #666; font-size: 12px;">
-              CMU ShareCycle - Green Campus<br>
-              <a href="http://localhost:3000" style="color: #2D7D3F;">เข้าสู่ระบบ</a>
-            </p>
-          </div>
-        `,
+      const tpl = donationAcceptedEmail({
+        requesterName: donationRequest.requester_name,
+        ownerName: donationRequest.owner_name,
+        itemTitle: donationRequest.item_title,
       })
+      await sendEmail({ to: donationRequest.requester_email, ...tpl })
     } catch (emailErr) {
-      console.error('Failed to send email:', emailErr)
+      console.error('Donation accepted email failed:', emailErr.message)
     }
 
     // ถ้าทั้งสองฝ่าย accept แล้ว ให้สร้าง chat และเปลี่ยน status
@@ -540,23 +527,14 @@ export const rejectDonationRequest = async (req, res) => {
 
     // ส่งอีเมล
     try {
-      await sendEmail({
-        to: targetUserEmail,
-        subject: 'คำขอรับบริจาคถูกปฏิเสธ',
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #d32f2f;">คำขอรับบริจาคถูกปฏิเสธ</h2>
-            <p>สวัสดี ${targetUserName},</p>
-            <p><strong>${rejecterName}</strong> ปฏิเสธคำขอรับบริจาคสำหรับสินค้า "<strong>${donationRequest.item_title}</strong>"</p>
-            <p style="margin-top: 30px; color: #666; font-size: 12px;">
-              CMU ShareCycle - Green Campus<br>
-              <a href="http://localhost:3000" style="color: #2D7D3F;">เข้าสู่ระบบ</a>
-            </p>
-          </div>
-        `,
+      const tpl = donationRejectedEmail({
+        recipientName: targetUserName,
+        rejecterName,
+        itemTitle: donationRequest.item_title,
       })
+      await sendEmail({ to: targetUserEmail, ...tpl })
     } catch (emailErr) {
-      console.error('Failed to send email:', emailErr)
+      console.error('Donation rejected email failed:', emailErr.message)
     }
 
     return res.json({ success: true, message: 'Donation request rejected' })
@@ -655,32 +633,20 @@ async function completeDonation(requestId, donationRequest) {
 
     // ส่งอีเมลไปยังทั้งสองฝ่าย
     try {
-      const emailHtml = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #2D7D3F;">การบริจาคสำเร็จ!</h2>
-          <p>การบริจาคสินค้า "<strong>${donationRequest.item_title}</strong>" สำเร็จแล้ว</p>
-          <p>แชทได้เปิดให้แล้วเพื่อให้คุณทั้งสองสามารถติดต่อกันได้</p>
-          <p style="margin-top: 30px; color: #666; font-size: 12px;">
-            CMU ShareCycle - Green Campus<br>
-            <a href="http://localhost:3000" style="color: #2D7D3F;">เข้าสู่ระบบ</a>
-          </p>
-        </div>
-      `
-
+      const ownerTpl = donationCompletedEmail({
+        recipientName: donationRequest.owner_name,
+        itemTitle: donationRequest.item_title,
+      })
+      const requesterTpl = donationCompletedEmail({
+        recipientName: donationRequest.requester_name,
+        itemTitle: donationRequest.item_title,
+      })
       await Promise.all([
-        sendEmail({
-          to: donationRequest.owner_email,
-          subject: 'การบริจาคสำเร็จ - CMU ShareCycle',
-          html: emailHtml,
-        }),
-        sendEmail({
-          to: donationRequest.requester_email,
-          subject: 'การบริจาคสำเร็จ - CMU ShareCycle',
-          html: emailHtml,
-        }),
+        sendEmail({ to: donationRequest.owner_email, ...ownerTpl }),
+        sendEmail({ to: donationRequest.requester_email, ...requesterTpl }),
       ])
     } catch (emailErr) {
-      console.error('Failed to send completion emails:', emailErr)
+      console.error('Donation completed emails failed:', emailErr.message)
     }
   } catch (err) {
     console.error('Complete donation error:', err)

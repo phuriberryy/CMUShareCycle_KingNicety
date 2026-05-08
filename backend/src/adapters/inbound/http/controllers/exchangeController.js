@@ -6,6 +6,12 @@ import { calculateItemCO2, calculateExchangeCO2Reduction } from '../../../../sha
 import { getChatServer } from '../../../../application/services/chatService.js'
 import { badRequest, forbidden, internalError, notFound, unauthorized } from '../../../../shared/http/apiError.js'
 import env from '../../../../infrastructure/config/env.js'
+import {
+  exchangeRequestEmail,
+  exchangeAcceptedEmail,
+  exchangeRejectedEmail,
+  exchangeCompletedEmail,
+} from '../../../../shared/utils/emailTemplates.js'
 
 // สร้างคำขอแลกเปลี่ยน
 export const createExchangeRequest = async (req, res) => {
@@ -154,47 +160,14 @@ export const createExchangeRequest = async (req, res) => {
 
     // ส่งอีเมลไปยังเจ้าของโพสต์ (หลัง commit)
     try {
-      const appUrl = env.clientOrigin || 'http://localhost:3000'
-      const chatUrl = `${appUrl}/chat`
-      await sendEmail({
-        to: item.email,
-        subject: `มีคำขอแลกเปลี่ยนใหม่สำหรับ "${item.title}" — CMU ShareCycle`,
-        html: `
-          <div style="font-family:'IBM Plex Sans Thai',Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
-            <div style="background:#2a6b52;padding:28px 32px;">
-              <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:700;">CMU ShareCycle</h1>
-              <p style="margin:4px 0 0;color:#a7f3d0;font-size:13px;">Green Campus — Chiang Mai University</p>
-            </div>
-            <div style="padding:28px 32px;">
-              <h2 style="margin:0 0 16px;color:#111827;font-size:18px;">มีคำขอแลกเปลี่ยนใหม่!</h2>
-              <p style="margin:0 0 12px;color:#374151;font-size:15px;">สวัสดีคุณ <strong>${item.name}</strong>,</p>
-              <p style="margin:0 0 20px;color:#374151;font-size:15px;">
-                <strong>${req.user.name}</strong> (${req.user.email}) ต้องการแลกเปลี่ยนสำหรับสินค้าของคุณ
-              </p>
-              <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px 20px;margin-bottom:20px;">
-                <p style="margin:0 0 6px;font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;font-weight:600;">สินค้าของคุณ</p>
-                <p style="margin:0;font-size:16px;font-weight:700;color:#15803d;">${item.title}</p>
-              </div>
-              ${message ? `
-              <div style="background:#f9fafb;border-left:3px solid #2a6b52;border-radius:0 6px 6px 0;padding:12px 16px;margin-bottom:20px;">
-                <p style="margin:0 0 4px;font-size:12px;color:#6b7280;font-weight:600;">ข้อความจากผู้ขอ</p>
-                <p style="margin:0;font-size:14px;color:#374151;">${message}</p>
-              </div>` : ''}
-              <a href="${chatUrl}" style="display:inline-block;background:#2a6b52;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;padding:12px 28px;border-radius:8px;margin-bottom:24px;">
-                เปิดกล่องข้อความ →
-              </a>
-              <p style="margin:0;font-size:13px;color:#6b7280;">
-                ไปที่ <strong>กล่องข้อความ (Chat)</strong> เพื่อยอมรับหรือปฏิเสธคำขอ และพูดคุยกับผู้ขอแลกเปลี่ยน
-              </p>
-            </div>
-            <div style="background:#f9fafb;border-top:1px solid #e5e7eb;padding:16px 32px;">
-              <p style="margin:0;font-size:12px;color:#9ca3af;">
-                อีเมลนี้ส่งโดยอัตโนมัติจาก CMU ShareCycle — กรุณาอย่าตอบกลับ
-              </p>
-            </div>
-          </div>
-        `,
+      const tpl = exchangeRequestEmail({
+        ownerName: item.name,
+        requesterName: req.user.name,
+        requesterEmail: req.user.email,
+        itemTitle: item.title,
+        message,
       })
+      await sendEmail({ to: item.email, ...tpl })
     } catch (emailErr) {
       console.error('Exchange request email failed:', emailErr.message)
     }
@@ -354,24 +327,14 @@ export const acceptExchangeRequestByOwner = async (req, res) => {
 
     // ส่งอีเมลไปยังผู้ขอแลก
     try {
-      await sendEmail({
-        to: exchangeRequest.requester_email,
-        subject: 'เจ้าของโพสต์ยอมรับคำขอแลกเปลี่ยน',
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #2D7D3F;">คำขอแลกเปลี่ยนของคุณได้รับการยอมรับ</h2>
-            <p>สวัสดี ${exchangeRequest.requester_name},</p>
-            <p><strong>${exchangeRequest.owner_name}</strong> ยอมรับคำขอแลกเปลี่ยนสำหรับสินค้า "<strong>${exchangeRequest.item_title}</strong>"</p>
-            <p>กรุณาเข้าสู่ระบบเพื่อยอมรับคำขอแลกเปลี่ยนของคุณ</p>
-            <p style="margin-top: 30px; color: #666; font-size: 12px;">
-              CMU ShareCycle - Green Campus<br>
-              <a href="http://localhost:3000" style="color: #2D7D3F;">เข้าสู่ระบบ</a>
-            </p>
-          </div>
-        `,
+      const tpl = exchangeAcceptedEmail({
+        requesterName: exchangeRequest.requester_name,
+        ownerName: exchangeRequest.owner_name,
+        itemTitle: exchangeRequest.item_title,
       })
+      await sendEmail({ to: exchangeRequest.requester_email, ...tpl })
     } catch (emailErr) {
-      console.error('Failed to send email:', emailErr)
+      console.error('Exchange accepted email failed:', emailErr.message)
     }
 
     // ถ้าทั้งสองฝ่าย accept แล้ว ให้สร้าง chat และ exchange history
@@ -619,23 +582,14 @@ export const rejectExchangeRequest = async (req, res) => {
 
     // ส่งอีเมล
     try {
-      await sendEmail({
-        to: targetUserEmail,
-        subject: 'คำขอแลกเปลี่ยนถูกปฏิเสธ',
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #d32f2f;">คำขอแลกเปลี่ยนถูกปฏิเสธ</h2>
-            <p>สวัสดี ${targetUserName},</p>
-            <p><strong>${rejecterName}</strong> ปฏิเสธคำขอแลกเปลี่ยนสำหรับสินค้า "<strong>${exchangeRequest.item_title}</strong>"</p>
-            <p style="margin-top: 30px; color: #666; font-size: 12px;">
-              CMU ShareCycle - Green Campus<br>
-              <a href="http://localhost:3000" style="color: #2D7D3F;">เข้าสู่ระบบ</a>
-            </p>
-          </div>
-        `,
+      const tpl = exchangeRejectedEmail({
+        recipientName: targetUserName,
+        rejecterName,
+        itemTitle: exchangeRequest.item_title,
       })
+      await sendEmail({ to: targetUserEmail, ...tpl })
     } catch (emailErr) {
-      console.error('Failed to send email:', emailErr)
+      console.error('Exchange rejected email failed:', emailErr.message)
     }
 
     return res.json({ success: true, message: 'Exchange request rejected' })
@@ -842,34 +796,23 @@ async function completeExchange(requestId, exchangeRequest) {
       const co2ReducedFormatted = Number.isFinite(co2Reduced)
         ? parseFloat(co2Reduced.toFixed(2))
         : null
-      const co2Text = co2ReducedFormatted !== null ? `${co2ReducedFormatted} kg` : 'N/A'
-      const emailHtml = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #2D7D3F;">การแลกเปลี่ยนสำเร็จ!</h2>
-          <p>การแลกเปลี่ยนสินค้า "<strong>${exchangeRequest.item_title}</strong>" สำเร็จแล้ว</p>
-          <p>แชทได้เปิดให้แล้วเพื่อให้คุณทั้งสองสามารถติดต่อกันได้</p>
-          <p>CO₂ ที่ลดได้จากการแลกเปลี่ยนนี้: <strong>${co2Text}</strong></p>
-          <p style="margin-top: 30px; color: #666; font-size: 12px;">
-            CMU ShareCycle - Green Campus<br>
-            <a href="http://localhost:3000" style="color: #2D7D3F;">เข้าสู่ระบบ</a>
-          </p>
-        </div>
-      `
-
+      const co2Text = co2ReducedFormatted !== null ? `${co2ReducedFormatted} kg` : null
+      const ownerTpl = exchangeCompletedEmail({
+        recipientName: exchangeRequest.owner_name,
+        itemTitle: exchangeRequest.item_title,
+        co2Text,
+      })
+      const requesterTpl = exchangeCompletedEmail({
+        recipientName: exchangeRequest.requester_name,
+        itemTitle: exchangeRequest.item_title,
+        co2Text,
+      })
       await Promise.all([
-        sendEmail({
-          to: exchangeRequest.owner_email,
-          subject: 'การแลกเปลี่ยนสำเร็จ - CMU ShareCycle',
-          html: emailHtml,
-        }),
-        sendEmail({
-          to: exchangeRequest.requester_email,
-          subject: 'การแลกเปลี่ยนสำเร็จ - CMU ShareCycle',
-          html: emailHtml,
-        }),
+        sendEmail({ to: exchangeRequest.owner_email, ...ownerTpl }),
+        sendEmail({ to: exchangeRequest.requester_email, ...requesterTpl }),
       ])
     } catch (emailErr) {
-      console.error('Failed to send completion emails:', emailErr)
+      console.error('Exchange completed emails failed:', emailErr.message)
     }
 
     return null
