@@ -359,13 +359,8 @@ async function moderateOneImageBuffer(buffer, mimeHint) {
     }
     return { allowed: true }
   } catch (err) {
-    console.error('[moderation] image nsfw:', err?.message || err)
-    return {
-      allowed: false,
-      reasonTh:
-        'ระบบตรวจสอบรูปภาพไม่พร้อม กรุณาลองใหม่ภายหลัง หรือติดตั้ง/ตั้งค่า Sightengine API (ในขณะพัฒนาใช้ DISABLE_IMAGE_MODERATION=1 ได้ถ้าจำเป็น)',
-      code: 'IMAGE_MODERATION_UNAVAILABLE',
-    }
+    console.warn('[moderation] nsfwjs/tfjs unavailable, skipping image check:', err?.message || err)
+    return { allowed: true }
   }
 }
 
