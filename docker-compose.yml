@@ -7,6 +7,9 @@ services:
       - "4000:4000"
     env_file:
       - ./backend/.env
+    environment:
+      - CLIENT_ORIGIN=https://app2.turnpro.dev
+      - CLIENT_ORIGINS=https://app2.turnpro.dev
     volumes:
       - ./backend/.env:/app/.env:ro
       - backend_uploads:/app/uploads
@@ -17,7 +20,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        REACT_APP_API_URL: http://localhost:4000/api
+        REACT_APP_API_URL: https://app2.turnpro.dev/api
     ports:
       - "3000:80"
     depends_on:
