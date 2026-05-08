@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { ArrowLeft } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import ChatInbox from './ChatInbox'
 import ChatRoom from './ChatRoom'
@@ -130,9 +131,10 @@ export default function ChatPage({
           <button
             type="button"
             onClick={onInboxBack || (() => window.history.back())}
-            className="inline-flex h-10 items-center gap-2 rounded-full border border-gray-200 bg-white px-3 text-sm font-semibold text-gray-700"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 shadow-sm transition hover:bg-gray-50"
+            aria-label="กลับ"
           >
-            ← Back
+            <ArrowLeft size={20} />
           </button>
         </div>
         <ChatInbox

@@ -127,10 +127,10 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
   return (
     <div className="sc-page w-full min-w-0 overflow-x-hidden">
       <div className="sc-container w-full min-w-0 space-y-4 sm:space-y-10 lg:space-y-12">
-        <section className="relative overflow-hidden rounded-[26px] border border-primary/10 bg-gradient-to-br from-[#f8fcfa] via-[#edf8f1] to-[#dff1e7] shadow-[0_14px_40px_rgba(14,81,58,0.08)] sm:rounded-[28px]">
+        <section className="relative overflow-hidden rounded-[26px] border border-primary/20 bg-gradient-to-br from-white via-[#fbfefc] to-[#f2faf6] shadow-[0_14px_40px_rgba(14,81,58,0.06)] sm:rounded-[28px]">
           <div className="pointer-events-none absolute -right-20 -top-24 h-52 w-52 rounded-full bg-white/70 blur-3xl" aria-hidden />
-          <div className="pointer-events-none absolute -bottom-28 left-8 h-52 w-52 rounded-full bg-primary/10 blur-3xl" aria-hidden />
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_28%,rgba(255,255,255,0.86),transparent_34%)]" aria-hidden />
+          <div className="pointer-events-none absolute -bottom-28 left-8 h-52 w-52 rounded-full bg-primary/[0.04] blur-3xl" aria-hidden />
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_28%,rgba(255,255,255,0.94),transparent_34%)]" aria-hidden />
 
           <div className="relative z-10 flex flex-col gap-3.5 px-4 py-4 sm:gap-7 sm:px-7 sm:py-8 lg:flex-row lg:items-center lg:justify-between lg:gap-12 lg:px-10 lg:py-9">
             <div className="max-w-xl space-y-3 sm:space-y-5">
