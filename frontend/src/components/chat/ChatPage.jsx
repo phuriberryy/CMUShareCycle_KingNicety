@@ -36,9 +36,12 @@ export default function ChatPage({
   onConfirmExchange,
   onAcceptChat,
   onDeclineChat,
-  confirmingExchange = false,
-  acceptingChat      = false,
-  decliningChat      = false,
+  confirmingExchange  = false,
+  acceptingChat       = false,
+  decliningChat       = false,
+  // Donation confirmation
+  onConfirmDonation,
+  confirmingDonation  = false,
 }) {
   useAuth()
   const [isMobile, setIsMobile] = useState(isMobileInitially)
@@ -186,6 +189,8 @@ export default function ChatPage({
           confirmingExchange={confirmingExchange}
           acceptingChat={acceptingChat}
           decliningChat={decliningChat}
+          onConfirmDonation={onConfirmDonation}
+          confirmingDonation={confirmingDonation}
         />
       </div>
 

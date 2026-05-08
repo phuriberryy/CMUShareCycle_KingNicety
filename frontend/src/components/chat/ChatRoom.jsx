@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ArrowLeft, Camera, Image as ImageIcon, Loader2, MessageCircle, Plus, Send, X } from 'lucide-react'
 import ExchangeBanner from './ExchangeBanner'
+import DonationBanner from './DonationBanner'
 
 export default function ChatRoom({
   chat,
@@ -26,9 +27,12 @@ export default function ChatRoom({
   onConfirmExchange,
   onAcceptChat,
   onDeclineChat,
-  confirmingExchange = false,
-  acceptingChat      = false,
-  decliningChat      = false,
+  confirmingExchange  = false,
+  acceptingChat       = false,
+  decliningChat       = false,
+  // Donation confirmation props
+  onConfirmDonation,
+  confirmingDonation  = false,
 }) {
   const messagesContainerRef = useRef(null)
   const [userScrolledUp, setUserScrolledUp] = useState(false)
@@ -127,6 +131,19 @@ export default function ChatRoom({
           onAccept={onAcceptChat}
           onDecline={onDeclineChat}
           confirming={confirmingExchange}
+          accepting={acceptingChat}
+          declining={decliningChat}
+        />
+      ) : null}
+
+      {/* Donation confirmation banner — only renders for donation chats */}
+      {chat?.isDonationChat ? (
+        <DonationBanner
+          chat={chat}
+          onConfirm={onConfirmDonation}
+          onAccept={onAcceptChat}
+          onDecline={onDeclineChat}
+          confirming={confirmingDonation}
           accepting={acceptingChat}
           declining={decliningChat}
         />

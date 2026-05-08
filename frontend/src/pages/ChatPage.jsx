@@ -38,6 +38,7 @@ export default function ChatPage() {
   const [chatMeta, setChatMeta] = useState({})
   const [socketConnected, setSocketConnected] = useState(false)
   const [confirmingExchange, setConfirmingExchange] = useState(false)
+  const [confirmingDonation, setConfirmingDonation] = useState(false)
   const [acceptingChat, setAcceptingChat] = useState(false)
   const [decliningChat, setDecliningChat] = useState(false)
   const fileInputRef = useRef(null)
@@ -200,9 +201,11 @@ export default function ChatPage() {
       mergeMessages([message], currentChatId)
     }
     // Patch chat state for real-time confirmation updates
-    const handleChatUpdated     = (updatedChat) => { if (updatedChat?.id) patchChat(updatedChat) }
+    const handleChatUpdated       = (updatedChat) => { if (updatedChat?.id) patchChat(updatedChat) }
     const handleExchangeConfirmed = (updatedChat) => { if (updatedChat?.id) patchChat(updatedChat) }
     const handleExchangeCompleted = (updatedChat) => { if (updatedChat?.id) patchChat(updatedChat) }
+    const handleDonationConfirmed = (updatedChat) => { if (updatedChat?.id) patchChat(updatedChat) }
+    const handleDonationCompleted = (updatedChat) => { if (updatedChat?.id) patchChat(updatedChat) }
 
     socket.off('connect', handleConnect)
     socket.off('disconnect', handleDisconnect)
@@ -210,6 +213,8 @@ export default function ChatPage() {
     socket.off('chat:updated', handleChatUpdated)
     socket.off('exchange:confirmed', handleExchangeConfirmed)
     socket.off('exchange:completed', handleExchangeCompleted)
+    socket.off('donation:confirmed', handleDonationConfirmed)
+    socket.off('donation:completed', handleDonationCompleted)
 
     socket.on('connect', handleConnect)
     socket.on('disconnect', handleDisconnect)
@@ -217,6 +222,8 @@ export default function ChatPage() {
     socket.on('chat:updated', handleChatUpdated)
     socket.on('exchange:confirmed', handleExchangeConfirmed)
     socket.on('exchange:completed', handleExchangeCompleted)
+    socket.on('donation:confirmed', handleDonationConfirmed)
+    socket.on('donation:completed', handleDonationCompleted)
 
     return () => {
       socket.off('connect', handleConnect)
@@ -225,6 +232,8 @@ export default function ChatPage() {
       socket.off('chat:updated', handleChatUpdated)
       socket.off('exchange:confirmed', handleExchangeConfirmed)
       socket.off('exchange:completed', handleExchangeCompleted)
+      socket.off('donation:confirmed', handleDonationConfirmed)
+      socket.off('donation:completed', handleDonationCompleted)
       socket.disconnect()
       socketRef.current = null
     }
@@ -255,6 +264,19 @@ export default function ChatPage() {
       console.error('Confirm exchange error:', err)
     } finally {
       setConfirmingExchange(false)
+    }
+  }
+
+  const handleConfirmDonation = async () => {
+    if (!token || !selectedChat || confirmingDonation) return
+    setConfirmingDonation(true)
+    try {
+      const updated = await chatApi.confirmDonation(token, String(selectedChat))
+      if (updated) patchChat(updated)
+    } catch (err) {
+      console.error('Confirm donation error:', err)
+    } finally {
+      setConfirmingDonation(false)
     }
   }
 
@@ -438,6 +460,8 @@ export default function ChatPage() {
       confirmingExchange={confirmingExchange}
       acceptingChat={acceptingChat}
       decliningChat={decliningChat}
+      onConfirmDonation={handleConfirmDonation}
+      confirmingDonation={confirmingDonation}
     />
   )
 }
