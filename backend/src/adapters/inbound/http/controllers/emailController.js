@@ -1,5 +1,11 @@
 import { body, validationResult } from 'express-validator'
-import { sendEmail } from '../../../../shared/utils/email.js'
+import { sendEmail, getEmailConfig } from '../../../../shared/utils/email.js'
+
+// ตรวจสอบสถานะ email service (GET /api/email/status)
+export const emailStatus = (_req, res) => {
+  const config = getEmailConfig()
+  return res.json({ ok: true, ...config })
+}
 
 // ทดสอบการส่งอีเมล
 export const testEmail = async (req, res) => {
@@ -9,36 +15,40 @@ export const testEmail = async (req, res) => {
   }
 
   const { to, subject, html } = req.body
+  const config = getEmailConfig()
 
   try {
-    await sendEmail({
+    const result = await sendEmail({
       to,
-      subject: subject || 'ทดสอบการส่งอีเมลจาก CMU ShareCycle',
+      subject: subject || 'SMTP Test — CMU ShareCycle',
       html: html || `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #2D7D3F;">ทดสอบการส่งอีเมล</h2>
-          <p>สวัสดีครับ/ค่ะ,</p>
-          <p>นี่คืออีเมลทดสอบจาก <strong>CMU ShareCycle</strong></p>
-          <p>หากคุณได้รับอีเมลนี้ แสดงว่าระบบส่งอีเมลทำงานได้ปกติ</p>
-          <p style="margin-top: 30px; color: #666; font-size: 12px;">
-            CMU ShareCycle - Green Campus<br>
-            <a href="http://localhost:3000" style="color: #2D7D3F;">เข้าสู่ระบบ</a>
-          </p>
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
+          <h2 style="color:#2D7D3F;">Email delivery test</h2>
+          <p>If you received this, the <strong>${config.mode.toUpperCase()}</strong> transport is working correctly.</p>
+          <p style="color:#666;font-size:12px;">CMU ShareCycle — sent at ${new Date().toISOString()}</p>
         </div>
       `,
     })
 
+    const delivered = result.accepted?.length > 0 && result.rejected?.length === 0
     return res.json({
       success: true,
-      message: 'อีเมลส่งสำเร็จ!',
+      delivered,
+      mode: config.mode,
+      messageId: result.messageId || null,
+      accepted: result.accepted || [],
+      rejected: result.rejected || [],
+      mock: config.mock,
       to,
     })
   } catch (err) {
     console.error('Test email error:', err)
     return res.status(500).json({
       success: false,
-      message: 'ไม่สามารถส่งอีเมลได้',
+      mode: config.mode,
       error: err.message,
+      code: err.code || null,
+      to,
     })
   }
 }

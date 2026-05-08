@@ -201,6 +201,27 @@ export const sendEmail = async ({ to, subject, html }) => {
   return mockSendEmail({ to, subject, html })
 }
 
+// รายงานสถานะ email service (ใช้ใน health/diagnostic endpoint)
+export const getEmailConfig = () => {
+  const mode = USE_MOCK_EMAIL ? 'mock' : hasSmtpConfig ? 'smtp' : useResend ? 'resend' : 'mock'
+  const masked = (v) => (v ? v.replace(/(.{2}).*(@.*)/, '$1***$2') : null)
+  return {
+    mode,
+    smtp: {
+      host: env.emailHost || null,
+      port: env.emailPort || null,
+      user: masked(env.emailUser),
+      from: masked(env.emailFrom),
+      configured: Boolean(hasSmtpConfig),
+    },
+    resend: {
+      configured: Boolean(useResend),
+      keyPrefix: env.resendApiKey ? env.resendApiKey.slice(0, 6) + '...' : null,
+    },
+    mock: USE_MOCK_EMAIL,
+  }
+}
+
 // ส่งอีเมลทดสอบ
 export const sendTestEmail = async (to) => {
   return sendEmail({
