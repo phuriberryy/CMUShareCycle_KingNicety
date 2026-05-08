@@ -89,8 +89,8 @@ export default function ChatRoom({
             <MessageCircle className="text-primary/80" size={20} strokeWidth={2} />
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-gray-900">Select a chat</p>
-            <p className="mt-0.5 text-xs leading-snug text-gray-500">Choose a conversation from the inbox.</p>
+            <p className="text-sm font-semibold text-gray-900">เลือกห้องแชท</p>
+            <p className="mt-0.5 text-xs leading-snug text-gray-500">เลือกบทสนทนาจากกล่องข้อความด้านซ้าย</p>
           </div>
         </div>
       </div>

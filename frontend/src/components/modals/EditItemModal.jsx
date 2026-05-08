@@ -5,6 +5,8 @@ import { itemsApi } from '../../lib/api'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import { MAX_ITEM_GALLERY, getGalleryUrlsFromItem } from '../../utils/itemImages'
+import { OTHER_SUBTYPE_MAX_LENGTH } from '../../utils/co2Calculator'
+import { moderateCombinedItemText } from '../../utils/contentModeration'
 
 const readFileAsDataUrl = (file) =>
   new Promise((resolve, reject) => {
@@ -20,6 +22,7 @@ export default function EditItemModal({ open, onClose, item, onSuccess }) {
   const [formData, setFormData] = useState({
     itemName: '',
     category: '',
+    otherSubtype: '',
     condition: '',
     lookingFor: '',
     availableUntil: '',
@@ -35,6 +38,7 @@ export default function EditItemModal({ open, onClose, item, onSuccess }) {
       setFormData({
         itemName: item.title || '',
         category: item.category || '',
+        otherSubtype: item.other_subtype || '',
         condition: item.item_condition || '',
         lookingFor: item.looking_for || '',
         availableUntil: item.available_until ? item.available_until.split('T')[0] : '',
@@ -45,6 +49,13 @@ export default function EditItemModal({ open, onClose, item, onSuccess }) {
       if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }, [item, open])
+
+  useEffect(() => {
+    if (formData.category === 'Others') return
+    if (!formData.otherSubtype) return
+    setFormData((prev) => ({ ...prev, otherSubtype: '' }))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.category])
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -97,11 +108,35 @@ export default function EditItemModal({ open, onClose, item, onSuccess }) {
       toast.warning('ต้องมีรูปสินค้าอย่างน้อย 1 รูป', 'ข้อมูลไม่ครบ')
       return
     }
+    if (formData.category === 'Others') {
+      const subtypeText = (formData.otherSubtype || '').trim()
+      if (subtypeText.length < 2) {
+        toast.warning('กรุณาระบุประเภทย่อยของสินค้าหมวด "อื่นๆ" (อย่างน้อย 2 ตัวอักษร) เพื่อคำนวณ CO₂ ที่แม่นยำ', 'ข้อมูลไม่ครบ')
+        return
+      }
+    }
+
+    const otherSubtypeTrim = formData.category === 'Others' ? (formData.otherSubtype || '').trim() : ''
+    const textMod = moderateCombinedItemText({
+      title: formData.itemName,
+      description: formData.description || '',
+      lookingFor: formData.lookingFor || '',
+      pickupLocation: formData.pickupLocation || '',
+      otherSubtype: otherSubtypeTrim,
+    })
+    if (!textMod.allowed) {
+      toast.warning(textMod.reasonTh, 'เนื้อหาไม่เหมาะสม')
+      return
+    }
+
     setSubmitting(true)
     try {
+      const otherSubtypeValue = formData.category === 'Others' ? (formData.otherSubtype || '').trim() : null
       await itemsApi.update(token, item.id, {
         title: formData.itemName,
         category: formData.category,
+        otherSubtype: otherSubtypeValue,
+        other_subtype: otherSubtypeValue,
         itemCondition: formData.condition,
         lookingFor: formData.lookingFor,
         description: formData.description,
@@ -122,14 +157,14 @@ export default function EditItemModal({ open, onClose, item, onSuccess }) {
 
   const categoryOptions = [
     { value: '', label: 'เลือกหมวดหมู่' },
-    { value: 'Clothes & Fashion', label: '👕 Clothes & Fashion (เสื้อผ้า, กางเกง, รองเท้า)' },
-    { value: 'Dorm Essentials', label: '🏡 Dorm Essentials (หม้อหุงข้าว, ราวตากผ้า, ผ้าห่ม)' },
-    { value: 'Books & Study', label: '📚 Books & Study (ตำราเรียน, สมุด, ไฟอ่านหนังสือ)' },
-    { value: 'Kitchen & Appliances', label: '🍳 Kitchen & Appliances (กระทะ, เขียง, หม้อทอด)' },
-    { value: 'Cleaning & Laundry', label: '🧼 Cleaning & Laundry (น้ำยาซักผ้า, ไม้ถูพื้น, ไม้กวาด)' },
-    { value: 'Hobbies & Entertainment', label: '🎮 Hobbies & Entertainment (บอร์ดเกม, กีตาร์, ของสะสม)' },
-    { value: 'Sports Gear', label: '🏀 Sports Gear (รองเท้ากีฬา, ลูกบอล, เสื่อโยคะ)' },
-    { value: 'Others', label: '✨ Others (อื่น ๆ)' },
+    { value: 'Clothes & Fashion', label: '👕 เสื้อผ้า แฟชั่น (เสื้อผ้า, กางเกง, รองเท้า)' },
+    { value: 'Dorm Essentials', label: '🏡 ของใช้ในหอ (หม้อหุงข้าว, ราวตากผ้า, ผ้าห่ม)' },
+    { value: 'Books & Study', label: '📚 หนังสือ การเรียน (ตำราเรียน, สมุด, โคมไฟ)' },
+    { value: 'Kitchen & Appliances', label: '🍳 ครัว เครื่องใช้ (กระทะ, เขียง, หม้อทอด)' },
+    { value: 'Cleaning & Laundry', label: '🧼 ทำความสะอาด ซักผ้า (น้ำยา, ไม้ถูพื้น, ไม้กวาด)' },
+    { value: 'Hobbies & Entertainment', label: '🎮 งานอดิเรก ความบันเทิง (บอร์ดเกม, กีตาร์, ของสะสม)' },
+    { value: 'Sports Gear', label: '🏀 กีฬา (รองเท้ากีฬา, ลูกบอล, เสื่อโยคะ)' },
+    { value: 'Others', label: '✨ อื่นๆ' },
   ]
 
   const conditionOptions = [
@@ -145,8 +180,8 @@ export default function EditItemModal({ open, onClose, item, onSuccess }) {
     <Modal
       open={open}
       onClose={onClose}
-      title="Edit Post"
-      subtitle="Edit your posted item information"
+      title="แก้ไขโพสต์"
+      subtitle="แก้ไขข้อมูลสินค้าที่คุณโพสต์ไว้"
       size="lg"
     >
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -203,14 +238,14 @@ export default function EditItemModal({ open, onClose, item, onSuccess }) {
         {/* Item Name */}
         <div>
           <label className="mb-2 block text-sm font-bold text-gray-900">
-            Item Name <span className="text-red-500">*</span>
+            ชื่อสินค้า <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             name="itemName"
             value={formData.itemName}
             onChange={handleInputChange}
-            placeholder="e.g., Calculus Textbook"
+            placeholder="เช่น ตำรา Calculus, หม้อหุงข้าว, ราวตากผ้า"
             className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0"
             required
           />
@@ -220,7 +255,7 @@ export default function EditItemModal({ open, onClose, item, onSuccess }) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="mb-2 block text-sm font-bold text-gray-900">
-              Category <span className="text-red-500">*</span>
+              หมวดหมู่ <span className="text-red-500">*</span>
             </label>
             <select
               name="category"
@@ -238,7 +273,7 @@ export default function EditItemModal({ open, onClose, item, onSuccess }) {
           </div>
           <div>
             <label className="mb-2 block text-sm font-bold text-gray-900">
-              Condition <span className="text-red-500">*</span>
+              สภาพสินค้า <span className="text-red-500">*</span>
             </label>
             <select
               name="condition"
@@ -256,6 +291,28 @@ export default function EditItemModal({ open, onClose, item, onSuccess }) {
           </div>
         </div>
 
+        {/* Other Subtype — แสดงเมื่อหมวดเป็น Others */}
+        {formData.category === 'Others' ? (
+          <div className="rounded-xl border border-amber-200 bg-amber-50/40 p-3 sm:p-4">
+            <label className="mb-2 block text-sm font-bold text-gray-900">
+              ระบุชนิดสินค้า <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="otherSubtype"
+              value={formData.otherSubtype}
+              onChange={handleInputChange}
+              maxLength={OTHER_SUBTYPE_MAX_LENGTH}
+              placeholder="เช่น โน้ตบุ๊ก Dell, ปากกา Pilot, หม้อหุงข้าว Sharp"
+              className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0"
+              required
+            />
+            <p className="mt-2 text-[11px] leading-relaxed text-gray-600 sm:text-xs">
+              จำเป็นสำหรับหมวด "อื่นๆ" — พิมพ์ชนิดสินค้าให้ชัดเจน ระบบจะใช้ keyword นี้คำนวณ CO₂ ให้แม่นยำขึ้น
+            </p>
+          </div>
+        ) : null}
+
         {/* Looking to Exchange For */}
         <div>
           <label className="mb-2 block text-sm font-bold text-gray-900">
@@ -266,7 +323,7 @@ export default function EditItemModal({ open, onClose, item, onSuccess }) {
             name="lookingFor"
             value={formData.lookingFor}
             onChange={handleInputChange}
-            placeholder="e.g., Laptop stand, Kitchen utensils, Study desk"
+            placeholder="เช่น ชั้นวางโน้ตบุ๊ก, อุปกรณ์ครัว, โต๊ะอ่านหนังสือ"
             className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0"
             required
           />
@@ -275,7 +332,7 @@ export default function EditItemModal({ open, onClose, item, onSuccess }) {
         {/* Expiration Date */}
         <div>
           <label className="mb-2 block text-sm font-bold text-gray-900">
-            Post Expiration Date <span className="text-red-500">*</span>
+            วันหมดอายุโพสต์ <span className="text-red-500">*</span>
           </label>
           <input
             type="date"
@@ -291,14 +348,14 @@ export default function EditItemModal({ open, onClose, item, onSuccess }) {
         {/* Pickup Location */}
         <div>
           <label className="mb-2 block text-sm font-bold text-gray-900">
-            Pickup Location <span className="text-red-500">*</span>
+            จุดนัดรับ/แลก <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             name="pickupLocation"
             value={formData.pickupLocation}
             onChange={handleInputChange}
-            placeholder="e.g., Engineering Building, Library 1st floor"
+            placeholder="เช่น คณะวิศวะ, หอสมุดกลางชั้น 1, หน้าโรงอาหาร"
             className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0"
             required
           />

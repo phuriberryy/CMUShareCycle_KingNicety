@@ -12,6 +12,33 @@ import {
   getUserItems,
   getItemExchangeRequests,
 } from '../controllers/itemController.js'
+import { OTHER_SUBTYPE_MAX_LENGTH } from '../../../../shared/utils/co2Calculator.js'
+
+// ตรวจ otherSubtype (free-text):
+//   - บังคับเมื่อ category === 'Others' (ต้องไม่ว่าง, ยาว 2-OTHER_SUBTYPE_MAX_LENGTH)
+//   - หมวดอื่น: อนุญาตว่าง/ไม่ส่ง; ถ้าส่งมาก็ต้องเป็น string สั้น ๆ
+const validateOtherSubtype = (value, { req }) => {
+  const cat = req.body.category
+  if (cat === 'Others') {
+    if (typeof value !== 'string') {
+      throw new Error('Other subtype is required when category is Others')
+    }
+    const trimmed = value.trim()
+    if (trimmed.length < 2) {
+      throw new Error('กรุณาระบุประเภทย่อยของสินค้า (อย่างน้อย 2 ตัวอักษร)')
+    }
+    if (trimmed.length > OTHER_SUBTYPE_MAX_LENGTH) {
+      throw new Error(`Other subtype must not exceed ${OTHER_SUBTYPE_MAX_LENGTH} characters`)
+    }
+    return true
+  }
+  if (value !== undefined && value !== null && value !== '') {
+    if (typeof value !== 'string' || value.length > OTHER_SUBTYPE_MAX_LENGTH) {
+      throw new Error(`Other subtype must not exceed ${OTHER_SUBTYPE_MAX_LENGTH} characters`)
+    }
+  }
+  return true
+}
 
 const router = Router()
 
@@ -70,6 +97,8 @@ router.post(
       .withMessage('Item condition is required')
       .isIn(['Like New', 'Good', 'Fair'])
       .withMessage('Invalid item condition'),
+    // หมายเหตุ: validator ต้องรันทุกครั้ง (ไม่ใช้ .optional()) เพราะต้องบังคับเมื่อ category === 'Others'
+    body('otherSubtype').custom(validateOtherSubtype),
     body('lookingFor')
       .optional()
       .trim()
@@ -132,6 +161,12 @@ router.put(
       .notEmpty()
       .withMessage('Item condition cannot be empty')
       .isIn(['Like New', 'Good', 'Fair']),
+    body('otherSubtype')
+      .optional({ nullable: true, checkFalsy: true })
+      .isString()
+      .trim()
+      .isLength({ min: 2, max: OTHER_SUBTYPE_MAX_LENGTH })
+      .withMessage(`Other subtype must be 2-${OTHER_SUBTYPE_MAX_LENGTH} characters`),
     body('lookingFor')
       .optional()
       .trim()

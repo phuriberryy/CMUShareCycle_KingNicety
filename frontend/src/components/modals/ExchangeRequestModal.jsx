@@ -97,19 +97,17 @@ export default function ExchangeRequestModal({ open, onClose, itemId }) {
       setImagePreview(null)
     } catch (err) {
       console.error('Exchange request error:', err)
-      let errorMsg = err.message || (err.errors && JSON.stringify(err.errors)) || 'Failed to send request'
-      
-      // Handle authentication errors
+      let errorMsg = err.message || (err.errors && JSON.stringify(err.errors)) || 'ส่งคำขอไม่สำเร็จ'
+
       if (errorMsg.includes('Invalid token') || errorMsg.includes('Unauthorized')) {
-        errorMsg = 'Your session has expired. Please log in again.'
-        // Optionally redirect to login or refresh token
+        errorMsg = 'เซสชันหมดอายุแล้ว กรุณาเข้าสู่ระบบใหม่'
         setTimeout(() => {
           window.location.href = '/login'
         }, 2000)
       } else if (errorMsg.includes('You cannot exchange your own item')) {
-        errorMsg = 'You cannot exchange your own item'
+        errorMsg = 'ไม่สามารถขอแลกเปลี่ยนกับสินค้าของตัวเองได้'
       } else if (errorMsg.includes('already exists') || errorMsg.includes('already sent')) {
-        errorMsg = 'You have already sent an exchange request for this item'
+        errorMsg = 'คุณส่งคำขอแลกเปลี่ยนสำหรับสินค้าชิ้นนี้ไปแล้ว'
       }
       
       // ถ้ามี existingRequestId แสดงข้อความและนำไปยังคำขอที่มีอยู่
@@ -172,7 +170,7 @@ export default function ExchangeRequestModal({ open, onClose, itemId }) {
             {imagePreview ? (
               <img
                 src={imagePreview}
-                alt="Preview"
+                alt="ตัวอย่างรูป"
                 className="h-48 w-full rounded-lg object-cover"
               />
             ) : (

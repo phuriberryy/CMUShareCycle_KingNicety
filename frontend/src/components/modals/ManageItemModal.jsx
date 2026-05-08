@@ -44,9 +44,9 @@ export default function ManageItemModal({ open, onClose, item, onUpdate }) {
     const days = Math.floor(diff / 86400000)
 
     if (minutes < 1) return 'เมื่อสักครู่'
-    if (minutes < 60) return `${minutes} minutes ago`
-    if (hours < 24) return `${hours} hours ago`
-    return `${days} days ago`
+    if (minutes < 60) return `${minutes} นาทีที่แล้ว`
+    if (hours < 24) return `${hours} ชั่วโมงที่แล้ว`
+    return `${days} วันที่แล้ว`
   }
 
   const getStatusBadge = (status) => {
@@ -54,19 +54,19 @@ export default function ManageItemModal({ open, onClose, item, onUpdate }) {
       case 'accepted':
         return (
           <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary-dark">
-            Accepted
+            ตอบรับแล้ว
           </span>
         )
       case 'rejected':
         return (
           <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700">
-            Rejected
+            ปฏิเสธแล้ว
           </span>
         )
       default:
         return (
           <span className="rounded-full bg-yellow-100 px-3 py-1 text-xs font-semibold text-yellow-700">
-            Pending
+            รอตอบรับ
           </span>
         )
     }

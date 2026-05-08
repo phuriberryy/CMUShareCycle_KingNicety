@@ -51,7 +51,7 @@ export const createDonation = async (req, res) => {
 
     // คำนวณ CO₂ ที่ลดได้จากการบริจาค
     // การบริจาคช่วยลด CO₂ เพราะไม่ต้องผลิตใหม่
-    const co2Footprint = calculateItemCO2(item.category, item.item_condition)
+    const co2Footprint = calculateItemCO2(item.category, item.item_condition, { title: item.title, description: item.description, otherSubtype: item.other_subtype })
     const co2Reduced = co2Footprint * 0.8 // 80% reduction (similar to exchange)
 
     // สร้าง donation history
@@ -195,7 +195,7 @@ export const receiveDonation = async (req, res) => {
     }
 
     // คำนวณ CO₂ ที่ลดได้จากการบริจาค
-    const co2Footprint = calculateItemCO2(item.category, item.item_condition)
+    const co2Footprint = calculateItemCO2(item.category, item.item_condition, { title: item.title, description: item.description, otherSubtype: item.other_subtype })
     const co2Reduced = co2Footprint * 0.8 // 80% reduction
 
     // สร้าง donation history

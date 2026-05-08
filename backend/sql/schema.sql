@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS items (
   title TEXT NOT NULL,
   category TEXT NOT NULL,
   item_condition TEXT NOT NULL,
+  other_subtype TEXT,
   looking_for TEXT,
   pickup_location TEXT,
   description TEXT,

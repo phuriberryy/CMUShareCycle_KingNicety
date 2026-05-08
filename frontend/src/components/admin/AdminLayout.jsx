@@ -42,7 +42,7 @@ export default function AdminLayout() {
             </button>
           </div>
 
-          {sidebarOpen && <button type="button" aria-label="Close admin navigation" className="fixed inset-0 z-30 bg-black/20 md:hidden" onClick={() => setSidebarOpen(false)} />}
+          {sidebarOpen && <button type="button" aria-label="ปิดเมนูแอดมิน" className="fixed inset-0 z-30 bg-black/20 md:hidden" onClick={() => setSidebarOpen(false)} />}
 
           <nav
             className={`fixed inset-x-0 top-[57px] z-40 max-h-[calc(100vh-57px)] overflow-y-auto border-b border-gray-100 bg-white px-4 py-4 shadow-xl md:static md:max-h-none md:border-r md:border-b-0 md:px-3 md:py-4 md:shadow-none ${
@@ -71,7 +71,7 @@ export default function AdminLayout() {
             </div>
             {user && (
               <div className="mt-6 hidden border-t border-gray-100 pt-4 md:block">
-                <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Signed in as</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">เข้าสู่ระบบในชื่อ</p>
                 <p className="mt-1 text-sm font-medium text-gray-900">{user.name}</p>
                 <p className="text-xs text-gray-500">{user.email}</p>
               </div>

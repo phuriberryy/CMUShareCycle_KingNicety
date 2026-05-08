@@ -1,7 +1,13 @@
 import { validationResult } from 'express-validator'
 import { query } from '../../../outbound/persistence/pool.js'
 import { calculateItemCO2 } from '../../../../shared/utils/co2Calculator.js'
-import { detectSpam, validateImage, checkDuplicateContent } from '../../../../shared/utils/contentModeration.js'
+import {
+  moderateText,
+  moderateCombinedItemText,
+  validateImage,
+  checkDuplicateContent,
+  moderateItemImageUrls,
+} from '../../../../shared/utils/contentModeration.js'
 import { getChatServer } from '../../../../application/services/chatService.js'
 import { awardPostItemPoints } from '../../../../shared/utils/pointsService.js'
 import { forbidden, internalError, notFound, unauthorized, badRequest } from '../../../../shared/http/apiError.js'
@@ -49,7 +55,7 @@ function withItemGallery(row) {
 }
 
 const ITEMS_LIST_SQL = `
-  SELECT i.id, i.user_id, i.title, i.category, i.item_condition, i.looking_for, i.description,
+  SELECT i.id, i.user_id, i.title, i.category, i.item_condition, i.other_subtype, i.looking_for, i.description,
          i.available_until, i.image_url, i.image_urls, i.pickup_location, i.status, i.listing_type,
          i.created_at, i.updated_at,
          u.name AS owner_name, u.faculty AS owner_faculty
@@ -83,7 +89,11 @@ function filterAndMapItems(rows) {
       const row = withItemGallery(item)
       return {
         ...row,
-        co2_footprint: calculateItemCO2(row.category, row.item_condition),
+        co2_footprint: calculateItemCO2(row.category, row.item_condition, {
+          title: row.title,
+          description: row.description,
+          otherSubtype: row.other_subtype,
+        }),
       }
     })
 }
@@ -99,7 +109,11 @@ export const getItems = async (_req, res) => {
           const row = withItemGallery(item)
           return {
             ...row,
-            co2_footprint: calculateItemCO2(row.category, row.item_condition),
+            co2_footprint: calculateItemCO2(row.category, row.item_condition, {
+              title: row.title,
+              description: row.description,
+              otherSubtype: row.other_subtype,
+            }),
           }
         })
   }
@@ -156,7 +170,7 @@ export const getItemById = async (req, res) => {
     const item = withItemGallery(result.rows[0])
 
     // คำนวณ CO₂ footprint
-    item.co2_footprint = calculateItemCO2(item.category, item.item_condition)
+    item.co2_footprint = calculateItemCO2(item.category, item.item_condition, { title: item.title, description: item.description, otherSubtype: item.other_subtype })
 
     return res.json(item)
   } catch (err) {
@@ -178,35 +192,22 @@ export const createItem = async (req, res) => {
 
   const { title, category, itemCondition, lookingFor, description, availableUntil, pickupLocation, listingType } =
     req.body
+  const otherSubtype = req.body.otherSubtype ?? req.body.other_subtype ?? null
 
   try {
-    // Content moderation checks
-    const titleSpamCheck = detectSpam(title)
-    if (titleSpamCheck.isSpam) {
-      return res.status(400).json({ 
-        message: 'Title contains inappropriate content',
-        reason: titleSpamCheck.reason 
+    const otherSubtypeToStore = category === 'Others' ? String(otherSubtype || '').trim() || null : null
+    const textMod = moderateCombinedItemText({
+      title,
+      description: description || '',
+      lookingFor: lookingFor || '',
+      pickupLocation: pickupLocation || '',
+      otherSubtype: otherSubtypeToStore || '',
+    })
+    if (!textMod.allowed) {
+      return res.status(400).json({
+        message: textMod.reasonTh,
+        code: textMod.code,
       })
-    }
-
-    if (description) {
-      const descSpamCheck = detectSpam(description)
-      if (descSpamCheck.isSpam) {
-        return res.status(400).json({ 
-          message: 'Description contains inappropriate content',
-          reason: descSpamCheck.reason 
-        })
-      }
-    }
-
-    if (lookingFor) {
-      const lookingForSpamCheck = detectSpam(lookingFor)
-      if (lookingForSpamCheck.isSpam) {
-        return res.status(400).json({ 
-          message: 'Looking for contains inappropriate content',
-          reason: lookingForSpamCheck.reason 
-        })
-      }
     }
 
     const gallery = normalizeImageGalleryFromBody(req.body)
@@ -221,6 +222,14 @@ export const createItem = async (req, res) => {
           reason: imageValidation.reason,
         })
       }
+    }
+
+    const imageMod = await moderateItemImageUrls(gallery)
+    if (!imageMod.allowed) {
+      return res.status(400).json({
+        message: imageMod.reasonTh,
+        code: imageMod.code,
+      })
     }
 
     // Check for duplicate content
@@ -251,14 +260,15 @@ export const createItem = async (req, res) => {
     const primaryImage = gallery[0]
 
     const result = await query(
-      `INSERT INTO items (user_id, title, category, item_condition, looking_for, description, available_until, image_url, image_urls, pickup_location, listing_type, status)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10,$11,'active')
+      `INSERT INTO items (user_id, title, category, item_condition, other_subtype, looking_for, description, available_until, image_url, image_urls, pickup_location, listing_type, status)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb,$11,$12,'active')
        RETURNING *`,
       [
         req.user.id,
         title,
         category,
         itemCondition,
+        otherSubtypeToStore,
         lookingFor || null,
         description || null,
         availableUntil || null,
@@ -272,7 +282,7 @@ export const createItem = async (req, res) => {
     const item = withItemGallery(result.rows[0])
     
     // คำนวณ CO₂ footprint
-    item.co2_footprint = calculateItemCO2(item.category, item.item_condition)
+    item.co2_footprint = calculateItemCO2(item.category, item.item_condition, { title: item.title, description: item.description, otherSubtype: item.other_subtype })
 
     // ให้แต้มสะสมสำหรับการโพสต์รายการใหม่
     await awardPostItemPoints(req.user.id, item.id)
@@ -304,6 +314,16 @@ export const updateItem = async (req, res) => {
 
   const { title, category, itemCondition, lookingFor, description, availableUntil, imageUrl, pickupLocation, status, listingType } =
     req.body
+  const otherSubtypeRaw = req.body.otherSubtype ?? req.body.other_subtype
+  // ถ้าเปลี่ยนหมวดเป็น Others ผ่าน update — บังคับให้มี otherSubtype, มิฉะนั้นปฏิเสธ
+  // ถ้าเปลี่ยนหมวดเป็นอื่น — ล้าง other_subtype เป็น NULL
+  // ถ้าไม่ได้เปลี่ยนหมวด — เคารพค่าเดิม (ส่ง undefined ให้ COALESCE)
+  const otherSubtypeParam =
+    category === 'Others'
+      ? (otherSubtypeRaw || null)
+      : category
+        ? null
+        : (otherSubtypeRaw === undefined ? undefined : (otherSubtypeRaw || null))
 
   const hasImageUrlsKey = Object.prototype.hasOwnProperty.call(req.body, 'imageUrls')
     || Object.prototype.hasOwnProperty.call(req.body, 'image_urls')
@@ -314,32 +334,37 @@ export const updateItem = async (req, res) => {
   try {
     // Content moderation checks for updates
     if (title) {
-      const titleSpamCheck = detectSpam(title)
-      if (titleSpamCheck.isSpam) {
-        return res.status(400).json({ 
-          message: 'Title contains inappropriate content',
-          reason: titleSpamCheck.reason 
-        })
+      const r = moderateText(title)
+      if (!r.allowed) {
+        return res.status(400).json({ message: r.reasonTh, code: r.code })
       }
     }
 
     if (description) {
-      const descSpamCheck = detectSpam(description)
-      if (descSpamCheck.isSpam) {
-        return res.status(400).json({ 
-          message: 'Description contains inappropriate content',
-          reason: descSpamCheck.reason 
-        })
+      const r = moderateText(description)
+      if (!r.allowed) {
+        return res.status(400).json({ message: r.reasonTh, code: r.code })
       }
     }
 
     if (lookingFor) {
-      const lookingForSpamCheck = detectSpam(lookingFor)
-      if (lookingForSpamCheck.isSpam) {
-        return res.status(400).json({ 
-          message: 'Looking for contains inappropriate content',
-          reason: lookingForSpamCheck.reason 
-        })
+      const r = moderateText(lookingFor)
+      if (!r.allowed) {
+        return res.status(400).json({ message: r.reasonTh, code: r.code })
+      }
+    }
+
+    if (pickupLocation) {
+      const r = moderateText(pickupLocation)
+      if (!r.allowed) {
+        return res.status(400).json({ message: r.reasonTh, code: r.code })
+      }
+    }
+
+    if (typeof otherSubtypeRaw === 'string' && otherSubtypeRaw.trim()) {
+      const r = moderateText(otherSubtypeRaw.trim())
+      if (!r.allowed) {
+        return res.status(400).json({ message: r.reasonTh, code: r.code })
       }
     }
 
@@ -359,6 +384,13 @@ export const updateItem = async (req, res) => {
             reason: imageValidation.reason,
           })
         }
+      }
+      const imageMod = await moderateItemImageUrls(gallery)
+      if (!imageMod.allowed) {
+        return res.status(400).json({
+          message: imageMod.reasonTh,
+          code: imageMod.code,
+        })
       }
       galleryJsonParam = JSON.stringify(gallery)
       imageUrlParam = gallery[0]
@@ -391,6 +423,13 @@ export const updateItem = async (req, res) => {
     // Validate listingType if provided
     const validListingType = listingType === 'donation' ? 'donation' : (listingType === 'exchange' ? 'exchange' : null)
     
+    // อัปเดต other_subtype ตาม otherSubtypeParam:
+    //   - undefined: เคารพค่าเดิม (ไม่แตะ)
+    //   - null: ล้างเป็น NULL (เช่นเปลี่ยนหมวดเป็นอื่นที่ไม่ใช่ Others)
+    //   - string: เซ็ตเป็นค่านั้น
+    const subtypeShouldUpdate = otherSubtypeParam !== undefined
+    const subtypeNewValue = otherSubtypeParam ?? null
+
     const result = await query(
       `UPDATE items 
        SET title=COALESCE($1, title),
@@ -404,6 +443,7 @@ export const updateItem = async (req, res) => {
            pickup_location=COALESCE($8, pickup_location),
            status=COALESCE($9, status),
            listing_type=COALESCE($10, listing_type),
+           other_subtype = CASE WHEN $13::boolean THEN $14 ELSE other_subtype END,
            updated_at=NOW()
        WHERE id=$11
        RETURNING *`,
@@ -420,13 +460,15 @@ export const updateItem = async (req, res) => {
         validListingType,
         itemId,
         galleryJsonParam,
+        subtypeShouldUpdate,
+        subtypeNewValue,
       ]
     )
 
     const item = withItemGallery(result.rows[0])
     
     // คำนวณ CO₂ footprint
-    item.co2_footprint = calculateItemCO2(item.category, item.item_condition)
+    item.co2_footprint = calculateItemCO2(item.category, item.item_condition, { title: item.title, description: item.description, otherSubtype: item.other_subtype })
 
     // Emit socket event for real-time update
     const io = getChatServer()
@@ -539,7 +581,11 @@ export const getUserItems = async (req, res) => {
       const row = withItemGallery(item)
       return {
         ...row,
-        co2_footprint: calculateItemCO2(row.category, row.item_condition),
+        co2_footprint: calculateItemCO2(row.category, row.item_condition, {
+          title: row.title,
+          description: row.description,
+          otherSubtype: row.other_subtype,
+        }),
       }
     })
 

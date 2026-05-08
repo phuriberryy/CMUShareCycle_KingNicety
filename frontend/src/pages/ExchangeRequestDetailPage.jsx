@@ -14,6 +14,8 @@ import { exchangeApi, chatApi } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { calculateItemCO2, calculateExchangeCO2Reduction } from '../utils/co2Calculator'
+import { getCategoryLabel, getConditionLabel } from '../utils/itemLabels'
+import ConfirmDialog from '../components/ui/ConfirmDialog'
 
 export default function ExchangeRequestDetailPage() {
   const { requestId } = useParams()
@@ -25,6 +27,7 @@ export default function ExchangeRequestDetailPage() {
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState(null)
   const [imageErrors, setImageErrors] = useState({ owner: false, requester: false })
+  const [showRejectConfirm, setShowRejectConfirm] = useState(false)
 
   useEffect(() => {
     const fetchExchangeRequest = async () => {
@@ -107,17 +110,18 @@ export default function ExchangeRequestDetailPage() {
     }
   }
 
-  const handleReject = async () => {
+  const handleReject = () => {
     if (!token || processing || !exchangeRequest) return
+    setShowRejectConfirm(true)
+  }
 
-    if (!window.confirm('Are you sure you want to reject this exchange request?')) {
-      return
-    }
-
+  const confirmReject = async () => {
+    if (!token || !exchangeRequest) return
     try {
       setProcessing(true)
       await exchangeApi.reject(token, requestId)
       toast.success('ปฏิเสธคำขอแลกเปลี่ยนสำเร็จ', 'สำเร็จ')
+      setShowRejectConfirm(false)
       navigate('/profile')
     } catch (err) {
       console.error('Failed to reject exchange:', err)
@@ -168,7 +172,7 @@ export default function ExchangeRequestDetailPage() {
   }
 
   const getStatusLabel = () => {
-    if (!exchangeRequest) return 'Waiting for response'
+    if (!exchangeRequest) return 'รอการตอบรับ'
     if (exchangeRequest.status === 'completed') return 'เสร็จสิ้น'
     if (exchangeRequest.status === 'in_progress') return 'กำลังดำเนินการ'
     if (exchangeRequest.status === 'chatting') return 'พร้อมแชท'
@@ -220,7 +224,7 @@ export default function ExchangeRequestDetailPage() {
 
   const isOwner = exchangeRequest.user_role === 'owner'
   const otherUserName = isOwner ? exchangeRequest.requester_name : exchangeRequest.owner_name
-  const otherUser = otherUserName || (isOwner ? 'Requester' : 'Post Owner')
+  const otherUser = otherUserName || (isOwner ? 'ผู้ขอแลก' : 'เจ้าของโพสต์')
   const otherUserFaculty = isOwner ? exchangeRequest.requester_faculty : exchangeRequest.owner_faculty
   const otherUserAvatar = isOwner ? exchangeRequest.requester_avatar_url : exchangeRequest.owner_avatar_url
   const bothAccepted = exchangeRequest.owner_accepted && exchangeRequest.requester_accepted
@@ -237,7 +241,15 @@ export default function ExchangeRequestDetailPage() {
   const calculateCO2 = () => {
     if (!exchangeRequest.item_category || !exchangeRequest.item_condition) return null
     
-    const co2Footprint = calculateItemCO2(exchangeRequest.item_category, exchangeRequest.item_condition)
+    const co2Footprint = calculateItemCO2(
+      exchangeRequest.item_category,
+      exchangeRequest.item_condition,
+      {
+        title: exchangeRequest.item_title,
+        description: exchangeRequest.item_description,
+        otherSubtype: exchangeRequest.item_other_subtype,
+      }
+    )
     const co2Reduced = calculateExchangeCO2Reduction(co2Footprint)
     
     return {
@@ -257,7 +269,7 @@ export default function ExchangeRequestDetailPage() {
         className="mb-6 inline-flex items-center gap-2 text-gray-600 hover:text-gray-900"
       >
         <ArrowLeft size={20} />
-        <span>Back</span>
+        <span>ย้อนกลับ</span>
       </button>
 
       {/* Header Section */}
@@ -310,7 +322,7 @@ export default function ExchangeRequestDetailPage() {
                       ? exchangeRequest.item_image_url 
                       : `${exchangeRequest.item_image_url}?t=${Date.now()}`
                   }
-                  alt={exchangeRequest.item_title || 'Owner item image'}
+                  alt={exchangeRequest.item_title || 'รูปสินค้าของเจ้าของโพสต์'}
                   className="h-full w-full object-cover"
                   onError={(e) => {
                     console.error('[OWNER ITEM] Failed to load image:', {
@@ -352,12 +364,12 @@ export default function ExchangeRequestDetailPage() {
             <div className="flex flex-wrap gap-2">
               {exchangeRequest.item_category && (
               <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-gray-700">
-                {exchangeRequest.item_category}
+                {getCategoryLabel(exchangeRequest.item_category, exchangeRequest.item_other_subtype)}
               </span>
               )}
               {exchangeRequest.item_condition && (
               <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-gray-700">
-                {exchangeRequest.item_condition}
+                {getConditionLabel(exchangeRequest.item_condition)}
               </span>
               )}
             </div>
@@ -416,17 +428,17 @@ export default function ExchangeRequestDetailPage() {
             <div className="flex flex-wrap gap-2">
               {exchangeRequest.requester_item_category && (
                 <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-gray-700">
-                  {exchangeRequest.requester_item_category}
+                  {getCategoryLabel(exchangeRequest.requester_item_category)}
                 </span>
               )}
               {exchangeRequest.requester_item_condition && (
                 <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-gray-700">
-                  {exchangeRequest.requester_item_condition}
+                  {getConditionLabel(exchangeRequest.requester_item_condition)}
                 </span>
               )}
               {!exchangeRequest.requester_item_category && !exchangeRequest.requester_item_condition && (
               <span className="rounded-full bg-yellow-100 px-3 py-1 text-xs font-semibold text-gray-700">
-                Your Item
+                สินค้าของคุณ
               </span>
               )}
             </div>
@@ -455,12 +467,12 @@ export default function ExchangeRequestDetailPage() {
           <div className="mt-4 rounded-[16px] bg-primary/10 p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold text-gray-700">CO₂ Footprint</p>
-                <p className="text-xs text-gray-600">of this item</p>
+                <p className="text-sm font-semibold text-gray-700">รอยเท้า CO₂</p>
+                <p className="text-xs text-gray-600">ของสินค้าชิ้นนี้</p>
               </div>
               <div className="text-right">
                 <p className="text-lg font-bold text-primary">
-                  {co2Data.footprint} kg
+                  {co2Data.footprint} กก.
                 </p>
                 <p className="text-xs text-gray-600">CO₂e</p>
               </div>
@@ -475,7 +487,7 @@ export default function ExchangeRequestDetailPage() {
           <div className="mb-4 flex items-center gap-2">
             <CheckCircle size={24} className="text-primary" />
             <p className="text-lg font-semibold text-gray-900">
-              Both parties accepted – Ready to chat!
+              ทั้งสองฝ่ายยอมรับแล้ว — พร้อมแชท!
             </p>
           </div>
           {/* CO₂ Reduction Info */}
@@ -483,12 +495,12 @@ export default function ExchangeRequestDetailPage() {
             <div className="mb-4 rounded-[16px] bg-white p-4 shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-gray-700">CO₂ Reduced</p>
-                  <p className="text-xs text-gray-600">From this exchange</p>
+                  <p className="text-sm font-semibold text-gray-700">CO₂ ที่ลดได้</p>
+                  <p className="text-xs text-gray-600">จากการแลกเปลี่ยนครั้งนี้</p>
                 </div>
                 <div className="text-right">
                   <p className="text-2xl font-bold text-primary">
-                    {co2Data.reduced} kg
+                    {co2Data.reduced} กก.
                   </p>
                   <p className="text-xs text-gray-600">CO₂e</p>
                 </div>
@@ -501,7 +513,7 @@ export default function ExchangeRequestDetailPage() {
           >
             <div className="flex items-center justify-center gap-2">
               <MessageCircle size={24} />
-              <span>Start Chat</span>
+              <span>เริ่มแชท</span>
             </div>
           </button>
         </div>
@@ -510,14 +522,14 @@ export default function ExchangeRequestDetailPage() {
           <div className="mb-4 flex items-center gap-2">
             <Clock size={24} className="text-yellow-600" />
             <p className="text-lg font-semibold text-gray-900">
-              Waiting for the other party to accept
+              กำลังรออีกฝ่ายตอบรับ
             </p>
           </div>
           <div className="rounded-[16px] bg-white p-4 shadow-sm">
             <p className="text-sm text-gray-700">
               {isOwner
-                ? 'You have accepted. Waiting for the requester to accept'
-                : 'You have accepted. Waiting for the post owner to accept'}
+                ? 'คุณได้ยอมรับแล้ว — กำลังรอผู้ขอแลกตอบรับ'
+                : 'คุณได้ยอมรับแล้ว — กำลังรอเจ้าของโพสต์ตอบรับ'}
             </p>
           </div>
         </div>
@@ -527,8 +539,8 @@ export default function ExchangeRequestDetailPage() {
             <Clock size={24} className="text-yellow-600" />
             <p className="text-lg font-semibold text-gray-900">
               {isOwner
-                ? `${otherUser} wants to exchange with you`
-                : `You want to exchange with ${otherUser}`}
+                ? `${otherUser} ต้องการแลกเปลี่ยนกับคุณ`
+                : `คุณต้องการแลกเปลี่ยนกับ ${otherUser}`}
             </p>
           </div>
           {(canAccept || canReject) && (
@@ -540,7 +552,7 @@ export default function ExchangeRequestDetailPage() {
               >
                 <div className="flex items-center justify-center gap-2">
                   <CheckCircle size={20} className="sm:w-6 sm:h-6" />
-                  <span>Accept</span>
+                  <span>ยอมรับ</span>
                 </div>
               </button>
               <button
@@ -550,7 +562,7 @@ export default function ExchangeRequestDetailPage() {
               >
                 <div className="flex items-center justify-center gap-2">
                   <XCircle size={20} className="sm:w-6 sm:h-6" />
-                  <span>Reject</span>
+                  <span>ปฏิเสธ</span>
                 </div>
               </button>
             </div>
@@ -558,6 +570,26 @@ export default function ExchangeRequestDetailPage() {
         </div>
       )}
       </div>
+
+      <ConfirmDialog
+        open={showRejectConfirm}
+        variant="danger"
+        title="ยืนยันการปฏิเสธคำขอแลกเปลี่ยน"
+        description={
+          <span>
+            คุณแน่ใจหรือไม่ว่าต้องการปฏิเสธคำขอแลกเปลี่ยนนี้?
+            <br />
+            <span className="text-gray-500">การปฏิเสธไม่สามารถย้อนกลับได้</span>
+          </span>
+        }
+        confirmLabel="ปฏิเสธคำขอ"
+        cancelLabel="ยกเลิก"
+        loading={processing}
+        onConfirm={confirmReject}
+        onCancel={() => {
+          if (!processing) setShowRejectConfirm(false)
+        }}
+      />
     </div>
   )
 }

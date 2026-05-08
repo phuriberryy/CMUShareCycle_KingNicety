@@ -10,6 +10,16 @@ const statusBadges = {
   rejected: 'bg-gray-100 text-gray-700',
 }
 
+const STATUS_LABEL_TH = {
+  pending: 'รอตรวจสอบ',
+  approved: 'อนุมัติ',
+  rejected: 'ปฏิเสธ',
+}
+
+function statusLabel(status) {
+  return STATUS_LABEL_TH[status] || status || '-'
+}
+
 export default function AdminReportsPage() {
   const { token } = useAuth()
   const [reports, setReports] = useState([])
@@ -69,9 +79,9 @@ export default function AdminReportsPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Reports</h1>
+          <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">รายงาน</h1>
           <p className="mt-1 text-sm text-gray-600">
-            Review abuse reports and decide whether to approve or reject.
+            ตรวจสอบรายงานการละเมิดและตัดสินใจอนุมัติหรือปฏิเสธ
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -83,16 +93,16 @@ export default function AdminReportsPage() {
             }}
             className="rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
           >
-            <option value="">All statuses</option>
-            <option value="pending">Pending</option>
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
+            <option value="">ทุกสถานะ</option>
+            <option value="pending">รอตรวจสอบ</option>
+            <option value="approved">อนุมัติ</option>
+            <option value="rejected">ปฏิเสธ</option>
           </select>
         </div>
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-        {loading && <div className="p-4 text-sm text-gray-500">Loading reports...</div>}
+        {loading && <div className="p-4 text-sm text-gray-500">กำลังโหลดรายงาน...</div>}
         {error && !loading && <div className="p-4 text-sm text-red-600">{error}</div>}
         {!loading && !error && (
           <>
@@ -103,11 +113,11 @@ export default function AdminReportsPage() {
                     <div className="flex min-w-0 items-start gap-2">
                       <span className="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-full bg-red-50 text-red-600"><Flag size={14} /></span>
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-gray-900">{report.reason || 'No reason provided'}</p>
-                        <p className="truncate text-xs text-gray-500">{report.reporter_email ? `By ${report.reporter_email}` : 'Reporter hidden'}</p>
+                        <p className="truncate text-sm font-semibold text-gray-900">{report.reason || 'ไม่ได้ระบุเหตุผล'}</p>
+                        <p className="truncate text-xs text-gray-500">{report.reporter_email ? `โดย ${report.reporter_email}` : 'ผู้รายงานไม่เปิดเผย'}</p>
                       </div>
                     </div>
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${statusBadges[report.status] || 'bg-gray-100 text-gray-700'}`}>{report.status}</span>
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${statusBadges[report.status] || 'bg-gray-100 text-gray-700'}`}>{statusLabel(report.status)}</span>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2 text-xs text-gray-600">
                     <span className="rounded-full bg-gray-100 px-2.5 py-1 font-semibold uppercase tracking-wide">{report.target_type}</span>
@@ -115,15 +125,15 @@ export default function AdminReportsPage() {
                     <span className="rounded-full bg-gray-100 px-2.5 py-1">{report.created_at ? new Date(report.created_at).toLocaleString() : '-'}</span>
                   </div>
                   <div className="mt-3 grid grid-cols-2 gap-2">
-                    {report.status !== 'approved' && <button type="button" onClick={() => openConfirm(report, 'approved')} className="min-h-11 rounded-full bg-primary/10 px-3 py-2 text-xs font-semibold text-primary-dark">Approve</button>}
-                    {report.status !== 'rejected' && <button type="button" onClick={() => openConfirm(report, 'rejected')} className="min-h-11 rounded-full bg-gray-100 px-3 py-2 text-xs font-semibold text-gray-700">Reject</button>}
+                    {report.status !== 'approved' && <button type="button" onClick={() => openConfirm(report, 'approved')} className="min-h-11 rounded-full bg-primary/10 px-3 py-2 text-xs font-semibold text-primary-dark">อนุมัติ</button>}
+                    {report.status !== 'rejected' && <button type="button" onClick={() => openConfirm(report, 'rejected')} className="min-h-11 rounded-full bg-gray-100 px-3 py-2 text-xs font-semibold text-gray-700">ปฏิเสธ</button>}
                   </div>
                 </div>
               ))}
-              {reports.length === 0 && <p className="px-2 py-6 text-center text-sm text-gray-500">No reports found.</p>}
+              {reports.length === 0 && <p className="px-2 py-6 text-center text-sm text-gray-500">ไม่พบรายงาน</p>}
             </div>
             <div className="hidden overflow-x-auto md:block">
-              <table className="min-w-full divide-y divide-gray-100 text-left text-sm"><thead className="bg-gray-50"><tr><th className="px-4 py-3 font-semibold text-gray-600">Report</th><th className="px-4 py-3 font-semibold text-gray-600">Target</th><th className="px-4 py-3 font-semibold text-gray-600">Status</th><th className="px-4 py-3 font-semibold text-gray-600">Created</th><th className="px-4 py-3 text-right font-semibold text-gray-600">Actions</th></tr></thead><tbody className="divide-y divide-gray-100">{reports.map((report) => (<tr key={report.id} className="align-top"><td className="px-4 py-3"><div className="flex items-start gap-2"><span className="mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-full bg-red-50 text-red-600"><Flag size={14} /></span><div><p className="text-sm font-semibold text-gray-900">{report.reason || 'No reason provided'}</p>{report.reporter_email && (<p className="mt-1 text-xs text-gray-500">By {report.reporter_email}</p>)}</div></div></td><td className="px-4 py-3 text-xs text-gray-600"><div className="flex flex-col"><span className="font-semibold uppercase tracking-wide">{report.target_type}</span><span className="text-gray-500">ID: {report.target_id}</span></div></td><td className="px-4 py-3"><span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${statusBadges[report.status] || 'bg-gray-100 text-gray-700'}`}>{report.status}</span></td><td className="px-4 py-3 text-xs text-gray-500">{report.created_at ? new Date(report.created_at).toLocaleString() : '-'}</td><td className="px-4 py-3"><div className="flex justify-end gap-2">{report.status !== 'approved' && (<button type="button" onClick={() => openConfirm(report, 'approved')} className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary-dark hover:bg-primary/15">Approve</button>)}{report.status !== 'rejected' && (<button type="button" onClick={() => openConfirm(report, 'rejected')} className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-200">Reject</button>)}</div></td></tr>))}{reports.length === 0 && <tr><td colSpan={5} className="px-4 py-6 text-center text-sm text-gray-500">No reports found.</td></tr>}</tbody></table>
+              <table className="min-w-full divide-y divide-gray-100 text-left text-sm"><thead className="bg-gray-50"><tr><th className="px-4 py-3 font-semibold text-gray-600">รายงาน</th><th className="px-4 py-3 font-semibold text-gray-600">เป้าหมาย</th><th className="px-4 py-3 font-semibold text-gray-600">สถานะ</th><th className="px-4 py-3 font-semibold text-gray-600">วันที่</th><th className="px-4 py-3 text-right font-semibold text-gray-600">การจัดการ</th></tr></thead><tbody className="divide-y divide-gray-100">{reports.map((report) => (<tr key={report.id} className="align-top"><td className="px-4 py-3"><div className="flex items-start gap-2"><span className="mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-full bg-red-50 text-red-600"><Flag size={14} /></span><div><p className="text-sm font-semibold text-gray-900">{report.reason || 'ไม่ได้ระบุเหตุผล'}</p>{report.reporter_email && (<p className="mt-1 text-xs text-gray-500">โดย {report.reporter_email}</p>)}</div></div></td><td className="px-4 py-3 text-xs text-gray-600"><div className="flex flex-col"><span className="font-semibold uppercase tracking-wide">{report.target_type}</span><span className="text-gray-500">ID: {report.target_id}</span></div></td><td className="px-4 py-3"><span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${statusBadges[report.status] || 'bg-gray-100 text-gray-700'}`}>{statusLabel(report.status)}</span></td><td className="px-4 py-3 text-xs text-gray-500">{report.created_at ? new Date(report.created_at).toLocaleString() : '-'}</td><td className="px-4 py-3"><div className="flex justify-end gap-2">{report.status !== 'approved' && (<button type="button" onClick={() => openConfirm(report, 'approved')} className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary-dark hover:bg-primary/15">อนุมัติ</button>)}{report.status !== 'rejected' && (<button type="button" onClick={() => openConfirm(report, 'rejected')} className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-200">ปฏิเสธ</button>)}</div></td></tr>))}{reports.length === 0 && <tr><td colSpan={5} className="px-4 py-6 text-center text-sm text-gray-500">ไม่พบรายงาน</td></tr>}</tbody></table>
             </div>
           </>
         )}
@@ -132,7 +142,7 @@ export default function AdminReportsPage() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between text-xs text-gray-500">
           <span>
-            Page {page} of {totalPages}
+            หน้า {page} จาก {totalPages}
           </span>
           <div className="flex gap-2">
             <button
@@ -141,7 +151,7 @@ export default function AdminReportsPage() {
               disabled={page === 1}
               className="rounded-full border border-gray-200 px-3 py-1 font-semibold text-gray-700 disabled:opacity-50"
             >
-              Previous
+              ก่อนหน้า
             </button>
             <button
               type="button"
@@ -149,7 +159,7 @@ export default function AdminReportsPage() {
               disabled={page === totalPages}
               className="rounded-full border border-gray-200 px-3 py-1 font-semibold text-gray-700 disabled:opacity-50"
             >
-              Next
+              ถัดไป
             </button>
           </div>
         </div>

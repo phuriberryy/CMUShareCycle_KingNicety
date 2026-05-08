@@ -56,7 +56,7 @@ export default function EditProfileModal({ isOpen, onClose, user, onUpdate }) {
       await onUpdate(form)
       onClose()
     } catch (err) {
-      setError(err.message || 'Failed to update profile')
+      setError(err.message || 'ไม่สามารถบันทึกโปรไฟล์ได้')
     } finally {
       setSubmitting(false)
     }
@@ -76,14 +76,14 @@ export default function EditProfileModal({ isOpen, onClose, user, onUpdate }) {
         </button>
 
         {/* Header */}
-        <h2 className="mb-6 text-2xl font-bold text-gray-900">Edit Profile</h2>
+        <h2 className="mb-6 text-2xl font-bold text-gray-900">แก้ไขโปรไฟล์</h2>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Name */}
           <div>
             <label className="mb-2 block text-sm font-semibold text-gray-900">
-              Full Name
+              ชื่อ-นามสกุล
             </label>
             <div className="relative">
               <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
@@ -104,7 +104,7 @@ export default function EditProfileModal({ isOpen, onClose, user, onUpdate }) {
           {/* Faculty */}
           <div>
             <label className="mb-2 block text-sm font-semibold text-gray-900">
-              Faculty/Department
+              คณะ / ภาควิชา
             </label>
             <div className="relative">
               <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
@@ -116,7 +116,7 @@ export default function EditProfileModal({ isOpen, onClose, user, onUpdate }) {
                 onChange={handleChange}
                 className="w-full appearance-none rounded-xl border border-gray-200 bg-white px-4 py-3 pl-10 pr-10 text-gray-900 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0"
               >
-                <option value="">Select Faculty/Department</option>
+                <option value="">เลือกคณะ/ภาควิชา</option>
                 {faculties.map((faculty) => (
                   <option key={faculty} value={faculty}>
                     {faculty}
