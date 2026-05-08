@@ -244,28 +244,18 @@ export default function ChatPage() {
     return newChat
   }
 
-  const handleStartChat = async ({ email }) => {
-    console.log('HANDLE START CHAT ENTER')
-    console.log('START CHAT EMAIL', email)
+  const handleStartChat = async (email) => {
     try {
       const response = await chatApi.start(token, { email })
-      console.log('START CHAT RESPONSE RAW', response)
       const candidate = response?.chat || response?.data?.chat || response?.data || response
       const newChat = normalizeChat(candidate)
-      console.log('NORMALIZED CHAT', newChat)
-      if (!newChat?.id) {
-        console.log('START CHAT INVALID RESPONSE', candidate)
-        return null
-      }
+      if (!newChat?.id) return null
       const selectedId = String(newChat.id)
-      console.log('FINAL SELECTED CHAT ID', selectedId)
       handleNewChat(newChat)
       setSelectedChat(selectedId)
       setTimeout(() => loadMessages(selectedId), 0)
-      console.log('CHAT OPEN SUCCESS')
       return newChat
     } catch (err) {
-      console.error('START CHAT FAILED', err)
       throw err
     }
   }

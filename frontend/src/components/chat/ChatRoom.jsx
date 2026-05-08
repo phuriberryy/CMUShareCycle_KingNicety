@@ -22,23 +22,22 @@ export default function ChatRoom({
   setShowActions,
   showActions,
 }) {
-  const bottomRef = useRef(null)
   const messagesContainerRef = useRef(null)
-  const composerRef = useRef(null)
-  const [composerHeight, setComposerHeight] = useState(88)
   const [userScrolledUp, setUserScrolledUp] = useState(false)
 
   const safeMessages = Array.isArray(messages) ? messages : []
-  const groupedMessages = safeMessages
 
-  const scrollToBottom = (behavior = 'smooth') => {
-    if (!chat) return
-    if (userScrolledUp) return
-    setTimeout(() => {
-      bottomRef.current?.scrollIntoView({ behavior, block: 'end' })
-    }, 0)
+  // Scroll ONLY the messages container. requestAnimationFrame ensures the DOM has
+  // been painted before we read scrollHeight, preventing a stale-height scroll.
+  const scrollToBottom = (behavior = 'auto') => {
+    const container = messagesContainerRef.current
+    if (!container) return
+    requestAnimationFrame(() => {
+      container.scrollTo({ top: container.scrollHeight, behavior })
+    })
   }
 
+  // Track whether the user has manually scrolled up to read history.
   useEffect(() => {
     const container = messagesContainerRef.current
     if (!container) return
@@ -51,32 +50,25 @@ export default function ChatRoom({
     return () => container.removeEventListener('scroll', onScroll)
   }, [chat?.id])
 
+  // On chat switch: reset state and jump instantly (no animation) to bottom.
   useEffect(() => {
-    scrollToBottom('smooth')
-  }, [chat?.id, safeMessages.length])
+    if (!chat?.id) return
+    setUserScrolledUp(false)
+    scrollToBottom('auto')
+  }, [chat?.id])
 
+  // On new message: always scroll for own messages; scroll for others only if
+  // the user hasn't scrolled up to read history.
   useEffect(() => {
-    const element = composerRef.current
-    if (!element) return
-
-    const updateHeight = () => {
-      const currentElement = composerRef.current
-      if (!currentElement) return
-      setComposerHeight(Math.ceil(currentElement.getBoundingClientRect().height))
+    if (!safeMessages.length) return
+    const last = safeMessages[safeMessages.length - 1]
+    if (Boolean(last?._mine)) {
+      setUserScrolledUp(false)
+      scrollToBottom('smooth')
+    } else if (!userScrolledUp) {
+      scrollToBottom('smooth')
     }
-
-    updateHeight()
-    const ro = new ResizeObserver(() => {
-      if (!composerRef.current) return
-      updateHeight()
-    })
-    ro.observe(element)
-    window.addEventListener('resize', updateHeight)
-    return () => {
-      ro.disconnect()
-      window.removeEventListener('resize', updateHeight)
-    }
-  }, [showActions, pendingImage, composerText])
+  }, [safeMessages.length])
 
   if (!chat) {
     return (
@@ -96,7 +88,7 @@ export default function ChatRoom({
 
   return (
     <div className="chat-room flex h-[100dvh] w-full flex-col bg-white">
-      <header className="chat-header sticky top-0 z-20 flex shrink-0 items-center gap-2 border-b border-gray-200 bg-white px-3 py-2.5">
+      <header className="chat-header shrink-0 flex items-center gap-2 border-b border-gray-200 bg-white px-3 py-2.5">
         {onBack ? (
           <button
             type="button"
@@ -119,27 +111,34 @@ export default function ChatRoom({
         </span>
       </header>
 
-      <div ref={messagesContainerRef} className="chat-messages min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-2" style={{ paddingBottom: `calc(${composerHeight}px + env(safe-area-inset-bottom) + 0.5rem)` }}>
-        {!chat ? null : messagesLoading ? (
+      {/*
+        overflowAnchor: 'none' — disables Chrome scroll anchoring, which otherwise
+        auto-adjusts scrollTop when DOM nodes are inserted/removed above the viewport,
+        causing the jump-to-top symptom.
+      */}
+      <div
+        ref={messagesContainerRef}
+        className="chat-messages min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pt-4 pb-4"
+        style={{ overflowAnchor: 'none' }}
+      >
+        {messagesLoading ? (
           <div className="flex h-full items-center justify-center text-sm text-gray-500">
             <Loader2 className="mr-2 animate-spin" size={16} /> กำลังโหลดข้อความ...
           </div>
-        ) : groupedMessages.length > 0 ? (
-          <div className="space-y-1.5">
-            {groupedMessages.map((message) => {
+        ) : safeMessages.length > 0 ? (
+          <div className="space-y-3">
+            {safeMessages.map((message) => {
               const mine = message.sender_id && String(message.sender_id) === String(chat?.my_user_id || message?.my_user_id || '') ? true : Boolean(message._mine)
               return (
-                <div key={getMessageId(message)} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[78%] rounded-2xl px-3 py-2 text-sm shadow-sm ${mine ? 'bg-primary text-white' : 'border border-gray-200 bg-white text-gray-800'} ${message.pending ? 'opacity-70' : 'opacity-100'}`}>
-                    {message.image_url ? <img src={message.image_url} alt="รูปที่แนบ" className="mb-2 max-h-72 w-full rounded-xl object-cover" /> : null}
+                <div key={getMessageId(message)} className={`flex flex-col gap-1 ${mine ? 'items-end' : 'items-start'}`}>
+                  <div className={`max-w-[78%] rounded-3xl px-4 py-3 text-[15px] leading-6 shadow-sm ${mine ? 'bg-primary text-white' : 'bg-gray-100 text-gray-900'} ${message.pending ? 'opacity-60' : 'opacity-100'}`}>
+                    {message.image_url ? <img src={message.image_url} alt="รูปที่แนบ" className="mb-2.5 max-h-72 w-full rounded-2xl object-cover" /> : null}
                     {message.body ? <p className="whitespace-pre-wrap break-words">{message.body}</p> : null}
-                    {message.pending ? null : null}
-                    {message._showTimestamp ? <p className={`mt-1 text-[10px] ${mine ? 'text-white/75' : 'text-gray-400'}`}>{formatMessageTime(message.created_at)}</p> : null}
                   </div>
+                  <p className="px-1 text-[10px] text-gray-400">{formatMessageTime(message.created_at)}</p>
                 </div>
               )
             })}
-            <div ref={bottomRef} />
           </div>
         ) : (
           <div className="flex h-full items-center justify-center text-center text-gray-500">
@@ -151,7 +150,7 @@ export default function ChatRoom({
         )}
       </div>
 
-      <div ref={composerRef} className="chat-composer sticky bottom-0 z-10 shrink-0 border-t border-gray-100 bg-white px-3 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
+      <div className="chat-composer shrink-0 border-t border-gray-100 bg-white px-3 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
         {pendingImage ? (
           <div className="mb-3 flex items-center gap-3 rounded-2xl border border-gray-200 bg-gray-50 p-2">
             <img src={pendingImage} alt="ตัวอย่างรูป" className="h-12 w-12 rounded-xl object-cover" />

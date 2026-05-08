@@ -20,19 +20,9 @@ export default function ChatInbox({
 }) {
   const handleStartClick = async () => {
     const email = startChatEmail
-    console.log('START BUTTON CLICKED')
-    console.log('CHAT INBOX onStartChat typeof', typeof onStartChat)
-    if (!onStartChat) {
-      console.error('onStartChat missing')
-      return
-    }
-    if (!email?.trim()) {
-      console.error('email empty')
-      return
-    }
+    if (!onStartChat || !email?.trim()) return
     try {
       await onStartChat(email.trim())
-      console.log('START CHAT CALLBACK FINISHED')
     } catch (err) {
       console.error('START CHAT CLICK FAILED', err)
     }

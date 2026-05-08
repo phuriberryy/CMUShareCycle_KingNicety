@@ -61,8 +61,6 @@ export default function ChatPage({
     })
   })()
 
-  console.log('CHAT PAGE PROP onStartChat typeof', typeof onNewChat)
-
   const handleStartChat = async (email) => {
     const nextEmail = typeof email === 'string' ? email.trim() : startChatEmail.trim()
     if (!nextEmail || startingChat) return
