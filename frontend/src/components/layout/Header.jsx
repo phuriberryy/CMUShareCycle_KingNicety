@@ -161,38 +161,6 @@ function Header({ unread, onNotificationsClick }) {
           />
           <div className="fixed inset-x-0 top-[calc(100%+0px)] z-40 rounded-b-3xl border-t border-gray-200 bg-white px-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))] pt-4 shadow-2xl sm:hidden">
             <div className="mx-auto max-w-md space-y-2">
-              <Link
-                to="/chat"
-                onClick={() => setOpen(false)}
-                className="flex min-h-11 items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-              >
-                <span className="flex items-center gap-2">
-                  <MessageCircle size={18} />
-                  แชท
-                </span>
-                <ChevronRight size={16} className="text-gray-400" />
-              </Link>
-              <button
-                type="button"
-                onClick={() => {
-                  setOpen(false)
-                  onNotificationsClick()
-                }}
-                className="flex min-h-11 w-full items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-              >
-                <span className="flex items-center gap-2">
-                  <Bell size={18} />
-                  การแจ้งเตือน
-                </span>
-                <span className="flex items-center gap-2 text-gray-400">
-                  {unread > 0 && (
-                    <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-bold text-white">
-                      {unread}
-                    </span>
-                  )}
-                  <ChevronRight size={16} />
-                </span>
-              </button>
               {navLinks.map((link) => (
                 <NavLink
                   key={link.to}
