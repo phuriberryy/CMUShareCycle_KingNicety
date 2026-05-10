@@ -7,7 +7,6 @@ import {
   Users,
   ArrowRightLeft,
   Crown,
-  ChevronDown,
   Sparkles,
   Heart,
   Flame,
@@ -16,6 +15,7 @@ import {
 } from 'lucide-react'
 import { leaderboardApi } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
+import TabBar from '../components/ui/TabBar'
 
 const TABS = [
   { key: 'points', label: 'คะแนน', icon: Trophy },
@@ -103,10 +103,7 @@ export default function LeaderboardPage() {
 
   // Fetch my rank
   useEffect(() => {
-    if (!token || activeTab === 'faculty') {
-      setMyRank(null)
-      return
-    }
+    if (!token || activeTab === 'faculty') return
     leaderboardApi.getMyRank(token, activeTab)
       .then(setMyRank)
       .catch(() => setMyRank(null))
@@ -122,7 +119,7 @@ export default function LeaderboardPage() {
       </section>
 
       {/* My Rank Card */}
-      {myRank && activeTab !== 'faculty' && (
+      {myRank && (
         <section className="mb-6 sm:mb-8">
           <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -160,42 +157,28 @@ export default function LeaderboardPage() {
       )}
 
       {/* Tabs */}
-      <div className="mb-8 flex flex-col gap-3 sm:mb-10">
-        {/* Category selector — full-width 4-column grid, no horizontal scroll */}
-        <div className="grid grid-cols-4 gap-1 rounded-2xl bg-gray-100/90 p-1 shadow-inner">
-          {TABS.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`flex flex-col items-center justify-center gap-1.5 rounded-xl px-1 py-2.5 text-center transition-all duration-200 sm:px-2 sm:py-3 ${
-                activeTab === tab.key
-                  ? 'bg-white shadow-sm ring-1 ring-black/[0.05]'
-                  : 'hover:bg-white/60 active:bg-white/80'
-              }`}
-            >
-              <tab.icon
-                size={18}
-                strokeWidth={2}
-                className={activeTab === tab.key ? 'text-primary' : 'text-gray-400'}
-              />
-              <span
-                className={`text-[10px] font-semibold leading-tight sm:text-[11px] ${
-                  activeTab === tab.key ? 'text-primary-dark' : 'text-gray-500'
-                }`}
-              >
-                {tab.label}
-              </span>
-            </button>
-          ))}
-        </div>
-
-        {/* Period selector */}
+      <div className="mb-8 sm:mb-10">
+        <TabBar
+          tabs={TABS.map((t) => ({ ...t, id: t.key }))}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
         {activeTab !== 'faculty' && (
-          <div className="relative self-end">
-            <select value={period} onChange={(e) => setPeriod(e.target.value)} className="appearance-none rounded-full border border-primary/15 bg-white px-4 py-2 pr-9 text-xs font-semibold text-gray-700 shadow-sm focus:border-primary focus:ring-2 focus:ring-primary/20 sm:text-sm">
-              {PERIODS.map((p) => (<option key={p.key} value={p.key}>{p.label}</option>))}
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+          <div className="mt-3 flex items-center gap-1.5">
+            {PERIODS.map((p) => (
+              <button
+                key={p.key}
+                onClick={() => setPeriod(p.key)}
+                className={[
+                  'rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-200',
+                  period === p.key
+                    ? 'bg-primary text-white shadow-sm'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800',
+                ].join(' ')}
+              >
+                {p.label}
+              </button>
+            ))}
           </div>
         )}
       </div>

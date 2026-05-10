@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState, useEffect, useRef } from 'react'
 import {
   ArrowRightLeft,
   User,
@@ -24,6 +24,7 @@ import { itemCoverUrl } from '../utils/itemImages'
 import { getCategoryLabel } from '../utils/itemLabels'
 import ManageItemModal from '../components/modals/ManageItemModal'
 import ConfirmDialog from '../components/ui/ConfirmDialog'
+import TabBar from '../components/ui/TabBar'
 
 const fetchMyItems = async ({ token, activeTab, setMyItems }) => {
   // Fetch items เมื่อ activeTab เป็น 'posts' หรือ 'expired' เพื่อให้แสดงทั้ง active และ expired items
@@ -52,6 +53,9 @@ export default function ProfilePage() {
   const [deletingItem, setDeletingItem] = useState(false)
   const { user, token } = useAuth()
   const toast = useToast()
+
+  const activeTabRef = useRef(activeTab)
+  useEffect(() => { activeTabRef.current = activeTab }, [activeTab])
 
   // แยก items ที่หมดอายุแล้วแต่ยังไม่ถูกแลกเปลี่ยน
   const activeItems = myItems.filter(item => !item.is_expired)
@@ -90,56 +94,58 @@ export default function ProfilePage() {
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
-      reconnectionAttempts: Infinity,
+      reconnectionAttempts: 5,
       timeout: 20000,
       transports: ['polling', 'websocket'],
       upgrade: true,
     })
 
     socket.on('connect_error', (err) => {
-      // Silently handle connection errors - backend might not be running
       if (err.message !== 'websocket error' && err.message !== 'xhr poll error') {
         console.debug('Socket connection error:', err.message)
       }
     })
 
     socket.on('item:updated', () => {
-      if (activeTab === 'posts' || activeTab === 'expired') {
-        fetchMyItems({ token, activeTab, setMyItems })
+      const tab = activeTabRef.current
+      if (tab === 'posts' || tab === 'expired') {
+        fetchMyItems({ token, activeTab: tab, setMyItems })
       }
     })
 
     socket.on('item:deleted', () => {
-      if (activeTab === 'posts' || activeTab === 'expired') {
-        fetchMyItems({ token, activeTab, setMyItems })
+      const tab = activeTabRef.current
+      if (tab === 'posts' || tab === 'expired') {
+        fetchMyItems({ token, activeTab: tab, setMyItems })
       }
     })
 
     socket.on('exchange:completed', () => {
-      if (activeTab === 'history') {
+      const tab = activeTabRef.current
+      if (tab === 'history') {
         profileApi.getExchangeHistory(token)
           .then(setExchangeHistory)
           .catch((err) => console.error('Failed to refresh exchange history:', err))
       }
-      if (activeTab === 'posts' || activeTab === 'expired') {
-        fetchMyItems({ token, activeTab, setMyItems })
+      if (tab === 'posts' || tab === 'expired') {
+        fetchMyItems({ token, activeTab: tab, setMyItems })
       }
     })
 
     socket.on('donation:completed', () => {
-      if (activeTab === 'donations') {
+      const tab = activeTabRef.current
+      if (tab === 'donations') {
         donationApi.getMyDonations(token)
           .then(setDonationHistory)
           .catch((err) => console.error('Failed to refresh donation history:', err))
       }
-      if (activeTab === 'posts' || activeTab === 'expired') {
-        fetchMyItems({ token, activeTab, setMyItems })
+      if (tab === 'posts' || tab === 'expired') {
+        fetchMyItems({ token, activeTab: tab, setMyItems })
       }
     })
 
     socket.on('notification:new', () => {
-      // Refresh exchange requests count if needed
-      if (activeTab === 'posts') {
+      if (activeTabRef.current === 'posts') {
         exchangeApi.getMyRequests(token)
           .then(setExchangeRequests)
           .catch((err) => console.error('Failed to refresh exchange requests:', err))
@@ -149,7 +155,7 @@ export default function ProfilePage() {
     return () => {
       socket.disconnect()
     }
-  }, [token, activeTab])
+  }, [token])
 
   useEffect(() => {
     const fetchExchangeHistory = async () => {
@@ -301,101 +307,76 @@ export default function ProfilePage() {
   const stats = profile?.stats || { itemsShared: 0, co2Reduced: '0.00' }
   const statCards = [
     { key: 'points', label: 'คะแนน', value: (stats.totalPoints || 0).toLocaleString(), icon: Star, tone: 'primary' },
-    { key: 'shared', label: 'สิ่งของที่แบ่งปัน', value: stats.itemsShared || 0, icon: Package, tone: 'green' },
-    { key: 'co2', label: 'CO₂ ที่ลดได้', value: `${stats.co2Reduced || '0.00'} กก.`, icon: CheckCircle, tone: 'primary' },
-    { key: 'exchanges', label: 'การแลกเปลี่ยน', value: stats.totalExchanges || 0, icon: ArrowRightLeft, tone: 'purple' },
-    { key: 'donations', label: 'การบริจาค', value: stats.totalDonations || 0, icon: Heart, tone: 'rose' },
+    { key: 'shared', label: 'สิ่งของ', value: stats.itemsShared || 0, icon: Package, tone: 'green' },
+    { key: 'co2', label: 'CO₂ (กก.)', value: parseFloat(stats.co2Reduced || 0).toFixed(2), icon: CheckCircle, tone: 'emerald' },
+    { key: 'exchanges', label: 'แลกเปลี่ยน', value: stats.totalExchanges || 0, icon: ArrowRightLeft, tone: 'purple' },
+    { key: 'donations', label: 'บริจาค', value: stats.totalDonations || 0, icon: Heart, tone: 'rose' },
   ]
 
   return (
     <div className="min-h-screen w-full min-w-0 bg-surface">
       <div className="mx-auto w-full min-w-0 max-w-5xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
+
+      {/* Profile Header + Stats */}
       <section className="w-full overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-elevated ring-1 ring-black/[0.03]">
-        <div className="relative px-4 pb-8 pt-6 sm:px-8 sm:pb-10 sm:pt-8">
+        <div className="px-4 pb-0 pt-6 sm:px-8 sm:pt-8">
           <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-primary-light bg-primary text-2xl font-bold text-white shadow-md sm:h-28 sm:w-28 sm:text-3xl">
             {initials}
           </div>
-
-          <div className="mt-5 flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900">{displayUser.name || 'ชื่อผู้ใช้'}</h1>
-              <div className="mt-4 space-y-3">
-                {displayUser.faculty && (
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                      <User size={20} className="text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-medium text-gray-500">คณะ / หน่วยงาน</p>
-                      <p className="text-base font-semibold text-gray-900">{displayUser.faculty}</p>
-                    </div>
-                  </div>
-                )}
+          <div className="mt-5">
+            <h1 className="text-3xl font-bold text-gray-900">{displayUser.name || 'ชื่อผู้ใช้'}</h1>
+            <div className="mt-4 space-y-3">
+              {displayUser.faculty && (
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                    <Mail size={20} className="text-primary" />
-                </div>
-                  <div>
-                    <p className="text-xs font-medium text-gray-500">อีเมล</p>
-                    <p className="text-base font-semibold text-gray-900">{displayUser.email}</p>
-                </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-5 border-t border-gray-100 pt-4 sm:mt-6 sm:pt-6">
-            <div className="space-y-2 rounded-2xl border border-gray-100 bg-white p-2 sm:space-y-3 sm:border-primary/10 sm:bg-gradient-to-br sm:from-primary-light/50 sm:via-white/90 sm:to-surface-light/80 sm:p-4 sm:shadow-sm">
-              <div className="grid grid-cols-5 gap-1.5 sm:gap-3">
-                {statCards.map((stat, idx) => (
-                  <div
-                    key={stat.key}
-                    className={`flex min-w-0 flex-col items-center justify-center gap-1 rounded-xl bg-gray-50/80 px-1 py-2 text-center transition hover:bg-white sm:items-start sm:gap-2 sm:border sm:border-gray-100/90 sm:bg-white/95 sm:px-3 sm:py-3 sm:text-left sm:shadow-sm ${idx === 4 ? '' : ''}`}
-                  >
-                    <div
-                      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full sm:mb-2 sm:h-8 sm:w-8 ${stat.tone === 'primary' ? 'bg-primary/10 text-primary' : stat.tone === 'green' ? 'bg-primary/10 text-primary' : stat.tone === 'emerald' ? 'bg-primary/10 text-primary' : stat.tone === 'purple' ? 'bg-purple-100 text-purple-600' : 'bg-red-100 text-red-600'}`}
-                    >
-                      <stat.icon size={15} strokeWidth={2} />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="truncate text-[13px] font-bold tabular-nums tracking-tight text-gray-900 sm:text-xl">{stat.value}</p>
-                      <p className="mt-0.5 line-clamp-2 text-[8.5px] font-medium leading-tight text-gray-600 sm:truncate sm:text-xs">{stat.label}</p>
-                    </div>
+                    <User size={20} className="text-primary" />
                   </div>
-                ))}
-              </div>
-              <div className="border-t border-gray-100 pt-2 sm:border-t-0 sm:pt-0">
-                <div className="grid grid-cols-4 gap-1 rounded-2xl bg-gray-50/80 p-1 ring-1 ring-gray-100 sm:gap-2 sm:rounded-full sm:bg-primary-light/55 sm:p-2 sm:ring-0">
-                  {tabItems.map((tab) => {
-                    const Icon = tab.icon
-                    const isActive = activeTab === tab.id
-                    const badge = tab.id === 'expired' ? expiredItems.length : tab.id === 'donations' ? donationHistory.length : null
-                    return (
-                      <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        title={tab.label}
-                        aria-label={tab.label}
-                        className={`flex min-h-9 min-w-0 w-full flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1 text-[10px] font-semibold leading-tight transition active:scale-[0.98] sm:min-h-11 sm:flex-row sm:gap-2 sm:rounded-full sm:px-2 sm:py-2.5 sm:text-sm ${isActive ? 'bg-primary-light text-primary-dark ring-1 ring-primary/15 hover:bg-primary-light hover:text-primary-dark sm:bg-primary sm:text-white sm:hover:bg-primary-dark sm:hover:text-white' : 'bg-transparent text-gray-600 hover:bg-gray-50 hover:text-primary-dark sm:text-gray-700 sm:hover:bg-white/90'}`}
-                      >
-                        <Icon size={14} className="shrink-0 sm:h-4 sm:w-4" />
-                        <span className="max-w-full truncate text-center leading-tight sm:max-w-[8rem]">{tab.label}</span>
-                        {badge !== null ? (
-                          <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold tabular-nums sm:text-[10px] ${isActive ? 'bg-white text-primary-dark sm:bg-white/20 sm:text-white' : 'bg-gray-100 text-gray-700 sm:bg-white'}`}>
-                            {badge}
-                          </span>
-                        ) : null}
-                      </button>
-                    )
-                  })}
+                  <div>
+                    <p className="text-xs font-medium text-gray-500">คณะ / หน่วยงาน</p>
+                    <p className="text-base font-semibold text-gray-900">{displayUser.faculty}</p>
+                  </div>
+                </div>
+              )}
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                  <Mail size={20} className="text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-gray-500">อีเมล</p>
+                  <p className="text-base font-semibold text-gray-900">{displayUser.email}</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
+
+        {/* Stats Strip */}
+        <div className="mt-5 border-t border-gray-100">
+          <div className="grid grid-cols-5 divide-x divide-gray-100">
+            {statCards.map((stat) => {
+              const iconColor =
+                stat.tone === 'purple'  ? 'text-purple-500'
+                : stat.tone === 'rose'  ? 'text-rose-400'
+                : stat.tone === 'emerald' ? 'text-emerald-500'
+                : 'text-primary'
+              return (
+                <div key={stat.key} className="flex flex-col items-center gap-1 px-1 py-3 sm:px-3 sm:py-4">
+                  <stat.icon size={13} strokeWidth={2} className={`shrink-0 ${iconColor}`} aria-hidden="true" />
+                  <p className="text-sm font-bold tabular-nums leading-none text-gray-900 sm:text-lg">{stat.value}</p>
+                  <p className="text-[9px] font-medium leading-none text-gray-400 sm:text-[11px]">{stat.label}</p>
+                </div>
+              )
+            })}
+          </div>
+        </div>
       </section>
 
-      <div className="mt-10 w-full min-w-0">
+      {/* Tab Bar */}
+      <div className="mt-3 w-full overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-card ring-1 ring-black/[0.03]">
+        <TabBar tabs={tabItems} activeTab={activeTab} onTabChange={setActiveTab} />
+      </div>
+
+      <div className="mt-6 w-full min-w-0">
         {activeTab === 'posts' && (
           <div>
             {activeItems.length === 0 ? (
