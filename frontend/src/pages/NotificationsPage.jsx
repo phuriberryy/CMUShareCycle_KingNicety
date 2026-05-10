@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Bell, Clock3, CheckCircle, XCircle, MessageCircle, ArrowRight, Heart, ArrowLeft } from 'lucide-react'
+import { Bell, Clock3, CheckCircle, XCircle, MessageCircle, ArrowRight, Heart, ArrowLeft, CheckCheck } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { notificationApi } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
@@ -45,6 +45,9 @@ export default function NotificationsPage() {
   const navigate = useNavigate()
   const [notifications, setNotifications] = useState([])
   const [loading, setLoading] = useState(true)
+  const [markingAll, setMarkingAll] = useState(false)
+
+  const unreadCount = notifications.filter((n) => !n.read).length
 
   useEffect(() => {
     if (!token) return
@@ -55,6 +58,20 @@ export default function NotificationsPage() {
       .catch(() => setNotifications([]))
       .finally(() => setLoading(false))
   }, [token])
+
+  const handleMarkAllRead = async () => {
+    if (!token || unreadCount === 0 || markingAll) return
+    setMarkingAll(true)
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
+    window.dispatchEvent(new CustomEvent('sharecycle:markAllRead'))
+    try {
+      await notificationApi.markRead(token)
+    } catch {
+      notificationApi.list(token).then(setNotifications).catch(() => {})
+    } finally {
+      setMarkingAll(false)
+    }
+  }
 
   const handleMarkAsRead = async (notification) => {
     if (!token || notification.read) return
@@ -97,15 +114,27 @@ export default function NotificationsPage() {
         <div className="mb-6 flex items-center gap-4">
           <Link
             to="/"
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 shadow-sm transition hover:bg-gray-50"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 shadow-sm transition hover:bg-gray-50"
             aria-label="กลับ"
           >
             <ArrowLeft size={20} />
           </Link>
-          <div>
+          <div className="min-w-0 flex-1">
             <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">การแจ้งเตือน</h1>
             <p className="text-sm text-gray-500">รายการแจ้งเตือนทั้งหมด</p>
           </div>
+          {unreadCount > 0 && (
+            <button
+              type="button"
+              onClick={handleMarkAllRead}
+              disabled={markingAll}
+              className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl px-3 text-sm font-medium text-primary transition hover:bg-primary/8 hover:text-primary-dark active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+              aria-label="อ่านทั้งหมดแล้ว"
+            >
+              <CheckCheck size={16} />
+              <span className="hidden sm:inline">อ่านทั้งหมดแล้ว</span>
+            </button>
+          )}
         </div>
 
         {/* List */}

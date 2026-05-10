@@ -121,6 +121,12 @@ function AppContent() {
     return () => window.removeEventListener('openChat', handleOpenChat)
   }, [navigate])
 
+  useEffect(() => {
+    const handleMarkAllRead = () => setUnreadCount(0)
+    window.addEventListener('sharecycle:markAllRead', handleMarkAllRead)
+    return () => window.removeEventListener('sharecycle:markAllRead', handleMarkAllRead)
+  }, [])
+
   if (loading) {
     return (
       <div className="flex min-h-screen w-full min-w-0 items-center justify-center bg-surface font-sans text-sm text-gray-500 antialiased">
