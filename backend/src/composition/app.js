@@ -27,8 +27,8 @@ const corsOptions = {
 
 app.use(cors(corsOptions))
 app.use(securityHeaders)
-app.use(express.json({ limit: '10mb', strict: true }))
-app.use(express.urlencoded({ extended: false, limit: '10mb' }))
+app.use(express.json({ limit: '50mb', strict: true }))
+app.use(express.urlencoded({ extended: false, limit: '50mb' }))
 app.use(cookieParser())
 app.use(sanitizeInput)
 

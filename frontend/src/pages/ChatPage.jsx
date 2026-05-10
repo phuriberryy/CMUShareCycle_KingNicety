@@ -46,7 +46,6 @@ export default function ChatPage() {
     return () => {
       if (pendingImage?.previewUrl) {
         URL.revokeObjectURL(pendingImage.previewUrl)
-        console.log('[SAFARI FLOW] object URL revoked:', pendingImage.previewUrl)
       }
     }
   }, [pendingImage])
@@ -193,6 +192,12 @@ export default function ChatPage() {
       auth: { token },
       transports: ['polling', 'websocket'],
       upgrade: true,
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 30000,
+      randomizationFactor: 0.5,
+      timeout: 20000,
     })
     socketRef.current = socket
 
@@ -365,17 +370,12 @@ export default function ChatPage() {
 
   const handleSendMessage = async () => {
     const pendingFile = pendingImage?.file ?? null
-    const pendingPreview = pendingImage?.previewUrl ?? null
-    console.log('[SEND] called | file:', pendingFile?.name ?? 'none', '| text:', JSON.stringify(composerText), '| chat:', selectedChat)
 
-    if (!token) { console.warn('[SEND] abort — no token'); return }
-    if (!selectedChat) { console.warn('[SEND] abort — no selectedChat'); return }
-    if (uploadingImage) { console.warn('[SEND] abort — upload already in progress'); return }
+    if (!token || !selectedChat || uploadingImage) return
 
     const body = composerText.trim()
-    if (!body && !pendingFile) { console.warn('[SEND] abort — nothing to send'); return }
+    if (!body && !pendingFile) return
 
-    // Clear composer immediately — responsive UX, blob URL revoked via useEffect
     setComposerText('')
     setPendingImage(null)
     setUploadingImage(true)
@@ -384,10 +384,8 @@ export default function ChatPage() {
       let imageUrl = null
 
       if (pendingFile) {
-        console.log('[SAFARI FLOW] upload started:', pendingFile.name, '|', pendingFile.size, 'bytes')
         const result = await chatApi.uploadFile(token, pendingFile)
         imageUrl = result?.url ?? null
-        console.log('[SAFARI FLOW] upload complete — server URL:', imageUrl)
       }
 
       const tempId = `temp-${Date.now()}`
@@ -406,16 +404,11 @@ export default function ChatPage() {
       mergeMessages([optimistic], String(selectedChat))
       setSendingMessage(true)
       try {
-        console.log('[SEND] emitting chat:message | imageUrl:', imageUrl)
         socketRef.current?.emit('chat:message', {
           chatId: String(selectedChat),
           body,
           imageUrl: imageUrl || null,
         })
-        // Do NOT call loadMessages immediately — it would race the DB insert and
-        // wipe the optimistic message before the socket confirmation arrives.
-        // Instead, fire a late reconciliation poll after the socket has had time
-        // to deliver the confirmed message (2 s is enough for any real network).
         const chatIdAtSend = String(selectedChat)
         setTimeout(() => {
           if (selectedChatRef.current === chatIdAtSend) loadMessages(chatIdAtSend)
@@ -424,12 +417,9 @@ export default function ChatPage() {
         setSendingMessage(false)
       }
     } catch (err) {
-      console.error('[SEND] failed:', err.name, err.message)
-      // Upload or socket failed — user can retry from an empty composer.
-      // (pendingImage is already cleared; we don't restore it to avoid stale blob URLs.)
+      console.error('Send message failed:', err.message)
     } finally {
       setUploadingImage(false)
-      console.log('[SAFARI FLOW] state reset complete — ready for next message')
     }
   }
 
@@ -445,28 +435,12 @@ export default function ChatPage() {
     input.style.cssText = 'position:fixed;top:-200px;left:-200px;width:1px;height:1px;overflow:hidden;'
     if (capture) input.setAttribute('capture', 'environment')
     document.body.appendChild(input)
-    console.log('[SAFARI FLOW] picker opening | capture:', capture ? 'environment' : 'none')
 
     input.onchange = (e) => {
-      console.log('[SAFARI FLOW] onchange fired | files:', e.target.files?.length ?? 0)
       const file = e.target.files?.[0]
-
-      // Delay DOM cleanup — give Safari one full event-loop tick before removing
-      // the input so the File handle is fully committed to JS memory.
       setTimeout(() => { if (document.body.contains(input)) input.remove() }, 0)
-
-      if (!file) {
-        console.log('[SAFARI FLOW] cancelled — no file selected')
-        return
-      }
-
-      console.log('[SAFARI FLOW] file:', file.name, '|', file.type, '|', file.size, 'bytes')
-
-      // createObjectURL is synchronous and returns a tiny pointer — no
-      // FileReader, no base64 string, no memory spike.
+      if (!file) return
       const previewUrl = URL.createObjectURL(file)
-      console.log('[SAFARI FLOW] object URL created:', previewUrl)
-
       setPendingImage({ file, previewUrl })
     }
 

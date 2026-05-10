@@ -42,6 +42,7 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
     listingType: 'exchange', // 'exchange' or 'donation'
   })
   const [imagePreviews, setImagePreviews] = useState([])
+  const [selectedDuration, setSelectedDuration] = useState(14)
   const [submitting, setSubmitting] = useState(false)
   const { token } = useAuth()
 
@@ -60,6 +61,7 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
       listingType: 'exchange',
     })
     setImagePreviews([])
+    setSelectedDuration(14)
     setSubmitting(false)
     if (fileInputRef.current) fileInputRef.current.value = ''
   }, [open])
@@ -100,8 +102,8 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
         let next = [...prev]
         for (const file of files) {
           if (next.length >= MAX_ITEM_GALLERY) break
-          if (file.size > 5 * 1024 * 1024) {
-            toast.warning('ไฟล์ใหญ่เกิน 5MB กรุณาเลือกไฟล์เล็กลง', 'รูปภาพใหญ่เกินไป')
+          if (file.size > 15 * 1024 * 1024) {
+            toast.warning('ไฟล์ใหญ่เกิน 15MB กรุณาเลือกไฟล์เล็กลง', 'รูปภาพใหญ่เกินไป')
             continue
           }
           try {
@@ -343,7 +345,7 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
               >
                 <ImageIcon className="mb-2 text-gray-400" size={36} />
                 <p className="mb-1 text-xs font-medium text-gray-700 sm:text-sm">คลิกเพื่อเพิ่มรูป</p>
-                <p className="text-[11px] text-gray-500 sm:text-xs">พีเอ็นจี / เจพีจี ไม่เกิน 5 เมกะไบต์ต่อไฟล์</p>
+                <p className="text-[11px] text-gray-500 sm:text-xs">พีเอ็นจี / เจพีจี ไม่เกิน 15 เมกะไบต์ต่อไฟล์</p>
               </label>
             ) : null}
           </div>
@@ -457,33 +459,32 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
               type="date"
               name="availableUntil"
               value={formData.availableUntil}
-              onChange={handleInputChange}
+              onChange={(e) => {
+                handleInputChange(e)
+                setSelectedDuration(null)
+              }}
               min={getTodayIso()}
               className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0 sm:py-3 sm:text-base"
               required
             />
             <div className="grid grid-cols-3 gap-2 sm:flex">
-              <button
-                type="button"
-                onClick={() => setFormData((prev) => ({ ...prev, availableUntil: addDaysIso(7) }))}
-                className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-[11px] font-semibold text-gray-700 hover:bg-gray-50"
-              >
-                +7d
-              </button>
-              <button
-                type="button"
-                onClick={() => setFormData((prev) => ({ ...prev, availableUntil: addDaysIso(14) }))}
-                className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-[11px] font-semibold text-gray-700 hover:bg-gray-50"
-              >
-                +14d
-              </button>
-              <button
-                type="button"
-                onClick={() => setFormData((prev) => ({ ...prev, availableUntil: addDaysIso(30) }))}
-                className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-[11px] font-semibold text-gray-700 hover:bg-gray-50"
-              >
-                +30d
-              </button>
+              {[7, 14, 30].map((days) => (
+                <button
+                  key={days}
+                  type="button"
+                  onClick={() => {
+                    setFormData((prev) => ({ ...prev, availableUntil: addDaysIso(days) }))
+                    setSelectedDuration(days)
+                  }}
+                  className={`rounded-xl border px-3 py-2 text-[11px] font-semibold transition-all duration-150 ${
+                    selectedDuration === days
+                      ? 'border-primary bg-primary text-white shadow-sm'
+                      : 'border-gray-200 bg-white text-gray-600 hover:border-primary/60 hover:bg-primary/5 hover:text-primary'
+                  }`}
+                >
+                  +{days}d
+                </button>
+              ))}
             </div>
           </div>
           <p className="mt-1 text-[11px] text-gray-500 sm:text-xs">

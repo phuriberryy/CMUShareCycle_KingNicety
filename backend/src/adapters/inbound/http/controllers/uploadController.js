@@ -5,7 +5,7 @@ import multer from 'multer'
 import { badRequest, unauthorized } from '../../../../shared/http/apiError.js'
 
 const UPLOAD_DIR = path.resolve(process.cwd(), 'uploads/chat')
-const MAX_SIZE_BYTES = 5 * 1024 * 1024 // 5 MB
+const MAX_SIZE_BYTES = 15 * 1024 * 1024 // 15 MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
 
 // Ensure upload directory exists at startup
@@ -61,7 +61,7 @@ export const uploadChatImage = async (req, res) => {
   const [, mime, b64] = match
   if (!ALLOWED_TYPES.includes(mime)) return res.status(400).json(badRequest('Allowed types: JPEG, PNG, GIF, WebP'))
   const buffer = Buffer.from(b64, 'base64')
-  if (buffer.length > MAX_SIZE_BYTES) return res.status(400).json(badRequest('Image must be under 5 MB'))
+  if (buffer.length > MAX_SIZE_BYTES) return res.status(400).json(badRequest('Image must be under 15 MB'))
   const ext = mime === 'image/jpeg' ? 'jpg' : mime.replace('image/', '')
   const filename = `${randomBytes(12).toString('hex')}.${ext}`
   fs.writeFileSync(path.join(UPLOAD_DIR, filename), buffer)
