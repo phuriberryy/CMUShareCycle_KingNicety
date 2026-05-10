@@ -47,8 +47,8 @@ export default function ItemCardGrid({ items, navigate, onExchangeItem, onDonati
         return (
           <article
             key={item.id}
-            className={`group flex w-full flex-col overflow-hidden rounded-[20px] bg-white shadow-[0_8px_24px_rgba(15,23,42,0.06)] ring-1 ring-black/[0.04] transition duration-200 sm:h-full sm:rounded-[16px] ${
-              isInProgress ? 'cursor-not-allowed opacity-75' : 'hover:-translate-y-1 hover:border-black/[0.08] hover:shadow-[0_10px_28px_rgba(0,0,0,0.08)]'
+            className={`group flex w-full flex-col overflow-hidden rounded-[20px] bg-white shadow-[0_8px_24px_rgba(15,23,42,0.06)] ring-1 ring-black/[0.04] transition duration-200 dark:shadow-[0_4px_20px_rgba(0,0,0,0.5)] dark:ring-white/[0.06] sm:h-full sm:rounded-[16px] ${
+              isInProgress ? 'cursor-not-allowed opacity-75' : 'hover:-translate-y-1 hover:shadow-[0_10px_28px_rgba(0,0,0,0.08)] dark:hover:shadow-[0_8px_28px_rgba(0,0,0,0.65)]'
             }`}
           >
             <div className="flex items-center gap-2 bg-white px-3 py-1.5 sm:gap-2.5 sm:border-b sm:border-gray-50 sm:bg-gradient-to-r sm:from-gray-50/80 sm:to-white sm:px-3.5 sm:py-2">

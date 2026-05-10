@@ -355,3 +355,102 @@ html.dark option {
 /* Scrollbar in dark mode */
 html.dark ::-webkit-scrollbar-track { background: #0d1c14; }
 html.dark ::-webkit-scrollbar-thumb { background-color: rgba(42,107,82,0.4); }
+
+/* ═══════════════════════════════════════════════════════
+   DARK MODE — Extended coverage (Part 2)
+   Covers color chips, gradient stops, hover states,
+   opacity variants, and all colorful components.
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Improved text-gray-400 contrast ── */
+html.dark .text-gray-400 { color: #6d8f7e; }
+
+/* ── Colored background chips (leaderboard, cards, badges) ── */
+html.dark .bg-yellow-50   { background-color: rgba(202,138,4,0.08);  }
+html.dark .bg-yellow-100  { background-color: rgba(202,138,4,0.15);  }
+html.dark .bg-amber-50    { background-color: rgba(202,138,4,0.07);  }
+html.dark .bg-orange-50   { background-color: rgba(234,88,12,0.08);  }
+html.dark .bg-orange-100  { background-color: rgba(234,88,12,0.14);  }
+html.dark .bg-red-50      { background-color: rgba(220,38,38,0.08);  }
+html.dark .bg-red-100     { background-color: rgba(220,38,38,0.14);  }
+html.dark .bg-pink-50     { background-color: rgba(236,72,153,0.08); }
+html.dark .bg-pink-100    { background-color: rgba(236,72,153,0.14); }
+html.dark .bg-purple-50   { background-color: rgba(124,58,237,0.08); }
+html.dark .bg-purple-100  { background-color: rgba(124,58,237,0.14); }
+html.dark .bg-blue-50     { background-color: rgba(37,99,235,0.08);  }
+html.dark .bg-blue-100    { background-color: rgba(37,99,235,0.14);  }
+html.dark .bg-slate-50    { background-color: rgba(255,255,255,0.03); }
+html.dark .bg-slate-100   { background-color: rgba(255,255,255,0.06); }
+html.dark .bg-emerald-50  { background-color: rgba(16,185,129,0.08); }
+html.dark .bg-emerald-100 { background-color: rgba(16,185,129,0.14); }
+
+/* ── Colored text (leaderboard ranks, badges) ── */
+html.dark .text-yellow-500 { color: #f59e0b; }
+html.dark .text-yellow-600 { color: #fbbf24; }
+html.dark .text-yellow-700 { color: #fcd34d; }
+html.dark .text-amber-500  { color: #f59e0b; }
+html.dark .text-orange-400 { color: #fb923c; }
+html.dark .text-orange-600 { color: #fdba74; }
+html.dark .text-orange-700 { color: #fb923c; }
+html.dark .text-red-400    { color: #f87171; }
+html.dark .text-red-500    { color: #fca5a5; }
+html.dark .text-red-600    { color: #f87171; }
+html.dark .text-red-700    { color: #fca5a5; }
+html.dark .text-pink-600   { color: #f472b6; }
+html.dark .text-pink-700   { color: #f9a8d4; }
+html.dark .text-purple-600 { color: #a78bfa; }
+html.dark .text-purple-700 { color: #c4b5fd; }
+html.dark .text-blue-500   { color: #60a5fa; }
+html.dark .text-blue-600   { color: #93c5fd; }
+html.dark .text-blue-700   { color: #60a5fa; }
+html.dark .text-emerald-500 { color: #34d399; }
+html.dark .text-emerald-600 { color: #6ee7b7; }
+html.dark .text-slate-400   { color: #94a3b8; }
+
+/* ── Border colors (leaderboard podium) ── */
+html.dark .border-yellow-300   { border-color: rgba(202,138,4,0.28);  }
+html.dark .border-orange-200   { border-color: rgba(234,88,12,0.20);  }
+html.dark .border-orange-300   { border-color: rgba(234,88,12,0.28);  }
+html.dark .border-primary\/10  { border-color: rgba(42,107,82,0.15);  }
+
+/* ── Gradient FROM stops (podium cards, rank list, item cards) ── */
+html.dark .from-yellow-50  { --tw-gradient-from: rgba(202,138,4,0.10)  var(--tw-gradient-from-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(202,138,4,0)); }
+html.dark .from-yellow-100 { --tw-gradient-from: rgba(202,138,4,0.16)  var(--tw-gradient-from-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(202,138,4,0)); }
+html.dark .from-amber-50   { --tw-gradient-from: rgba(202,138,4,0.07)  var(--tw-gradient-from-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(202,138,4,0)); }
+html.dark .from-orange-50  { --tw-gradient-from: rgba(234,88,12,0.10)  var(--tw-gradient-from-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(234,88,12,0)); }
+html.dark .from-gray-50    { --tw-gradient-from: rgba(255,255,255,0.03) var(--tw-gradient-from-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(255,255,255,0)); }
+html.dark .from-gray-100   { --tw-gradient-from: rgba(255,255,255,0.06) var(--tw-gradient-from-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(255,255,255,0)); }
+html.dark .from-slate-50   { --tw-gradient-from: rgba(255,255,255,0.02) var(--tw-gradient-from-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(255,255,255,0)); }
+/* opacity-modifier variants (item card owner strip) */
+html.dark .from-gray-50\/80 { --tw-gradient-from: rgba(255,255,255,0.02) var(--tw-gradient-from-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(255,255,255,0)); }
+
+/* ── Gradient TO stops ── */
+html.dark .to-white    { --tw-gradient-to: #132019    var(--tw-gradient-to-position); }
+html.dark .to-amber-50 { --tw-gradient-to: rgba(202,138,4,0.04)  var(--tw-gradient-to-position); }
+html.dark .to-slate-50 { --tw-gradient-to: rgba(255,255,255,0.02) var(--tw-gradient-to-position); }
+
+/* ── Hover state overrides ── */
+html.dark .hover\:bg-gray-200:hover   { background-color: rgba(255,255,255,0.10); }
+html.dark .hover\:text-gray-800:hover { color: #c4dccb; }
+html.dark .hover\:shadow-md:hover     { box-shadow: 0 4px 12px rgba(0,0,0,0.55), 0 2px 6px rgba(0,0,0,0.4); }
+html.dark .hover\:border-gray-300:hover { border-color: rgba(255,255,255,0.12); }
+
+/* ── Opacity-variant background overrides ── */
+html.dark .bg-white\/95    { background-color: rgba(19,32,25,0.97); }
+html.dark .bg-gray-50\/80  { background-color: rgba(255,255,255,0.03); }
+
+/* ── Opacity-variant border & ring overrides ── */
+html.dark .border-gray-100\/90 { border-color: rgba(255,255,255,0.05); }
+html.dark .ring-gray-100\/60   { --tw-ring-color: rgba(255,255,255,0.04); }
+html.dark .ring-gray-100\/80   { --tw-ring-color: rgba(255,255,255,0.05); }
+html.dark .ring-black\/\[0\.04\] { --tw-ring-color: rgba(255,255,255,0.04); }
+
+/* ── Leaderboard avatar ring tokens ── */
+html.dark .ring-amber-300\/50 { --tw-ring-color: rgba(202,138,4,0.20); }
+html.dark .ring-slate-300\/50 { --tw-ring-color: rgba(148,163,184,0.15); }
+html.dark .ring-amber-400\/50 { --tw-ring-color: rgba(202,138,4,0.25); }
+html.dark .shadow-amber-200\/50 { --tw-shadow-color: rgba(202,138,4,0.10); }
+
+/* ── bg-primary-light (nav hover states) ── */
+html.dark .bg-primary-light { background-color: rgba(42,107,82,0.15); }
+html.dark .hover\:bg-primary-light:hover { background-color: rgba(42,107,82,0.20); }
