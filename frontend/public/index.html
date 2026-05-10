@@ -8,6 +8,18 @@
     <meta name="theme-color" content="#2A6B52" />
     <meta name="description" content="CMU ShareCycle — แลกเปลี่ยนและบริจาคในวิทยาเขต มช." />
     <title>CMU ShareCycle</title>
+    <!-- Dark mode: runs before React to prevent flash of wrong theme -->
+    <script>
+      (function() {
+        try {
+          var t = localStorage.getItem('sharecycle_theme');
+          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (t === 'dark' || (!t && prefersDark)) {
+            document.documentElement.classList.add('dark');
+          }
+        } catch(e) {}
+      })();
+    </script>
     <!-- GitHub Pages SPA redirect handler -->
     <script type="text/javascript">
       (function(l) {

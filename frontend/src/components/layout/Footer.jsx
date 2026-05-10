@@ -2,7 +2,7 @@ import ShareCycleLogo from '../brand/ShareCycleLogo'
 
 function Footer() {
   return (
-    <footer className="mt-auto mt-8 w-full min-w-0 border-t border-gray-200 bg-white/85 backdrop-blur-sm sm:mt-12">
+    <footer className="mt-auto mt-8 w-full min-w-0 border-t border-gray-200 bg-white/85 backdrop-blur-sm dark:bg-[#132019]/95 dark:border-white/[0.07] sm:mt-12">
       <div className="mx-auto w-full min-w-0 max-w-5xl px-4 py-5 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
         {/* CMU ShareCycle Info */}
         <div className="mx-auto max-w-md text-center">

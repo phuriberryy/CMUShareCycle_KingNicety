@@ -1,7 +1,8 @@
-import { Bell, Menu, X, Trophy, MessageCircle, ChevronRight } from 'lucide-react'
+import { Bell, Menu, X, Trophy, MessageCircle, ChevronRight, Moon, Sun } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { useTheme } from '../../context/ThemeContext'
 import ShareCycleLogo from '../brand/ShareCycleLogo'
 import { APP_ROUTES } from '../../shared/constants/routes'
 
@@ -16,6 +17,7 @@ function Header({ unread, onNotificationsClick }) {
   const navigate = useNavigate()
   const onLogin = () => navigate(APP_ROUTES.login)
   const { user, logout } = useAuth()
+  const { theme, toggleTheme } = useTheme()
   const initials = useMemo(() => {
     if (!user?.name) return 'CM'
     return user.name
@@ -31,7 +33,7 @@ function Header({ unread, onNotificationsClick }) {
   }, [location.pathname])
 
   return (
-    <header className="sticky top-0 z-40 w-full min-w-0 border-b border-primary/10 bg-white/92 shadow-sm backdrop-blur-md supports-[backdrop-filter]:bg-white/85">
+    <header className="sticky top-0 z-40 w-full min-w-0 border-b border-primary/10 bg-white/92 shadow-sm backdrop-blur-md supports-[backdrop-filter]:bg-white/85 dark:bg-[#132019]/95 dark:border-white/[0.07] dark:shadow-none dark:supports-[backdrop-filter]:bg-[#0f1c15]/90">
       <div className="mx-auto flex w-full min-w-0 max-w-5xl items-center justify-between gap-2 py-2 pl-[max(0.9rem,env(safe-area-inset-left,0px))] pr-[max(0.9rem,env(safe-area-inset-right,0px))] sm:gap-3 sm:px-6 sm:py-2.5 lg:px-8">
         <Link
           to={APP_ROUTES.home}
@@ -84,6 +86,16 @@ function Header({ unread, onNotificationsClick }) {
               </span>
             )}
           </button>
+          {/* Desktop theme toggle */}
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="flex min-h-11 min-w-11 items-center justify-center rounded-full border border-gray-200 bg-white p-2.5 text-gray-600 transition hover:bg-gray-50 dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10"
+            aria-label={theme === 'dark' ? 'เปลี่ยนเป็นโหมดสว่าง' : 'เปลี่ยนเป็นโหมดมืด'}
+          >
+            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+
           {user ? (
             <>
               <Link
@@ -180,6 +192,23 @@ function Header({ unread, onNotificationsClick }) {
               ))}
             </div>
             <div className="mx-auto mt-4 max-w-md border-t border-gray-100 pt-4">
+              {/* Mobile theme toggle */}
+              <div className="mb-2">
+                <button
+                  type="button"
+                  onClick={toggleTheme}
+                  className="flex min-h-11 w-full items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                >
+                  <span className="flex items-center gap-2">
+                    {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+                    {theme === 'dark' ? 'โหมดสว่าง' : 'โหมดมืด'}
+                  </span>
+                  <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-500">
+                    {theme === 'dark' ? 'สว่าง' : 'มืด'}
+                  </span>
+                </button>
+              </div>
+
               {user ? (
                 <div className="space-y-2">
                   <Link

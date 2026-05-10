@@ -147,6 +147,10 @@ select {
   padding-bottom: max(1rem, env(safe-area-inset-bottom));
 }
 
+/* Native color-scheme so scrollbars + browser UI follow the theme */
+html { color-scheme: light; }
+html.dark { color-scheme: dark; }
+
 @layer components {
   .sc-page {
     @apply min-h-screen w-full min-w-0 overflow-x-hidden bg-surface;
@@ -220,3 +224,134 @@ select {
     @apply rounded-2xl border border-gray-200 bg-white py-10 text-center text-sm text-gray-500 sm:py-12;
   }
 }
+
+/* ═══════════════════════════════════════════════════════
+   DARK MODE — Global CSS overrides
+   Unlayered CSS has higher cascade priority than @layer,
+   so no !important needed. Covers all components globally.
+   ═══════════════════════════════════════════════════════ */
+
+/* Body / page */
+html.dark body {
+  background-color: #0d1c14;
+  background-image: none;
+  color: #dff0e5;
+}
+
+/* Page section backgrounds */
+html.dark .bg-surface       { background-color: #0d1c14; }
+html.dark .bg-surface-light { background-color: #101f16; }
+
+/* Card / panel / modal backgrounds */
+html.dark .bg-white    { background-color: #132019; }
+html.dark .bg-white\/85 { background-color: rgba(19,32,25,0.92); }
+html.dark .bg-white\/92 { background-color: rgba(19,32,25,0.95); }
+html.dark .bg-white\/95 { background-color: rgba(19,32,25,0.97); }
+
+/* Subtle gray backgrounds — hover targets, icon wrappers, tags */
+html.dark .bg-gray-50  { background-color: rgba(255,255,255,0.03); }
+html.dark .bg-gray-100 { background-color: rgba(255,255,255,0.06); }
+html.dark .bg-gray-200 { background-color: rgba(255,255,255,0.09); }
+
+/* Hover backgrounds */
+html.dark .hover\:bg-gray-50:hover  { background-color: rgba(255,255,255,0.04); }
+html.dark .hover\:bg-gray-100:hover { background-color: rgba(255,255,255,0.07); }
+html.dark .hover\:bg-white:hover    { background-color: #1a2b20; }
+
+/* Primary-light hover (nav links) */
+html.dark .hover\:bg-primary-light\/80:hover { background-color: rgba(42,107,82,0.18); }
+html.dark .hover\:bg-primary-light\/70:hover { background-color: rgba(42,107,82,0.15); }
+html.dark .hover\:bg-primary\/5:hover        { background-color: rgba(42,107,82,0.12); }
+html.dark .hover\:bg-primary\/8:hover        { background-color: rgba(42,107,82,0.16); }
+
+/* Text colors */
+html.dark .text-gray-900 { color: #dff0e5; }
+html.dark .text-gray-800 { color: #c4dccb; }
+html.dark .text-gray-700 { color: #adc9b8; }
+html.dark .text-gray-600 { color: #8aaa97; }
+html.dark .text-gray-500 { color: #7a9a87; }
+html.dark .text-gray-400 { color: #5d7d6b; }
+html.dark .text-gray-300 { color: #4a6857; }
+
+/* Hover text */
+html.dark .hover\:text-primary-dark:hover  { color: #5bbf93; }
+html.dark .hover\:text-gray-900:hover      { color: #dff0e5; }
+
+/* Border colors */
+html.dark .border-gray-200 { border-color: rgba(255,255,255,0.08); }
+html.dark .border-gray-100 { border-color: rgba(255,255,255,0.05); }
+html.dark .border-gray-300 { border-color: rgba(255,255,255,0.12); }
+
+/* Divide utilities */
+html.dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]) { border-color: rgba(255,255,255,0.05); }
+html.dark .divide-gray-200 > :not([hidden]) ~ :not([hidden]) { border-color: rgba(255,255,255,0.08); }
+html.dark .divide-x > :not([hidden]) ~ :not([hidden])        { border-color: rgba(255,255,255,0.07); }
+
+/* Ring color for subtle card rings */
+html.dark .ring-black\/\[0\.03\] { --tw-ring-color: rgba(255,255,255,0.04); }
+
+/* Shadows — deepen for dark surfaces */
+html.dark .shadow-sm       { box-shadow: 0 1px 3px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.4); }
+html.dark .shadow-elevated { box-shadow: 0 2px 8px -2px rgba(0,0,0,0.6), 0 12px 32px -8px rgba(0,0,0,0.7); }
+html.dark .shadow-card     { box-shadow: 0 4px 24px -4px rgba(0,0,0,0.5); }
+
+/* sc-* component overrides */
+html.dark .sc-card {
+  background-color: #132019;
+  border-color: rgba(255,255,255,0.08);
+}
+html.dark .sc-input {
+  background-color: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.1);
+  color: #dff0e5;
+}
+html.dark .sc-input::placeholder { color: #5d7d6b; }
+html.dark .sc-select {
+  background-color: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.1);
+  color: #dff0e5;
+}
+html.dark .sc-empty {
+  background-color: #132019;
+  border-color: rgba(255,255,255,0.08);
+}
+html.dark .sc-btn-secondary {
+  background-color: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.1);
+  color: #adc9b8;
+}
+html.dark .sc-btn-secondary:hover {
+  background-color: rgba(255,255,255,0.09);
+}
+
+/* Native form elements — covers all typed inputs globally */
+html.dark input[type="text"],
+html.dark input[type="email"],
+html.dark input[type="password"],
+html.dark input[type="search"],
+html.dark input[type="tel"],
+html.dark input[type="number"],
+html.dark textarea {
+  background-color: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.1);
+  color: #dff0e5;
+}
+html.dark input[type="text"]::placeholder,
+html.dark input[type="email"]::placeholder,
+html.dark input[type="password"]::placeholder,
+html.dark input[type="search"]::placeholder,
+html.dark textarea::placeholder { color: #5d7d6b; }
+
+html.dark select {
+  background-color: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.1);
+  color: #dff0e5;
+}
+html.dark option {
+  background-color: #132019;
+  color: #dff0e5;
+}
+
+/* Scrollbar in dark mode */
+html.dark ::-webkit-scrollbar-track { background: #0d1c14; }
+html.dark ::-webkit-scrollbar-thumb { background-color: rgba(42,107,82,0.4); }

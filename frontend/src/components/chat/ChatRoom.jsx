@@ -83,7 +83,7 @@ export default function ChatRoom({
 
   if (!chat) {
     return (
-      <div className="grid h-full min-h-0 w-full place-content-center bg-[#FBFCFB] px-6 py-8">
+      <div className="grid h-full min-h-0 w-full place-content-center bg-[#FBFCFB] dark:bg-[#0d1c14] px-6 py-8">
         <div className="flex max-w-sm gap-3 rounded-2xl border border-gray-200 bg-white p-4 text-left shadow-sm">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100">
             <MessageCircle className="text-primary/80" size={20} strokeWidth={2} />

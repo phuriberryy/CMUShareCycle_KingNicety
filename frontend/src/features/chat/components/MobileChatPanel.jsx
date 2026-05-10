@@ -26,7 +26,7 @@ export default function MobileChatPanel({
   sendingMessage,
 }) {
   return (
-    <div className={`flex h-full min-h-0 flex-col bg-[#FBFCFB] md:hidden ${isOpen ? 'flex' : 'hidden'}`}>
+    <div className={`flex h-full min-h-0 flex-col bg-[#FBFCFB] dark:bg-[#0d1c14] md:hidden ${isOpen ? 'flex' : 'hidden'}`}>
       <div className="sticky top-0 z-30 shrink-0 border-b border-gray-200 bg-white/95 px-4 py-3 backdrop-blur-sm">
         <div className="flex items-center gap-3">
           <button
