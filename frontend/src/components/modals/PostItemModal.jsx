@@ -11,13 +11,7 @@ import Textarea from '../../shared/ui/Textarea'
 import { OTHER_SUBTYPE_MAX_LENGTH } from '../../utils/co2Calculator'
 import { moderateCombinedItemText } from '../../utils/contentModeration'
 
-const readFileAsDataUrl = (file) =>
-  new Promise((resolve, reject) => {
-    const r = new FileReader()
-    r.onloadend = () => resolve(r.result)
-    r.onerror = reject
-    r.readAsDataURL(file)
-  })
+import { compressImageFile } from '../../utils/imageCompression'
 
 export default function PostItemModal({ open, onClose, onSuccess }) {
   const toast = useToast()
@@ -102,12 +96,12 @@ export default function PostItemModal({ open, onClose, onSuccess }) {
         let next = [...prev]
         for (const file of files) {
           if (next.length >= MAX_ITEM_GALLERY) break
-          if (file.size > 15 * 1024 * 1024) {
-            toast.warning('ไฟล์ใหญ่เกิน 15MB กรุณาเลือกไฟล์เล็กลง', 'รูปภาพใหญ่เกินไป')
+          if (file.size > 20 * 1024 * 1024) {
+            toast.warning('ไฟล์ใหญ่เกิน 20MB กรุณาเลือกไฟล์เล็กลง', 'รูปภาพใหญ่เกินไป')
             continue
           }
           try {
-            const dataUrl = await readFileAsDataUrl(file)
+            const dataUrl = await compressImageFile(file)
             next = [...next, dataUrl].slice(0, MAX_ITEM_GALLERY)
           } catch {
             toast.error('อ่านไฟล์ไม่สำเร็จ', 'เกิดข้อผิดพลาด')

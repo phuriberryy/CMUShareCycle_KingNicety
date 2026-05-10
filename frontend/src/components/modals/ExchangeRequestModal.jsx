@@ -5,6 +5,7 @@ import Modal from '../ui/Modal'
 import { exchangeApi } from '../../lib/api'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
+import { compressImageFile } from '../../utils/imageCompression'
 
 export default function ExchangeRequestModal({ open, onClose, itemId }) {
   const navigate = useNavigate()
@@ -26,13 +27,16 @@ export default function ExchangeRequestModal({ open, onClose, itemId }) {
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleImageChange = (e) => {
+  const handleImageChange = async (e) => {
     const file = e.target.files?.[0]
-    if (file) {
+    if (!file) return
+    try {
+      const dataUrl = await compressImageFile(file)
+      setImagePreview(dataUrl)
+    } catch {
+      // fallback: read as-is
       const reader = new FileReader()
-      reader.onloadend = () => {
-        setImagePreview(reader.result)
-      }
+      reader.onloadend = () => setImagePreview(reader.result)
       reader.readAsDataURL(file)
     }
   }
