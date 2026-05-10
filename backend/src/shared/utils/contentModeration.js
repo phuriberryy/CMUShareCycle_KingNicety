@@ -257,8 +257,8 @@ export function validateImage(imageUrl) {
     const base64Data = imageUrl.split(',')[1]
     if (!base64Data) return { isValid: false, reason: 'Invalid base64 image format' }
     const sizeInBytes = (base64Data.length * 3) / 4
-    const maxSize = 5 * 1024 * 1024
-    if (sizeInBytes > maxSize) return { isValid: false, reason: 'รูปมีขนาดเกิน 5 เมกะไบต์' }
+    const maxSize = 15 * 1024 * 1024
+    if (sizeInBytes > maxSize) return { isValid: false, reason: 'รูปมีขนาดเกิน 15 เมกะไบต์' }
     const imageType = imageUrl.match(/data:image\/(\w+);base64/)?.[1]
     const allowedTypes = ['jpeg', 'jpg', 'png', 'webp', 'gif']
     if (!imageType || !allowedTypes.includes(imageType.toLowerCase())) {

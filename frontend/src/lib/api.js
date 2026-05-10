@@ -58,6 +58,7 @@ const handleResponse = async (res) => {
 
 const DEFAULT_TIMEOUT_MS = 15000 // 15 วินาที
 const CHAT_TIMEOUT_MS = 30000 // แชทใช้ 30 วินาที — ลดโอกาส "Fetch is aborted"
+const ITEM_TIMEOUT_MS = 60000 // 60 วินาที — รองรับรูปหลายรูปที่เข้ารหัส base64
 
 const request = async (path, { token, headers, timeoutMs = DEFAULT_TIMEOUT_MS, ...options } = {}) => {
   const mergedHeaders = {
@@ -183,12 +184,14 @@ export const itemsApi = {
       method: 'POST',
       body: JSON.stringify(payload),
       token,
+      timeoutMs: ITEM_TIMEOUT_MS,
     }),
   update: (token, itemId, payload) =>
     request(`/items/${itemId}`, {
       method: 'PUT',
       body: JSON.stringify(payload),
       token,
+      timeoutMs: ITEM_TIMEOUT_MS,
     }),
   delete: (token, itemId) =>
     request(`/items/${itemId}`, {
@@ -340,6 +343,7 @@ export const donationApi = {
       method: 'POST',
       body: JSON.stringify(payload),
       token,
+      timeoutMs: ITEM_TIMEOUT_MS,
     }),
   receive: (token, payload) =>
     request('/donations/receive', {
