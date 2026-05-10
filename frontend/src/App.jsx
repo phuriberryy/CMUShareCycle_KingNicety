@@ -14,17 +14,17 @@ import { API_BASE, notificationApi } from './lib/api'
 import AppLoading from './components/system/AppLoading'
 import { APP_ROUTES } from './shared/constants/routes'
 
-const LoginPage = lazy(() => import('./pages/LoginPage'))
-const HomePage = lazy(() => import('./pages/HomePage'))
-const ProfilePage = lazy(() => import('./pages/ProfilePage'))
-const RegisterPage = lazy(() => import('./pages/RegisterPage'))
-const ExchangeRequestDetailPage = lazy(() => import('./pages/ExchangeRequestDetailPage'))
-const DonationRequestDetailPage = lazy(() => import('./pages/DonationRequestDetailPage'))
-const ItemDetailPage = lazy(() => import('./pages/ItemDetailPage'))
-const LeaderboardPage = lazy(() => import('./pages/LeaderboardPage'))
-const ChatPage = lazy(() => import('./pages/ChatPage'))
-const NotificationsPage = lazy(() => import('./pages/NotificationsPage'))
-const AdminLayout = lazy(() => import('./components/admin/AdminLayout'))
+const LoginPage = lazy(() => import(/* webpackChunkName: "login" */ './pages/LoginPage'))
+const HomePage = lazy(() => import(/* webpackChunkName: "home" */ './pages/HomePage'))
+const ProfilePage = lazy(() => import(/* webpackChunkName: "profile" */ './pages/ProfilePage'))
+const RegisterPage = lazy(() => import(/* webpackChunkName: "register" */ './pages/RegisterPage'))
+const ExchangeRequestDetailPage = lazy(() => import(/* webpackChunkName: "exchange-detail" */ './pages/ExchangeRequestDetailPage'))
+const DonationRequestDetailPage = lazy(() => import(/* webpackChunkName: "donation-detail" */ './pages/DonationRequestDetailPage'))
+const ItemDetailPage = lazy(() => import(/* webpackChunkName: "item-detail" */ './pages/ItemDetailPage'))
+const LeaderboardPage = lazy(() => import(/* webpackChunkName: "leaderboard" */ './pages/LeaderboardPage'))
+const ChatPage = lazy(() => import(/* webpackChunkName: "chat" */ './pages/ChatPage'))
+const NotificationsPage = lazy(() => import(/* webpackChunkName: "notifications" */ './pages/NotificationsPage'))
+const AdminLayout = lazy(() => import(/* webpackChunkName: "admin" */ './components/admin/AdminLayout'))
 
 const SOCKET_URL = (API_BASE || '').replace(/\/api$/, '')
 
