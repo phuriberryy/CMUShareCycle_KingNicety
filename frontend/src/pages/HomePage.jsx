@@ -127,7 +127,7 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
   return (
     <div className="sc-page w-full min-w-0 overflow-x-hidden">
       <div className="sc-container w-full min-w-0 space-y-4 sm:space-y-10 lg:space-y-12">
-        <section className="relative overflow-hidden rounded-[26px] border border-primary/20 bg-gradient-to-br from-white via-[#fbfefc] to-[#f2faf6] shadow-[0_14px_40px_rgba(14,81,58,0.06)] sm:rounded-[28px]">
+        <section className="relative overflow-hidden rounded-[26px] border border-primary/20 bg-gradient-to-br from-white via-[#fbfefc] to-[#f2faf6] shadow-[0_14px_40px_rgba(14,81,58,0.06)] dark:border-white/[0.08] dark:from-[#1e3328] dark:via-[#1e3328] dark:to-[#1e3328] dark:shadow-none sm:rounded-[28px]">
           <div className="pointer-events-none absolute -right-20 -top-24 h-52 w-52 rounded-full bg-white/70 blur-3xl" aria-hidden />
           <div className="pointer-events-none absolute -bottom-28 left-8 h-52 w-52 rounded-full bg-primary/[0.04] blur-3xl" aria-hidden />
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_28%,rgba(255,255,255,0.94),transparent_34%)]" aria-hidden />
@@ -135,15 +135,15 @@ export default function HomePage({ onExchangeItem, onDonationItem, onPostItem, r
           <div className="relative z-10 flex flex-col gap-3.5 px-4 py-4 sm:gap-7 sm:px-7 sm:py-8 lg:flex-row lg:items-center lg:justify-between lg:gap-12 lg:px-10 lg:py-9">
             <div className="max-w-xl space-y-3 sm:space-y-5">
               <div className="space-y-1.5 sm:space-y-2.5">
-                <h1 className="text-balance text-[1.22rem] font-bold leading-[1.45] tracking-[0.015em] text-primary-dark sm:text-3xl sm:leading-[1.5] sm:tracking-[0.04em] lg:text-[2rem] lg:leading-[1.48] [text-rendering:optimizeLegibility]">
+                <h1 className="text-balance text-[1.22rem] font-bold leading-[1.45] tracking-[0.015em] text-primary-dark dark:text-[#dff0e5] sm:text-3xl sm:leading-[1.5] sm:tracking-[0.04em] lg:text-[2rem] lg:leading-[1.48] [text-rendering:optimizeLegibility]">
                   ของที่มี แลกของที่ต้องการ
                 </h1>
-                <p className="max-w-lg text-[13px] font-normal leading-relaxed text-gray-600 sm:text-base">
+                <p className="max-w-lg text-[13px] font-normal leading-relaxed text-gray-600 dark:text-[#8aaa97] sm:text-base">
                   แลกเปลี่ยนและบริจาคภายใน มช. — ปลอดภัย ไม่มีค่าใช้จ่าย
                 </p>
               </div>
               <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
-                <span className="inline-flex min-h-8 w-fit items-center justify-center gap-2 rounded-full bg-white/82 px-3 py-1.5 text-xs font-semibold text-primary-dark shadow-sm ring-1 ring-white/70 transition sm:min-h-10 sm:rounded-xl sm:px-3 sm:py-2 sm:text-sm">
+                <span className="inline-flex min-h-8 w-fit items-center justify-center gap-2 rounded-full bg-white/82 px-3 py-1.5 text-xs font-semibold text-primary-dark shadow-sm ring-1 ring-white/70 transition dark:bg-[#2a4a38] dark:text-[#dff0e5] dark:ring-white/10 dark:shadow-none sm:min-h-10 sm:rounded-xl sm:px-3 sm:py-2 sm:text-sm">
                   <Zap size={15} className="shrink-0 text-primary" aria-hidden />
                   <span className="text-center sm:text-left">มุ่งสู่มหาวิทยาลัยไร้ขยะ</span>
                 </span>

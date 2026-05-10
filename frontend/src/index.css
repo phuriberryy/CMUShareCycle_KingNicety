@@ -243,10 +243,10 @@ html.dark .bg-surface       { background-color: #0d1c14; }
 html.dark .bg-surface-light { background-color: #101f16; }
 
 /* Card / panel / modal backgrounds */
-html.dark .bg-white    { background-color: #132019; }
-html.dark .bg-white\/85 { background-color: rgba(19,32,25,0.92); }
-html.dark .bg-white\/92 { background-color: rgba(19,32,25,0.95); }
-html.dark .bg-white\/95 { background-color: rgba(19,32,25,0.97); }
+html.dark .bg-white    { background-color: #1e3328; }
+html.dark .bg-white\/85 { background-color: rgba(30,51,40,0.92); }
+html.dark .bg-white\/92 { background-color: rgba(30,51,40,0.95); }
+html.dark .bg-white\/95 { background-color: rgba(30,51,40,0.97); }
 
 /* Subtle gray backgrounds — hover targets, icon wrappers, tags */
 html.dark .bg-gray-50  { background-color: rgba(255,255,255,0.03); }
@@ -256,7 +256,7 @@ html.dark .bg-gray-200 { background-color: rgba(255,255,255,0.09); }
 /* Hover backgrounds */
 html.dark .hover\:bg-gray-50:hover  { background-color: rgba(255,255,255,0.04); }
 html.dark .hover\:bg-gray-100:hover { background-color: rgba(255,255,255,0.07); }
-html.dark .hover\:bg-white:hover    { background-color: #1a2b20; }
+html.dark .hover\:bg-white:hover    { background-color: #253c2e; }
 
 /* Primary-light hover (nav links) */
 html.dark .hover\:bg-primary-light\/80:hover { background-color: rgba(42,107,82,0.18); }
@@ -297,7 +297,7 @@ html.dark .shadow-card     { box-shadow: 0 4px 24px -4px rgba(0,0,0,0.5); }
 
 /* sc-* component overrides */
 html.dark .sc-card {
-  background-color: #132019;
+  background-color: #1e3328;
   border-color: rgba(255,255,255,0.08);
 }
 html.dark .sc-input {
@@ -312,7 +312,7 @@ html.dark .sc-select {
   color: #dff0e5;
 }
 html.dark .sc-empty {
-  background-color: #132019;
+  background-color: #1e3328;
   border-color: rgba(255,255,255,0.08);
 }
 html.dark .sc-btn-secondary {
@@ -348,7 +348,7 @@ html.dark select {
   color: #dff0e5;
 }
 html.dark option {
-  background-color: #132019;
+  background-color: #1e3328;
   color: #dff0e5;
 }
 
@@ -425,7 +425,8 @@ html.dark .from-slate-50   { --tw-gradient-from: rgba(255,255,255,0.02) var(--tw
 html.dark .from-gray-50\/80 { --tw-gradient-from: rgba(255,255,255,0.02) var(--tw-gradient-from-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(255,255,255,0)); }
 
 /* ── Gradient TO stops ── */
-html.dark .to-white    { --tw-gradient-to: #132019    var(--tw-gradient-to-position); }
+html.dark .from-white  { --tw-gradient-from: #1e3328 var(--tw-gradient-from-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(30,51,40,0)); }
+html.dark .to-white    { --tw-gradient-to: #1e3328    var(--tw-gradient-to-position); }
 html.dark .to-amber-50 { --tw-gradient-to: rgba(202,138,4,0.04)  var(--tw-gradient-to-position); }
 html.dark .to-slate-50 { --tw-gradient-to: rgba(255,255,255,0.02) var(--tw-gradient-to-position); }
 
@@ -436,7 +437,7 @@ html.dark .hover\:shadow-md:hover     { box-shadow: 0 4px 12px rgba(0,0,0,0.55),
 html.dark .hover\:border-gray-300:hover { border-color: rgba(255,255,255,0.12); }
 
 /* ── Opacity-variant background overrides ── */
-html.dark .bg-white\/95    { background-color: rgba(19,32,25,0.97); }
+html.dark .bg-white\/95    { background-color: rgba(30,51,40,0.97); }
 html.dark .bg-gray-50\/80  { background-color: rgba(255,255,255,0.03); }
 
 /* ── Opacity-variant border & ring overrides ── */
