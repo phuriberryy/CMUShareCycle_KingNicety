@@ -1,13 +1,30 @@
+import fs from 'fs'
 import path from 'path'
 import { createRequire } from 'module'
 import { z } from 'zod'
 
 const require = createRequire(import.meta.url)
+const dotenv = require('dotenv')
 const envPath =
   process.env.ENV_FILE?.trim() || path.resolve(process.cwd(), '.env')
 
-// Load .env file
-const result = require('dotenv').config({ path: envPath })
+// เคลียร์ตัวแปร SMTP ที่หลุดจาก shell เมื่อไม่ได้ประกาศในไฟล์ `.env`
+// (dotenv เดิมไม่มี override → ชื่อค้างจากการ `source .env` จะทับค่าที่คอมเมนต์ในไฟล์)
+const SMTP_KEYS_FROM_SHELL_ONLY = ['EMAIL_HOST', 'EMAIL_PORT', 'EMAIL_USER', 'EMAIL_PASS']
+
+if (fs.existsSync(envPath)) {
+  try {
+    const fromFile = dotenv.parse(fs.readFileSync(envPath, 'utf8'))
+    for (const key of SMTP_KEYS_FROM_SHELL_ONLY) {
+      if (!(key in fromFile)) delete process.env[key]
+    }
+  } catch (e) {
+    console.warn('⚠️  Could not merge .env (parse):', e.message)
+  }
+}
+
+// Load .env file — keys จากไฟล์ชนะค่าใน environment
+const result = dotenv.config({ path: envPath, override: true })
 if (result.error) {
   console.warn('⚠️  Warning: Could not load .env file:', result.error.message)
   console.warn('   Expected path:', envPath)

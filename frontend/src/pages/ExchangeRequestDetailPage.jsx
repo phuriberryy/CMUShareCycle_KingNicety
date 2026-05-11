@@ -240,7 +240,7 @@ export default function ExchangeRequestDetailPage() {
   // Calculate CO₂ footprint and CO₂ reduced
   const calculateCO2 = () => {
     if (!exchangeRequest.item_category || !exchangeRequest.item_condition) return null
-    
+
     const co2Footprint = calculateItemCO2(
       exchangeRequest.item_category,
       exchangeRequest.item_condition,
@@ -250,8 +250,23 @@ export default function ExchangeRequestDetailPage() {
         otherSubtype: exchangeRequest.item_other_subtype,
       }
     )
-    const co2Reduced = calculateExchangeCO2Reduction(co2Footprint)
-    
+
+    const hasRequesterItem =
+      exchangeRequest.requester_item_category && exchangeRequest.requester_item_condition
+    const co2RequesterItem = hasRequesterItem
+      ? calculateItemCO2(
+          exchangeRequest.requester_item_category,
+          exchangeRequest.requester_item_condition,
+          {
+            title: exchangeRequest.requester_item_name,
+            description: exchangeRequest.requester_item_description,
+            otherSubtype: exchangeRequest.requester_item_other_subtype,
+          }
+        )
+      : null
+
+    const co2Reduced = calculateExchangeCO2Reduction(co2Footprint, co2RequesterItem)
+
     return {
       footprint: parseFloat(co2Footprint.toFixed(2)),
       reduced: parseFloat(co2Reduced.toFixed(2)),
@@ -428,7 +443,10 @@ export default function ExchangeRequestDetailPage() {
             <div className="flex flex-wrap gap-2">
               {exchangeRequest.requester_item_category && (
                 <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-gray-700">
-                  {getCategoryLabel(exchangeRequest.requester_item_category)}
+                  {getCategoryLabel(
+                    exchangeRequest.requester_item_category,
+                    exchangeRequest.requester_item_other_subtype
+                  )}
                 </span>
               )}
               {exchangeRequest.requester_item_condition && (

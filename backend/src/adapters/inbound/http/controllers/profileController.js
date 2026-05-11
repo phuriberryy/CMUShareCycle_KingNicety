@@ -173,10 +173,12 @@ export const getExchangeHistory = async (req, res) => {
         i.title as owner_item_title,
         i.image_url as owner_item_image_url,
         i.category as owner_item_category,
+        i.other_subtype as owner_item_other_subtype,
         -- Requester item (ของที่ได้รับ หรือ ของที่แลกเข้ามา)
         er.requester_item_name as requester_item_title,
         er.requester_item_image_url as requester_item_image_url,
         er.requester_item_category as requester_item_category,
+        er.requester_item_other_subtype as requester_item_other_subtype,
         -- User info
         owner.name as owner_name,
         owner.email as owner_email,
@@ -206,9 +208,11 @@ export const getExchangeHistory = async (req, res) => {
           my_item_title: row.owner_item_title,
           my_item_image_url: row.owner_item_image_url,
           my_item_category: row.owner_item_category,
+          my_item_other_subtype: row.owner_item_other_subtype,
           received_item_title: row.requester_item_title,
           received_item_image_url: row.requester_item_image_url,
           received_item_category: row.requester_item_category,
+          received_item_other_subtype: row.requester_item_other_subtype,
           received_from_name: row.requester_name,
           // สำหรับ backward compatibility
           item_title: row.owner_item_title,
@@ -220,9 +224,11 @@ export const getExchangeHistory = async (req, res) => {
           my_item_title: row.requester_item_title,
           my_item_image_url: row.requester_item_image_url,
           my_item_category: row.requester_item_category,
+          my_item_other_subtype: row.requester_item_other_subtype,
           received_item_title: row.owner_item_title,
           received_item_image_url: row.owner_item_image_url,
           received_item_category: row.owner_item_category,
+          received_item_other_subtype: row.owner_item_other_subtype,
           received_from_name: row.owner_name,
           // สำหรับ backward compatibility
           item_title: row.requester_item_title,

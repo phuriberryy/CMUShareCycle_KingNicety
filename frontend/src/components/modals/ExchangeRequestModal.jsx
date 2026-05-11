@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { CheckCircle, Image as ImageIcon } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import Modal from '../ui/Modal'
 import { exchangeApi } from '../../lib/api'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
+import { OTHER_SUBTYPE_MAX_LENGTH } from '../../utils/co2Calculator'
+import { moderateCombinedItemText, moderateText } from '../../utils/contentModeration'
 
 export default function ExchangeRequestModal({ open, onClose, itemId }) {
   const navigate = useNavigate()
@@ -12,6 +14,7 @@ export default function ExchangeRequestModal({ open, onClose, itemId }) {
   const [formData, setFormData] = useState({
     itemName: '',
     category: '',
+    otherSubtype: '',
     condition: '',
     description: '',
   })
@@ -20,6 +23,13 @@ export default function ExchangeRequestModal({ open, onClose, itemId }) {
   const [message, setMessage] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const { token } = useAuth()
+
+  useEffect(() => {
+    if (formData.category === 'Others') return
+    if (!formData.otherSubtype) return
+    setFormData((prev) => ({ ...prev, otherSubtype: '' }))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.category])
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -57,6 +67,16 @@ export default function ExchangeRequestModal({ open, onClose, itemId }) {
       toast.warning('กรุณาเลือกหมวดหมู่', 'ข้อมูลไม่ครบ')
       return
     }
+    if (formData.category === 'Others') {
+      const subtypeText = (formData.otherSubtype || '').trim()
+      if (subtypeText.length < 2) {
+        toast.warning(
+          'กรุณาระบุประเภทย่อยของสินค้าหมวด "อื่นๆ" (อย่างน้อย 2 ตัวอักษร) เพื่อคำนวณ CO₂ ที่แม่นยำ',
+          'ข้อมูลไม่ครบ'
+        )
+        return
+      }
+    }
     if (!formData.condition) {
       toast.warning('กรุณาเลือกสภาพสินค้า', 'ข้อมูลไม่ครบ')
       return
@@ -64,6 +84,28 @@ export default function ExchangeRequestModal({ open, onClose, itemId }) {
     if (!formData.description.trim()) {
       toast.warning('กรุณากรอกรายละเอียดสินค้า', 'ข้อมูลไม่ครบ')
       return
+    }
+
+    const otherSubtypeStored = formData.category === 'Others' ? (formData.otherSubtype || '').trim() || null : null
+
+    const textMod = moderateCombinedItemText({
+      title: formData.itemName.trim(),
+      description: formData.description.trim(),
+      lookingFor: '',
+      pickupLocation: '',
+      otherSubtype: otherSubtypeStored || '',
+    })
+    if (!textMod.allowed) {
+      toast.warning(textMod.reasonTh, 'เนื้อหาไม่เหมาะสม')
+      return
+    }
+
+    if (includeMessage && (message || '').trim()) {
+      const msgMod = moderateText(message.trim())
+      if (!msgMod.allowed) {
+        toast.warning(msgMod.reasonTh, 'เนื้อหาไม่เหมาะสม')
+        return
+      }
     }
 
     setSubmitting(true)
@@ -79,6 +121,8 @@ export default function ExchangeRequestModal({ open, onClose, itemId }) {
         message: message || undefined,
         requesterItemName: formData.itemName || undefined,
         requesterItemCategory: formData.category || undefined,
+        requesterItemOtherSubtype: otherSubtypeStored || undefined,
+        requester_item_other_subtype: otherSubtypeStored || undefined,
         requesterItemCondition: formData.condition || undefined,
         requesterItemDescription: formData.description || undefined,
         requesterItemImageUrl: imageUrl || undefined,
@@ -90,6 +134,7 @@ export default function ExchangeRequestModal({ open, onClose, itemId }) {
       setFormData({
         itemName: '',
         category: '',
+        otherSubtype: '',
         condition: '',
         description: '',
       })
@@ -240,6 +285,27 @@ export default function ExchangeRequestModal({ open, onClose, itemId }) {
             </select>
           </div>
         </div>
+
+        {formData.category === 'Others' ? (
+          <div className="rounded-xl border border-amber-200 bg-amber-50/40 p-4">
+            <label className="mb-2 block text-sm font-bold text-gray-900">
+              ระบุชนิดสินค้า <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="otherSubtype"
+              value={formData.otherSubtype}
+              onChange={handleInputChange}
+              maxLength={OTHER_SUBTYPE_MAX_LENGTH}
+              placeholder="เช่น โน้ตบุ๊ก Dell, ปากกา Pilot, หม้อหุงข้าว Sharp"
+              className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-0"
+              required
+            />
+            <p className="mt-2 text-xs leading-relaxed text-gray-600">
+              จำเป็นสำหรับหมวด &quot;อื่นๆ&quot; — พิมพ์ชนิดสินค้าให้ชัดเจน เหมือนตอนโพสต์สินค้า ระบบใช้คำนวณ CO₂ เมื่อแลกเปลี่ยนสำเร็จ
+            </p>
+          </div>
+        ) : null}
 
         {/* Description */}
         <div>

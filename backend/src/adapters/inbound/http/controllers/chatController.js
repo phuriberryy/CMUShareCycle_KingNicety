@@ -716,6 +716,7 @@ export const confirmChatQr = async (req, res) => {
             er.requester_item_condition,
             er.requester_item_name,
             er.requester_item_description,
+            er.requester_item_other_subtype,
             i.user_id as owner_id,
             i.category as owner_item_category,
             i.item_condition as owner_item_condition,
@@ -745,7 +746,11 @@ export const confirmChatQr = async (req, res) => {
             ? calculateItemCO2(
                 exchangeData.requester_item_category,
                 exchangeData.requester_item_condition,
-                { title: exchangeData.requester_item_name, description: exchangeData.requester_item_description }
+                {
+                  title: exchangeData.requester_item_name,
+                  description: exchangeData.requester_item_description,
+                  otherSubtype: exchangeData.requester_item_other_subtype,
+                }
               )
             : co2OwnerItem // ถ้าไม่มี requester item ให้ใช้ค่าเดียวกับ owner item
           
@@ -1258,6 +1263,7 @@ async function finalizeExchangeConfirmation(chatRow, chatId) {
        er.requester_item_condition,
        er.requester_item_name,
        er.requester_item_description,
+       er.requester_item_other_subtype,
        i.user_id    AS owner_id,
        i.category   AS owner_item_category,
        i.item_condition AS owner_item_condition,
@@ -1296,7 +1302,11 @@ async function finalizeExchangeConfirmation(chatRow, chatId) {
       ? calculateItemCO2(
           exchangeData.requester_item_category,
           exchangeData.requester_item_condition,
-          { title: exchangeData.requester_item_name, description: exchangeData.requester_item_description }
+          {
+            title: exchangeData.requester_item_name,
+            description: exchangeData.requester_item_description,
+            otherSubtype: exchangeData.requester_item_other_subtype,
+          }
         )
       : co2Owner
   const co2Reduced = parseFloat(calculateExchangeCO2Reduction(co2Owner, co2Requester).toFixed(2))

@@ -24,6 +24,8 @@ router.post(
     body('message').optional().isString().trim().isLength({ max: 1000 }),
     body('requesterItemName').optional().isString().trim().isLength({ max: 120 }),
     body('requesterItemCategory').optional().isString().trim().isLength({ max: 80 }),
+    body('requesterItemOtherSubtype').optional().isString().trim().isLength({ max: 80 }),
+    body('requester_item_other_subtype').optional().isString().trim().isLength({ max: 80 }),
     body('requesterItemCondition').optional().isString().trim().isLength({ max: 40 }),
     body('requesterItemDescription').optional().isString().trim().isLength({ max: 2000 }),
     body('requesterItemImageUrl').optional().isString(),

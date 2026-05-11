@@ -14,7 +14,7 @@ const USE_MOCK_EMAIL = process.env.USE_MOCK_EMAIL === 'true' || (!useResend && !
 // Resend client (เมื่อมี RESEND_API_KEY)
 const resendClient = useResend ? new Resend(env.resendApiKey) : null
 
-// Nodemailer transporter (เมื่อมี SMTP config – ใช้ก่อน Resend)
+// Nodemailer transporter (เมื่อมี SMTP config — ไม่เรียกใช้เมื่อเลือก Resend อยู่ก่อนขั้นตอนส่ง)
 const transporter = !USE_MOCK_EMAIL && hasSmtpConfig ? nodemailer.createTransport({
   host: env.emailHost,
   port: env.emailPort,
@@ -54,11 +54,12 @@ export const verifyEmailConnection = async () => {
     return true
   }
 
+  if (useResend && resendClient) {
+    console.log('✅ Email Service: Resend (ส่งอีเมลจริง)')
+    return true
+  }
+
   if (!hasSmtpConfig) {
-    if (useResend) {
-      console.log('✅ Email Service: Resend (ส่งอีเมลจริง)')
-      return true
-    }
     console.error('❌ Email configuration not found')
     console.log('   ตั้งค่า Gmail: npm run email:gmail หรือใส่ EMAIL_HOST, EMAIL_USER, EMAIL_PASS, EMAIL_FROM ใน .env')
     return false
@@ -133,39 +134,7 @@ export const sendEmail = async ({ to, subject, html, text }) => {
     return mockSendEmail({ to, subject, text: plainText, html })
   }
 
-  // --- SMTP (Gmail → @cmu.ac.th) ---
-  if (hasSmtpConfig && transporter) {
-    try {
-      const fromEmail = env.emailFrom?.includes('@') ? env.emailFrom : env.emailUser
-      const info = await transporter.sendMail({
-        from: `"CMU ShareCycle" <${fromEmail}>`,
-        to,
-        replyTo: fromEmail,
-        subject,
-        html,
-        text: plainText,
-        // nodemailer auto-sets Date and Message-ID — do not override them here,
-        // duplicate headers trigger spam filters in Outlook/Exchange.
-        headers: {
-          'X-Mailer': 'CMU ShareCycle',
-          'X-Priority': '3',
-          'Organization': 'Chiang Mai University',
-        },
-      })
-      console.log('Email sent via SMTP:', info.messageId, '→', to)
-      return info
-    } catch (err) {
-      console.error('[SMTP] Send failed:')
-      console.error('  error.name      :', err.name)
-      console.error('  error.message   :', err.message)
-      console.error('  error.code      :', err.code ?? null)
-      console.error('  error.response  :', err.response ?? null)
-      console.error('  error.responseCode:', err.responseCode ?? null)
-      return { messageId: null, accepted: [], rejected: [to], error: err.message }
-    }
-  }
-
-  // --- Resend (fallback when no SMTP) ---
+  // --- Resend — ให้ความสำคัญก่อนเมื่อมี API key ---
   if (useResend && resendClient) {
     const fromEmail = env.emailFrom?.includes('@') ? env.emailFrom : 'onboarding@resend.dev'
     const fromDisplay = `"CMU ShareCycle" <${fromEmail}>`
@@ -205,12 +174,44 @@ export const sendEmail = async ({ to, subject, html, text }) => {
     }
   }
 
+  // --- SMTP (Gmail → @cmu.ac.th) ---
+  if (hasSmtpConfig && transporter) {
+    try {
+      const fromEmail = env.emailFrom?.includes('@') ? env.emailFrom : env.emailUser
+      const info = await transporter.sendMail({
+        from: `"CMU ShareCycle" <${fromEmail}>`,
+        to,
+        replyTo: fromEmail,
+        subject,
+        html,
+        text: plainText,
+        // nodemailer auto-sets Date and Message-ID — do not override them here,
+        // duplicate headers trigger spam filters in Outlook/Exchange.
+        headers: {
+          'X-Mailer': 'CMU ShareCycle',
+          'X-Priority': '3',
+          'Organization': 'Chiang Mai University',
+        },
+      })
+      console.log('Email sent via SMTP:', info.messageId, '→', to)
+      return info
+    } catch (err) {
+      console.error('[SMTP] Send failed:')
+      console.error('  error.name      :', err.name)
+      console.error('  error.message   :', err.message)
+      console.error('  error.code      :', err.code ?? null)
+      console.error('  error.response  :', err.response ?? null)
+      console.error('  error.responseCode:', err.responseCode ?? null)
+      return { messageId: null, accepted: [], rejected: [to], error: err.message }
+    }
+  }
+
   return mockSendEmail({ to, subject, text: plainText, html })
 }
 
 // รายงานสถานะ email service (ใช้ใน health/diagnostic endpoint)
 export const getEmailConfig = () => {
-  const mode = USE_MOCK_EMAIL ? 'mock' : hasSmtpConfig ? 'smtp' : useResend ? 'resend' : 'mock'
+  const mode = USE_MOCK_EMAIL ? 'mock' : useResend ? 'resend' : hasSmtpConfig ? 'smtp' : 'mock'
   const masked = (v) => (v ? v.replace(/(.{2}).*(@.*)/, '$1***$2') : null)
   return {
     mode,

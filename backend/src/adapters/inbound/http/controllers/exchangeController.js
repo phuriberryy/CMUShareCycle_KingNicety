@@ -2,7 +2,12 @@ import { validationResult } from 'express-validator'
 import { randomBytes } from 'crypto'
 import pool, { query } from '../../../outbound/persistence/pool.js'
 import { sendEmail } from '../../../../shared/utils/email.js'
-import { calculateItemCO2, calculateExchangeCO2Reduction } from '../../../../shared/utils/co2Calculator.js'
+import { calculateItemCO2, calculateExchangeCO2Reduction, OTHER_SUBTYPE_MAX_LENGTH } from '../../../../shared/utils/co2Calculator.js'
+import {
+  moderateCombinedItemText,
+  moderateItemImageUrls,
+  moderateText,
+} from '../../../../shared/utils/contentModeration.js'
 import { getChatServer } from '../../../../application/services/chatService.js'
 import { badRequest, forbidden, internalError, notFound, unauthorized } from '../../../../shared/http/apiError.js'
 import env from '../../../../infrastructure/config/env.js'
@@ -28,16 +33,74 @@ export const createExchangeRequest = async (req, res) => {
     })
   }
 
-  const { 
-    itemId, 
+  const {
+    itemId,
     message,
     requesterItemName,
     requesterItemCategory,
     requesterItemCondition,
     requesterItemDescription,
     requesterItemImageUrl,
-    requesterPickupLocation
+    requesterPickupLocation,
   } = req.body
+  const subtypeFromBody =
+    req.body.requesterItemOtherSubtype ?? req.body.requester_item_other_subtype ?? null
+  const categoryTrimmed = typeof requesterItemCategory === 'string' ? requesterItemCategory.trim() : ''
+  let requesterItemOtherSubtype = null
+  if (categoryTrimmed === 'Others') {
+    const st = subtypeFromBody == null ? '' : String(subtypeFromBody).trim()
+    if (st.length < 2) {
+      return res.status(400).json(
+        badRequest(
+          'กรุณาระบุประเภทย่อยของสินค้าหมวด Others (อย่างน้อย 2 ตัวอักษร)'
+        )
+      )
+    }
+    if (st.length > OTHER_SUBTYPE_MAX_LENGTH) {
+      return res.status(400).json(badRequest('ประเภทย่อยยาวเกินกำหนด'))
+    }
+    requesterItemOtherSubtype = st
+  }
+
+  const nameTrim = typeof requesterItemName === 'string' ? requesterItemName.trim() : ''
+  const descTrim =
+    typeof requesterItemDescription === 'string' ? requesterItemDescription.trim() : ''
+  const pickupTrim =
+    typeof requesterPickupLocation === 'string' ? requesterPickupLocation.trim() : ''
+
+  const textMod = moderateCombinedItemText({
+    title: nameTrim,
+    description: descTrim,
+    lookingFor: '',
+    pickupLocation: pickupTrim,
+    otherSubtype: requesterItemOtherSubtype || '',
+  })
+  if (!textMod.allowed) {
+    return res.status(400).json({ message: textMod.reasonTh, code: textMod.code })
+  }
+  const msgTrim = typeof message === 'string' ? message.trim() : ''
+  if (msgTrim) {
+    const m = moderateText(msgTrim)
+    if (!m.allowed) {
+      return res.status(400).json({ message: m.reasonTh, code: m.code })
+    }
+  }
+
+  const imageUrls = typeof requesterItemImageUrl === 'string' && requesterItemImageUrl.trim()
+    ? [requesterItemImageUrl.trim()]
+    : []
+  if (imageUrls.length > 0) {
+    try {
+      const imageMod = await moderateItemImageUrls(imageUrls)
+      if (!imageMod.allowed) {
+        return res.status(400).json({ message: imageMod.reasonTh, code: imageMod.code })
+      }
+    } catch (modImgErr) {
+      console.error('Exchange request image moderation:', modImgErr)
+      return res.status(400).json(badRequest('ไม่สามารถตรวจสอบรูปภาพได้'))
+    }
+  }
+
   const client = await pool.connect()
   let item = null
   let exchangeRequest = null
@@ -89,28 +152,30 @@ export const createExchangeRequest = async (req, res) => {
 
     const exchangeResult = await client.query(
       `INSERT INTO exchange_requests (
-        item_id, 
-        requester_id, 
+        item_id,
+        requester_id,
         message,
         requester_item_name,
         requester_item_category,
+        requester_item_other_subtype,
         requester_item_condition,
         requester_item_description,
         requester_item_image_url,
         requester_pickup_location
       )
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
        RETURNING *`,
       [
-        itemId, 
-        req.user.id, 
-        message || null,
-        requesterItemName || null,
-        requesterItemCategory || null,
-        requesterItemCondition || null,
-        requesterItemDescription || null,
-        requesterItemImageUrl || null,
-        requesterPickupLocation || null
+        itemId,
+        req.user.id,
+        message ? String(message).trim() || null : null,
+        nameTrim || null,
+        categoryTrimmed || null,
+        requesterItemOtherSubtype,
+        requesterItemCondition ? String(requesterItemCondition).trim() || null : null,
+        descTrim || null,
+        requesterItemImageUrl ? String(requesterItemImageUrl).trim() || null : null,
+        pickupTrim || null,
       ]
     )
 
@@ -693,6 +758,7 @@ async function completeExchange(requestId, exchangeRequest) {
           {
             title: exchangeRequest.requester_item_name,
             description: exchangeRequest.requester_item_description,
+            otherSubtype: exchangeRequest.requester_item_other_subtype,
           }
         )
       : null
